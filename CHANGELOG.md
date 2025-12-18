@@ -1,3 +1,10 @@
+# 1.0.0 (2025-12-18)
+
+
+### Features
+
+* 🎉 initialize the NoobHeaders extension ([9c237a9](https://github.com/BioSs54/noobheaders/commit/9c237a9cd85ff0c858991d8697067bf69dfd22ed))
+
 # Changelog
 
 All notable changes to NoobHeaders will be documented in this file.
