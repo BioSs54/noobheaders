@@ -1,0 +1,31 @@
+name: Publish to Firefox Add-ons
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  publish-firefox:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Download Firefox package
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download v${{ steps.version.outputs.VERSION }} \
+            --pattern "noobheaders-firefox-v${{ steps.version.outputs.VERSION }}.zip" \
+            --repo ${{ github.repository }}
+
+      - name: Submit to Firefox Add-ons
+        uses: trmcnvn/firefox-addon@v1
+        with:
+          api-key: ${{ secrets.FIREFOX_API_KEY }}
+          api-secret: ${{ secrets.FIREFOX_API_SECRET }}
+          addon-guid: ${{ secrets.FIREFOX_ADDON_GUID }}
+          xpi: noobheaders-firefox-v${{ steps.version.outputs.VERSION }}.zip

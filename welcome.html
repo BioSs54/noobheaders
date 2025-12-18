@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="welcomeTitle">Welcome to NoobHeaders</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 60px 20px;
+    }
+
+    .welcome-header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .welcome-header h1 {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .welcome-header .subtitle {
+      font-size: 18px;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+
+    .feature-card {
+      text-align: center;
+      padding: 32px 24px;
+    }
+
+    .feature-card .icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .feature-card h3 {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    .feature-card p {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .cta-section {
+      text-align: center;
+      padding: 40px;
+      background: var(--gradient);
+      border-radius: 16px;
+      color: white;
+    }
+
+    .cta-section h2 {
+      font-size: 28px;
+      margin-bottom: 16px;
+    }
+
+    .cta-section p {
+      font-size: 16px;
+      margin-bottom: 24px;
+      opacity: 0.9;
+    }
+
+    .cta-button {
+      display: inline-block;
+      padding: 12px 32px;
+      background: white;
+      color: var(--primary-color);
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 16px;
+      transition: transform 0.2s;
+    }
+
+    .cta-button:hover {
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="welcome-header">
+      <h1>🎓 <span data-i18n="welcomeTitle">Welcome to NoobHeaders!</span></h1>
+      <p class="subtitle" data-i18n="welcomeSubtitle">Clean, privacy-focused HTTP header modifier</p>
+    </div>
+
+    <div class="features">
+      <div class="feature-card section">
+        <div class="icon">🚀</div>
+        <h3 data-i18n="welcomeFeatureSimpleTitle">Simple & Clean</h3>
+        <p data-i18n="welcomeFeatureSimpleDesc">Intuitive interface designed for developers and noobs alike. No clutter,
+          just headers.</p>
+      </div>
+
+      <div class="feature-card section">
+        <div class="icon">🔒</div>
+        <h3 data-i18n="welcomeFeaturePrivacyTitle">Privacy First</h3>
+        <p data-i18n="welcomeFeaturePrivacyDesc">No ads, no tracking, no analytics. Your data stays on your device.</p>
+      </div>
+
+      <div class="feature-card section">
+        <div class="icon">⚡</div>
+        <h3 data-i18n="welcomeFeatureProfilesTitle">Powerful Profiles</h3>
+        <p data-i18n="welcomeFeatureProfilesDesc">Create multiple profiles for different scenarios. Switch instantly.
+        </p>
+      </div>
+
+      <div class="feature-card section">
+        <div class="icon">🎯</div>
+        <h3 data-i18n="welcomeFeatureFiltersTitle">Smart Filters</h3>
+        <p data-i18n="welcomeFeatureFiltersDesc">Apply headers to specific domains or URL patterns.</p>
+      </div>
+
+      <div class="feature-card section">
+        <div class="icon">📦</div>
+        <h3 data-i18n="welcomeFeatureImportExportTitle">Import/Export</h3>
+        <p data-i18n="welcomeFeatureImportExportDesc">Share configurations with your team or backup your profiles.</p>
+      </div>
+
+      <div class="feature-card section">
+        <div class="icon">🌍</div>
+        <h3 data-i18n="welcomeFeatureOpenSourceTitle">Open Source</h3>
+        <p data-i18n="welcomeFeatureOpenSourceDesc">Built in the open. Contribute on GitHub or audit the code.</p>
+      </div>
+    </div>
+
+    <div class="cta-section">
+      <h2 data-i18n="welcomeReadyTitle">Ready to Get Started?</h2>
+      <p data-i18n="welcomeReadyDesc">Click the extension icon in your toolbar to create your first profile!</p>
+      <button id="get-started" class="cta-button"><span data-i18n="getStarted">Get Started</span> 🎓</button>
+    </div>
+
+    <div class="section" style="margin-top: 40px; text-align: center;">
+      <h3 style="margin-bottom: 12px;" data-i18n="welcomeQuickTipsTitle">Quick Tips</h3>
+      <ul style="list-style: none; padding: 0;">
+        <li style="margin-bottom: 8px;">✨ <span data-i18n="welcomeTip1">Click the extension icon to open the
+            popup</span></li>
+        <li style="margin-bottom: 8px;">🔧 <span data-i18n="welcomeTip2">Create profiles for different development
+            scenarios</span></li>
+        <li style="margin-bottom: 8px;">🎯 <span data-i18n="welcomeTip3">Use filters to target specific URLs or
+            domains</span></li>
+        <li style="margin-bottom: 8px;">💾 <span data-i18n="welcomeTip4">Export your profiles to share with
+            teammates</span></li>
+        <li style="margin-bottom: 8px;">🐛 <span data-i18n="welcomeTip5">Check the Debug section if something isn't
+            working</span></li>
+      </ul>
+    </div>
+
+    <footer class="footer" style="margin-top: 60px;">
+      <p>
+        <span data-i18n="welcomeMadeWith">Made with 💜 by</span>
+        <a href="https://github.com/BioSs54" target="_blank">BioSs54</a>
+      </p>
+      <p>
+        <a href="https://github.com/BioSs54/noobheaders" target="_blank">GitHub</a> •
+        <a href="https://github.com/BioSs54/noobheaders/issues" target="_blank" data-i18n="welcomeReportIssue">Report
+          Issue</a> •
+        <a href="https://github.com/BioSs54/noobheaders/blob/main/LICENSE" target="_blank">MIT License</a>
+      </p>
+    </footer>
+  </div>
+
+  <script src="i18n.js"></script>
+  <script>
+    document.getElementById('get-started').addEventListener('click', () => {
+      // Ouvrir le popup de l'extension
+      chrome.action.openPopup();
+    });
+  </script>
+</body>
+
+</html>

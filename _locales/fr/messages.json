@@ -1,0 +1,169 @@
+{
+  "extensionName": {
+    "message": "NoobHeaders",
+    "description": "Nom de l'extension"
+  },
+  "extensionDescription": {
+    "message": "Modificateur d'en-têtes HTTP propre et respectueux de la vie privée pour développeurs et noobs. Sans pubs ni tracking.",
+    "description": "Description de l'extension"
+  },
+  "subtitle": {
+    "message": "Modificateur d'En-têtes HTTP"
+  },
+  "headerModificationEnabled": {
+    "message": "Modification des En-têtes Activée"
+  },
+  "activeProfile": {
+    "message": "Profil Actif"
+  },
+  "addProfile": {
+    "message": "Ajouter un Profil"
+  },
+  "deleteProfile": {
+    "message": "Supprimer le Profil"
+  },
+  "rename": {
+    "message": "Renommer"
+  },
+  "duplicate": {
+    "message": "Dupliquer"
+  },
+  "headers": {
+    "message": "En-têtes"
+  },
+  "addHeader": {
+    "message": "+ Ajouter un En-tête"
+  },
+  "filters": {
+    "message": "Filtres"
+  },
+  "addFilter": {
+    "message": "+ Ajouter un Filtre"
+  },
+  "noHeadersConfigured": {
+    "message": "Aucun en-tête configuré"
+  },
+  "clickAddHeaderHint": {
+    "message": "Cliquez sur \"Ajouter un En-tête\" pour commencer"
+  },
+  "noFiltersConfigured": {
+    "message": "Aucun filtre configuré"
+  },
+  "headersApplyAllRequests": {
+    "message": "Les en-têtes s'appliqueront à toutes les requêtes"
+  },
+  "importExport": {
+    "message": "Importer/Exporter"
+  },
+  "export": {
+    "message": "Exporter"
+  },
+  "import": {
+    "message": "Importer"
+  },
+  "debug": {
+    "message": "Débogage"
+  },
+  "showDebugInfo": {
+    "message": "Afficher les Infos de Débogage"
+  },
+  "clearAllData": {
+    "message": "Effacer Toutes les Données"
+  },
+  "request": {
+    "message": "Requête"
+  },
+  "response": {
+    "message": "Réponse"
+  },
+  "headerName": {
+    "message": "Nom de l'en-tête"
+  },
+  "headerValue": {
+    "message": "Valeur de l'en-tête"
+  },
+  "urlPattern": {
+    "message": "Schéma d'URL"
+  },
+  "domain": {
+    "message": "Domaine"
+  },
+  "options": {
+    "message": "Options"
+  },
+  "welcomeTitle": {
+    "message": "Bienvenue sur NoobHeaders !"
+  },
+  "welcomeSubtitle": {
+    "message": "Modificateur d'en-têtes HTTP propre et respectueux de la vie privée"
+  },
+  "getStarted": {
+    "message": "Commencer"
+  },
+  "welcomeFeatureSimpleTitle": {
+    "message": "Simple et Propre"
+  },
+  "welcomeFeatureSimpleDesc": {
+    "message": "Interface intuitive conçue pour les développeurs et les débutants. Sans encombrement, juste des en-têtes."
+  },
+  "welcomeFeaturePrivacyTitle": {
+    "message": "Confidentialité d'Abord"
+  },
+  "welcomeFeaturePrivacyDesc": {
+    "message": "Pas de pubs, pas de tracking, pas d'analytiques. Vos données restent sur votre appareil."
+  },
+  "welcomeFeatureProfilesTitle": {
+    "message": "Profils Puissants"
+  },
+  "welcomeFeatureProfilesDesc": {
+    "message": "Créez plusieurs profils pour différents scénarios. Changez instantanément."
+  },
+  "welcomeFeatureFiltersTitle": {
+    "message": "Filtres Intelligents"
+  },
+  "welcomeFeatureFiltersDesc": {
+    "message": "Appliquez des en-têtes à des domaines ou motifs d'URL spécifiques."
+  },
+  "welcomeFeatureImportExportTitle": {
+    "message": "Importer/Exporter"
+  },
+  "welcomeFeatureImportExportDesc": {
+    "message": "Partagez vos configurations avec votre équipe ou sauvegardez vos profils."
+  },
+  "welcomeFeatureOpenSourceTitle": {
+    "message": "Open Source"
+  },
+  "welcomeFeatureOpenSourceDesc": {
+    "message": "Développé ouvertement. Contribuez sur GitHub ou auditez le code."
+  },
+  "welcomeReadyTitle": {
+    "message": "Prêt à Commencer ?"
+  },
+  "welcomeReadyDesc": {
+    "message": "Cliquez sur l'icône de l'extension dans votre barre d'outils pour créer votre premier profil !"
+  },
+  "welcomeQuickTipsTitle": {
+    "message": "Astuces Rapides"
+  },
+  "welcomeTip1": {
+    "message": "Cliquez sur l'icône de l'extension pour ouvrir le popup"
+  },
+  "welcomeTip2": {
+    "message": "Créez des profils pour différents scénarios de développement"
+  },
+  "welcomeTip3": {
+    "message": "Utilisez des filtres pour cibler des URL ou domaines spécifiques"
+  },
+  "welcomeTip4": {
+    "message": "Exportez vos profils pour les partager avec vos coéquipiers"
+  },
+  "welcomeTip5": {
+    "message": "Vérifiez la section Débogage si quelque chose ne fonctionne pas"
+  },
+  "welcomeMadeWith": {
+    "message": "Fait avec 💜 par"
+  },
+  "welcomeReportIssue": {
+    "message": "Signaler un Problème"
+  }
+}

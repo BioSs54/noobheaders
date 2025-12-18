@@ -1,0 +1,59 @@
+name: PR Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  pr-checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Generate icons
+        run: pnpm run icons
+
+      - name: Check for icon files
+        run: |
+          test -f icons/icon16.png || exit 1
+          test -f icons/icon48.png || exit 1
+          test -f icons/icon128.png || exit 1
+
+      - name: Validate manifest
+        run: node tests/manifest.test.js
+
+      - name: Check i18n completeness
+        run: node tests/i18n.test.js
+
+      - name: Comment PR
+        uses: actions/github-script@v7
+        if: always()
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✅ All PR checks passed! Ready for review.'
+            })

@@ -1,0 +1,169 @@
+{
+  "extensionName": {
+    "message": "NoobHeaders",
+    "description": "Name of the extension"
+  },
+  "extensionDescription": {
+    "message": "Clean, privacy-focused HTTP header modifier for developers and noobs. No ads, no tracking.",
+    "description": "Description of the extension"
+  },
+  "subtitle": {
+    "message": "Clean HTTP Header Modifier"
+  },
+  "headerModificationEnabled": {
+    "message": "Header Modification Enabled"
+  },
+  "activeProfile": {
+    "message": "Active Profile"
+  },
+  "addProfile": {
+    "message": "Add Profile"
+  },
+  "deleteProfile": {
+    "message": "Delete Profile"
+  },
+  "rename": {
+    "message": "Rename"
+  },
+  "duplicate": {
+    "message": "Duplicate"
+  },
+  "headers": {
+    "message": "Headers"
+  },
+  "addHeader": {
+    "message": "+ Add Header"
+  },
+  "filters": {
+    "message": "Filters"
+  },
+  "addFilter": {
+    "message": "+ Add Filter"
+  },
+  "noHeadersConfigured": {
+    "message": "No headers configured"
+  },
+  "clickAddHeaderHint": {
+    "message": "Click \"Add Header\" to get started"
+  },
+  "noFiltersConfigured": {
+    "message": "No filters configured"
+  },
+  "headersApplyAllRequests": {
+    "message": "Headers will apply to all requests"
+  },
+  "importExport": {
+    "message": "Import/Export"
+  },
+  "export": {
+    "message": "Export"
+  },
+  "import": {
+    "message": "Import"
+  },
+  "debug": {
+    "message": "Debug"
+  },
+  "showDebugInfo": {
+    "message": "Show Debug Info"
+  },
+  "clearAllData": {
+    "message": "Clear All Data"
+  },
+  "request": {
+    "message": "Request"
+  },
+  "response": {
+    "message": "Response"
+  },
+  "headerName": {
+    "message": "Header name"
+  },
+  "headerValue": {
+    "message": "Header value"
+  },
+  "urlPattern": {
+    "message": "URL Pattern"
+  },
+  "domain": {
+    "message": "Domain"
+  },
+  "options": {
+    "message": "Options"
+  },
+  "welcomeTitle": {
+    "message": "Welcome to NoobHeaders!"
+  },
+  "welcomeSubtitle": {
+    "message": "Clean, privacy-focused HTTP header modifier"
+  },
+  "getStarted": {
+    "message": "Get Started"
+  },
+  "welcomeFeatureSimpleTitle": {
+    "message": "Simple & Clean"
+  },
+  "welcomeFeatureSimpleDesc": {
+    "message": "Intuitive interface designed for developers and noobs alike. No clutter, just headers."
+  },
+  "welcomeFeaturePrivacyTitle": {
+    "message": "Privacy First"
+  },
+  "welcomeFeaturePrivacyDesc": {
+    "message": "No ads, no tracking, no analytics. Your data stays on your device."
+  },
+  "welcomeFeatureProfilesTitle": {
+    "message": "Powerful Profiles"
+  },
+  "welcomeFeatureProfilesDesc": {
+    "message": "Create multiple profiles for different scenarios. Switch instantly."
+  },
+  "welcomeFeatureFiltersTitle": {
+    "message": "Smart Filters"
+  },
+  "welcomeFeatureFiltersDesc": {
+    "message": "Apply headers to specific domains or URL patterns."
+  },
+  "welcomeFeatureImportExportTitle": {
+    "message": "Import/Export"
+  },
+  "welcomeFeatureImportExportDesc": {
+    "message": "Share configurations with your team or backup your profiles."
+  },
+  "welcomeFeatureOpenSourceTitle": {
+    "message": "Open Source"
+  },
+  "welcomeFeatureOpenSourceDesc": {
+    "message": "Built in the open. Contribute on GitHub or audit the code."
+  },
+  "welcomeReadyTitle": {
+    "message": "Ready to Get Started?"
+  },
+  "welcomeReadyDesc": {
+    "message": "Click the extension icon in your toolbar to create your first profile!"
+  },
+  "welcomeQuickTipsTitle": {
+    "message": "Quick Tips"
+  },
+  "welcomeTip1": {
+    "message": "Click the extension icon to open the popup"
+  },
+  "welcomeTip2": {
+    "message": "Create profiles for different development scenarios"
+  },
+  "welcomeTip3": {
+    "message": "Use filters to target specific URLs or domains"
+  },
+  "welcomeTip4": {
+    "message": "Export your profiles to share with teammates"
+  },
+  "welcomeTip5": {
+    "message": "Check the Debug section if something isn't working"
+  },
+  "welcomeMadeWith": {
+    "message": "Made with 💜 by"
+  },
+  "welcomeReportIssue": {
+    "message": "Report Issue"
+  }
+}

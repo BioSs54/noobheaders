@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NoobHeaders - Options</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    .options-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .options-header h1 {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
+    .options-section {
+      margin-bottom: 24px;
+    }
+
+    .option-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      background: var(--background);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+
+    .option-info h3 {
+      font-size: 16px;
+      margin-bottom: 4px;
+    }
+
+    .option-info p {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="options-header">
+      <h1>⚙️ Options</h1>
+      <p class="subtitle">Configure NoobHeaders settings</p>
+    </div>
+
+    <section class="section options-section">
+      <div class="section-header">
+        <h2>General Settings</h2>
+      </div>
+
+      <div class="option-item">
+        <div class="option-info">
+          <h3>Auto-enable profiles</h3>
+          <p>Automatically enable new profiles when created</p>
+        </div>
+        <label class="toggle-container">
+          <input type="checkbox" id="auto-enable" class="toggle-input">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="option-item">
+        <div class="option-info">
+          <h3>Show badge count</h3>
+          <p>Display number of active headers on extension icon</p>
+        </div>
+        <label class="toggle-container">
+          <input type="checkbox" id="show-badge" class="toggle-input" checked disabled>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </section>
+
+    <section class="section options-section">
+      <div class="section-header">
+        <h2>About</h2>
+      </div>
+
+      <div style="padding: 16px; background: var(--background); border: 1px solid var(--border); border-radius: 8px;">
+        <p style="margin-bottom: 8px;"><strong>NoobHeaders</strong> v1.0.0</p>
+        <p style="margin-bottom: 8px; font-size: 13px; color: var(--text-secondary);">
+          A clean, privacy-focused HTTP header modifier for developers and noobs.
+        </p>
+        <p style="font-size: 13px; color: var(--text-secondary);">
+          Made with 💜 by <a href="https://github.com/BioSs54" target="_blank">BioSs54</a>
+        </p>
+        <p style="margin-top: 12px; font-size: 13px;">
+          <a href="https://github.com/BioSs54/noobheaders" target="_blank">GitHub</a> •
+          <a href="https://github.com/BioSs54/noobheaders/issues" target="_blank">Report Issue</a> •
+          <a href="https://github.com/BioSs54/noobheaders/blob/main/LICENSE" target="_blank">MIT License</a>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <script type="module" src="options.js"></script>
+</body>
+
+</html>

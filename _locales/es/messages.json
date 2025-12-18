@@ -1,0 +1,169 @@
+{
+  "extensionName": {
+    "message": "NoobHeaders",
+    "description": "Nombre de la extensión"
+  },
+  "extensionDescription": {
+    "message": "Modificador de encabezados HTTP limpio y centrado en la privacidad para desarrolladores y noobs. Sin anuncios ni rastreo.",
+    "description": "Descripción de la extensión"
+  },
+  "subtitle": {
+    "message": "Modificador de Encabezados HTTP"
+  },
+  "headerModificationEnabled": {
+    "message": "Modificación de Encabezados Activada"
+  },
+  "activeProfile": {
+    "message": "Perfil Activo"
+  },
+  "addProfile": {
+    "message": "Añadir Perfil"
+  },
+  "deleteProfile": {
+    "message": "Eliminar Perfil"
+  },
+  "rename": {
+    "message": "Renombrar"
+  },
+  "duplicate": {
+    "message": "Duplicar"
+  },
+  "headers": {
+    "message": "Encabezados"
+  },
+  "addHeader": {
+    "message": "+ Añadir Encabezado"
+  },
+  "filters": {
+    "message": "Filtros"
+  },
+  "addFilter": {
+    "message": "+ Añadir Filtro"
+  },
+  "noHeadersConfigured": {
+    "message": "No hay encabezados configurados"
+  },
+  "clickAddHeaderHint": {
+    "message": "Haz clic en \"Añadir Encabezado\" para comenzar"
+  },
+  "noFiltersConfigured": {
+    "message": "No hay filtros configurados"
+  },
+  "headersApplyAllRequests": {
+    "message": "Los encabezados se aplicarán a todas las solicitudes"
+  },
+  "importExport": {
+    "message": "Importar/Exportar"
+  },
+  "export": {
+    "message": "Exportar"
+  },
+  "import": {
+    "message": "Importar"
+  },
+  "debug": {
+    "message": "Depuración"
+  },
+  "showDebugInfo": {
+    "message": "Mostrar Información de Depuración"
+  },
+  "clearAllData": {
+    "message": "Borrar Todos los Datos"
+  },
+  "request": {
+    "message": "Solicitud"
+  },
+  "response": {
+    "message": "Respuesta"
+  },
+  "headerName": {
+    "message": "Nombre del encabezado"
+  },
+  "headerValue": {
+    "message": "Valor del encabezado"
+  },
+  "urlPattern": {
+    "message": "Patrón de URL"
+  },
+  "domain": {
+    "message": "Dominio"
+  },
+  "options": {
+    "message": "Opciones"
+  },
+  "welcomeTitle": {
+    "message": "¡Bienvenido a NoobHeaders!"
+  },
+  "welcomeSubtitle": {
+    "message": "Modificador de encabezados HTTP limpio y respetuoso con la privacidad"
+  },
+  "getStarted": {
+    "message": "Comenzar"
+  },
+  "welcomeFeatureSimpleTitle": {
+    "message": "Simple y Limpio"
+  },
+  "welcomeFeatureSimpleDesc": {
+    "message": "Interfaz intuitiva diseñada tanto para desarrolladores como para principiantes. Sin desorden, solo encabezados."
+  },
+  "welcomeFeaturePrivacyTitle": {
+    "message": "Privacidad Primero"
+  },
+  "welcomeFeaturePrivacyDesc": {
+    "message": "Sin anuncios, sin rastreo, sin analíticas. Tus datos permanecen en tu dispositivo."
+  },
+  "welcomeFeatureProfilesTitle": {
+    "message": "Perfiles Potentes"
+  },
+  "welcomeFeatureProfilesDesc": {
+    "message": "Crea múltiples perfiles para diferentes escenarios. Cambia instantáneamente."
+  },
+  "welcomeFeatureFiltersTitle": {
+    "message": "Filtros Inteligentes"
+  },
+  "welcomeFeatureFiltersDesc": {
+    "message": "Aplica encabezados a dominios o patrones de URL específicos."
+  },
+  "welcomeFeatureImportExportTitle": {
+    "message": "Importar/Exportar"
+  },
+  "welcomeFeatureImportExportDesc": {
+    "message": "Comparte configuraciones con tu equipo o haz copias de seguridad de tus perfiles."
+  },
+  "welcomeFeatureOpenSourceTitle": {
+    "message": "Código Abierto"
+  },
+  "welcomeFeatureOpenSourceDesc": {
+    "message": "Desarrollado abiertamente. Contribuye en GitHub o audita el código."
+  },
+  "welcomeReadyTitle": {
+    "message": "¿Listo para Comenzar?"
+  },
+  "welcomeReadyDesc": {
+    "message": "¡Haz clic en el icono de la extensión en tu barra de herramientas para crear tu primer perfil!"
+  },
+  "welcomeQuickTipsTitle": {
+    "message": "Consejos Rápidos"
+  },
+  "welcomeTip1": {
+    "message": "Haz clic en el icono de la extensión para abrir el popup"
+  },
+  "welcomeTip2": {
+    "message": "Crea perfiles para diferentes escenarios de desarrollo"
+  },
+  "welcomeTip3": {
+    "message": "Usa filtros para apuntar a URL o dominios específicos"
+  },
+  "welcomeTip4": {
+    "message": "Exporta tus perfiles para compartir con compañeros de equipo"
+  },
+  "welcomeTip5": {
+    "message": "Revisa la sección de Depuración si algo no funciona"
+  },
+  "welcomeMadeWith": {
+    "message": "Hecho con 💜 por"
+  },
+  "welcomeReportIssue": {
+    "message": "Reportar Problema"
+  }
+}

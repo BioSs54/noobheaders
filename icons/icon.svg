@@ -1,0 +1,28 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Gradient Background -->
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background Circle -->
+  <circle cx="64" cy="64" r="64" fill="url(#grad)"/>
+
+  <!-- Graduation Cap Icon -->
+  <!-- Base of cap -->
+  <path d="M 64 35 L 25 50 L 64 65 L 103 50 Z" fill="white" opacity="0.95"/>
+
+  <!-- Top of cap -->
+  <path d="M 25 50 L 25 65 L 40 72 L 40 55 Z" fill="white" opacity="0.9"/>
+  <path d="M 88 55 L 88 72 L 64 82 L 40 72 L 40 55 L 64 65 Z" fill="white" opacity="0.85"/>
+
+  <!-- Tassel -->
+  <circle cx="103" cy="50" r="3" fill="white" opacity="0.9"/>
+  <line x1="103" y1="53" x2="103" y2="60" stroke="white" stroke-width="2" opacity="0.8"/>
+  <circle cx="103" cy="62" r="4" fill="white" opacity="0.8"/>
+
+  <!-- H Letter (for Headers) -->
+  <text x="64" y="108" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle" opacity="0.9">H</text>
+</svg>

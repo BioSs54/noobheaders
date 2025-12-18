@@ -1,0 +1,55 @@
+{
+  "name": "noobheaders",
+  "version": "0.0.0-development",
+  "description": "Clean, open-source browser extension to modify HTTP headers. No ads, no tracking. Perfect for developers and noobs 🎓",
+  "type": "module",
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "build": "node scripts/build.js",
+    "build:dev": "node scripts/build.js --dev",
+    "build:watch": "node scripts/build.js --dev --watch",
+    "clean": "rimraf dist",
+    "test": "node --test tests/*.test.js",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "check": "pnpm build && biome check --write . && pnpm test",
+    "icons": "node scripts/generate-icons.js",
+    "semantic-release": "semantic-release",
+    "package": "pnpm build && node scripts/package.js"
+  },
+  "keywords": [
+    "chrome-extension",
+    "firefox-addon",
+    "http-headers",
+    "developer-tools",
+    "modheader-alternative",
+    "cors",
+    "user-agent",
+    "no-ads",
+    "privacy-focused",
+    "open-source"
+  ],
+  "author": "BioSs54",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BioSs54/noobheaders.git"
+  },
+  "bugs": {
+    "url": "https://github.com/BioSs54/noobheaders/issues"
+  },
+  "homepage": "https://github.com/BioSs54/noobheaders#readme",
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@types/chrome": "^0.1.32",
+    "archiver": "^7.0.1",
+    "esbuild": "^0.27.2",
+    "rimraf": "^6.1.2",
+    "semantic-release": "^23.0.0",
+    "sharp": "^0.33.5",
+    "typescript": "^5.9.3"
+  }
+}

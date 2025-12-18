@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NoobHeaders</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-top">
+                <h1 class="logo">
+                    <span class="logo-icon">🎓</span>
+                    NoobHeaders
+                </h1>
+                <button id="options-btn" class="icon-btn" data-i18n-title="options">⚙️</button>
+            </div>
+            <p class="subtitle" data-i18n="subtitle">Clean HTTP Header Modifier</p>
+        </header>
+
+        <!-- Global Toggle -->
+        <section class="section">
+            <label class="toggle-container global-toggle">
+                <input type="checkbox" id="global-enabled" class="toggle-input">
+                <span class="toggle-slider"></span>
+                <span class="toggle-label" data-i18n="headerModificationEnabled">Header Modification Enabled</span>
+            </label>
+        </section>
+
+        <!-- Profile Section -->
+        <section class="section">
+            <div class="section-header">
+                <h2 data-i18n="activeProfile">Active Profile</h2>
+                <div class="profile-actions">
+                    <button id="add-profile-btn" class="icon-btn" data-i18n-title="addProfile">➕</button>
+                    <button id="delete-profile-btn" class="icon-btn" data-i18n-title="deleteProfile">🗑️</button>
+                </div>
+            </div>
+
+            <div class="profile-controls">
+                <select id="profile-select" class="profile-select-full"></select>
+
+                <div class="button-group">
+                    <button id="rename-profile-btn" class="btn-secondary" data-i18n="rename">Rename</button>
+                    <button id="duplicate-profile-btn" class="btn-secondary" data-i18n="duplicate">Duplicate</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Headers Section -->
+        <section class="section">
+            <div class="section-header">
+                <h2 data-i18n="headers">Headers</h2>
+                <button id="add-header-btn" class="btn-primary" data-i18n="addHeader">+ Add Header</button>
+            </div>
+
+            <div id="headers-list" class="headers-list">
+                <!-- Headers will be inserted here -->
+            </div>
+
+            <div class="empty-state" id="empty-headers" style="display: none;">
+                <p data-i18n="noHeadersConfigured">No headers configured</p>
+                <p class="empty-hint" data-i18n="clickAddHeaderHint">Click "Add Header" to get started</p>
+            </div>
+        </section>
+
+        <!-- Filters Section -->
+        <section class="section">
+            <div class="section-header">
+                <h2 data-i18n="filters">Filters</h2>
+                <button id="add-filter-btn" class="btn-primary" data-i18n="addFilter">+ Add Filter</button>
+            </div>
+
+            <div id="filters-list" class="filters-list">
+                <!-- Filters will be inserted here -->
+            </div>
+
+            <div class="empty-state" id="empty-filters" style="display: none;">
+                <p data-i18n="noFiltersConfigured">No filters configured</p>
+                <p class="empty-hint" data-i18n="headersApplyAllRequests">Headers will apply to all requests</p>
+            </div>
+        </section>
+
+        <!-- Import/Export Section -->
+        <section class="section">
+            <div class="section-header">
+                <h2 data-i18n="importExport">Import/Export</h2>
+            </div>
+
+            <div class="button-group">
+                <button id="export-btn" class="btn-secondary">📥 <span data-i18n="export">Export</span>
+                    Profiles</button>
+                <button id="import-btn" class="btn-secondary">📤 <span data-i18n="import">Import</span>
+                    Profiles</button>
+                <input type="file" id="import-input" accept=".json" style="display: none;">
+            </div>
+        </section>
+
+        <!-- Debug Section -->
+        <section class="section debug-section">
+            <div class="section-header">
+                <h2 data-i18n="debug">Debug</h2>
+                <button id="toggle-debug-btn" class="icon-btn">🔽</button>
+            </div>
+
+            <div id="debug-content" class="debug-content" style="display: none;">
+                <div class="debug-info">
+                    <div class="debug-row">
+                        <span class="debug-label">Active Rules:</span>
+                        <span id="debug-rules-count" class="debug-value">0</span>
+                    </div>
+                    <div class="debug-row">
+                        <span class="debug-label">Storage Used:</span>
+                        <span id="debug-storage-size" class="debug-value">0 KB</span>
+                    </div>
+                </div>
+
+                <button id="clear-all-btn" class="btn-danger" data-i18n="clearAllData">Clear All Data</button>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>
+                Made with 💜 by
+                <a href="https://github.com/BioSs54" target="_blank">BioSs54</a>
+                •
+                <a href="https://github.com/BioSs54/noobheaders" target="_blank">GitHub</a>
+                •
+                <span id="easter-egg-trigger" style="cursor: pointer;">v1.0.0</span>
+            </p>
+            <p class="footer-hint">No ads, no tracking, just headers 🎓</p>
+        </footer>
+    </div>
+
+    <script type="module" src="i18n.js"></script>
+    <script type="module" src="popup.js"></script>
+</body>
+
+</html>
