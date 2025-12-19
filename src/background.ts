@@ -11,6 +11,7 @@ import type {
   Profile,
   StorageData,
 } from './types/index.js';
+import { convertProfileToRules } from './rules';
 import { STORAGE_KEYS } from './types/index.js';
 
 const RULE_ID_OFFSET = 1;
@@ -25,94 +26,7 @@ function generateId(): string {
 /**
  * Convert profile to declarativeNetRequest rules
  */
-function convertProfileToRules(
-  profile: Profile,
-  globalEnabled: boolean,
-  ruleIdOffset: number = RULE_ID_OFFSET
-): ModifyHeaderRule[] {
-  const rules: ModifyHeaderRule[] = [];
-
-  if (!globalEnabled || !profile.headers || profile.headers.length === 0) {
-    return rules;
-  }
-
-  profile.headers.forEach((header: Header, index: number) => {
-    if (!header.enabled || !header.name) {
-      return;
-    }
-
-    // Add header modification
-    const headerObj: HeaderAction = {
-      header: header.name,
-      operation: header.value ? 'set' : 'remove',
-    };
-
-    if (header.value) {
-      headerObj.value = header.value;
-    }
-
-    // Build action based on header type - ONLY include the array that will be used
-    const action: ModifyHeaderRule['action'] = {
-      type: 'modifyHeaders',
-    };
-
-    if (header.type === 'request') {
-      action.requestHeaders = [headerObj];
-    } else {
-      action.responseHeaders = [headerObj];
-    }
-
-    // Apply filters if they exist
-    const hasFilters = profile.filters && profile.filters.length > 0;
-    const activeFilters: Filter[] = hasFilters
-      ? profile.filters.filter((f) => f.enabled && f.value)
-      : [];
-
-    const condition: ModifyHeaderRule['condition'] = {
-      urlFilter: '*://*/*',
-      resourceTypes: [
-        'main_frame',
-        'sub_frame',
-        'stylesheet',
-        'script',
-        'image',
-        'font',
-        'object',
-        'xmlhttprequest',
-        'ping',
-        'csp_report',
-        'media',
-        'websocket',
-        'other',
-      ],
-    };
-
-    if (activeFilters.length > 0) {
-      // Use the first URL filter if available
-      const urlFilter = activeFilters.find((f) => f.type === 'url');
-      if (urlFilter) {
-        condition.urlFilter = urlFilter.value;
-      }
-
-      // Add domain filters (only initiatorDomains is supported in MV3)
-      const domainFilters = activeFilters.filter((f) => f.type === 'domain');
-      if (domainFilters.length > 0) {
-        condition.initiatorDomains = domainFilters.map((f) => f.value);
-      }
-    }
-
-    const rule: ModifyHeaderRule = {
-      id: ruleIdOffset + index,
-      priority: 1,
-      action,
-      condition,
-    };
-
-    rules.push(rule);
-  });
-
-  return rules;
-}
+// convertProfileToRules is implemented in ./rules.ts to keep URL-filter OR semantics
 
 /**
  * Apply rules to declarativeNetRequest

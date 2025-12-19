@@ -215,6 +215,18 @@ pnpm test
 node --test tests/manifest.test.js
 ```
 
+## Release Process
+
+Releases are handled automatically with `semantic-release`. As part of the release pipeline, we run `node scripts/update-version.js ${nextRelease.version}` which updates `manifest.json` and replaces any `vX.Y.Z` occurrences in top-level HTML files (for example `options.html`, `popup.html`, `welcome.html`) so the version displayed in the UI matches the release version. The updated files are then committed by `semantic-release` and included in the release artifacts.
+
+If you need to perform a local dry-run, run:
+
+```bash
+node scripts/update-version.js 1.2.3
+```
+
+Remember to revert those changes after testing (or commit them as part of your release branch).
+
 ### Writing Tests
 
 - Place tests in `tests/` directory

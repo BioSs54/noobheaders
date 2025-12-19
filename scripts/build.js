@@ -45,6 +45,11 @@ const builds = [
     entryPoints: ['src/i18n.ts'],
     outfile: 'dist/i18n.js',
   },
+  {
+    ...commonOptions,
+    entryPoints: ['src/rules.ts'],
+    outfile: 'dist/rules.js',
+  },
 ];
 
 async function build() {

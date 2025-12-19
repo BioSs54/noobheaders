@@ -4,6 +4,7 @@
 
 import type { Filter, Header, Profile } from './types/index.js';
 import { STORAGE_KEYS } from './types/index.js';
+import { getMessage } from './i18n.js';
 
 let profiles: Profile[] = [];
 let activeProfileId: string | null = null;
@@ -225,7 +226,7 @@ function createHeaderElement(header: Header, index: number): HTMLDivElement {
   const deleteBtn = document.createElement('button');
   deleteBtn.className = 'icon-btn delete-btn';
   deleteBtn.textContent = '🗑️';
-  deleteBtn.title = 'Delete';
+  deleteBtn.title = chrome.i18n.getMessage('delete');
   deleteBtn.addEventListener('click', () => deleteHeader(index));
 
   div.appendChild(toggleLabel);
@@ -319,7 +320,7 @@ function createFilterElement(filter: Filter, index: number): HTMLDivElement {
   const deleteBtn = document.createElement('button');
   deleteBtn.className = 'icon-btn delete-btn';
   deleteBtn.textContent = '🗑️';
-  deleteBtn.title = 'Delete';
+  deleteBtn.title = chrome.i18n.getMessage('delete');
   deleteBtn.addEventListener('click', () => deleteFilter(index));
 
   div.appendChild(toggleLabel);
@@ -345,7 +346,7 @@ async function handleProfileChange(e: Event): Promise<void> {
  * Add new profile
  */
 async function addProfile(): Promise<void> {
-  const name = prompt('Enter profile name:');
+  const name = prompt(getMessage('enterProfileName'));
   if (!name) return;
 
   const newProfile: Profile = {
@@ -368,14 +369,14 @@ async function addProfile(): Promise<void> {
  */
 async function deleteProfile(): Promise<void> {
   if (profiles.length <= 1) {
-    alert('Cannot delete the last profile');
+    alert(getMessage('cannotDeleteLastProfile'));
     return;
   }
 
   const activeProfile = getActiveProfile();
   if (!activeProfile) return;
 
-  if (!confirm(`Delete profile "${activeProfile.name}"?`)) return;
+  if (!confirm(getMessage('confirmDeleteProfile', activeProfile.name))) return;
 
   profiles = profiles.filter((p) => p.id !== activeProfileId);
   activeProfileId = profiles[0].id;
@@ -392,7 +393,7 @@ async function renameProfile(): Promise<void> {
   const activeProfile = getActiveProfile();
   if (!activeProfile) return;
 
-  const newName = prompt('Enter new name:', activeProfile.name);
+  const newName = prompt(getMessage('enterNewName'), activeProfile.name);
   if (!newName) return;
 
   activeProfile.name = newName.trim();
@@ -592,13 +593,11 @@ async function importProfiles(e: Event): Promise<void> {
     const importedProfiles: Profile[] = JSON.parse(text);
 
     if (!Array.isArray(importedProfiles)) {
-      alert('Invalid profile format');
+      alert(getMessage('invalidProfileFormat'));
       return;
     }
 
-    if (
-      confirm(`Import ${importedProfiles.length} profile(s)? This will replace existing profiles.`)
-    ) {
+    if (confirm(getMessage('confirmImport', String(importedProfiles.length)))) {
       profiles = importedProfiles;
       activeProfileId = profiles[0]?.id || generateId();
       await saveState();
@@ -607,7 +606,7 @@ async function importProfiles(e: Event): Promise<void> {
       renderFilters();
     }
   } catch (error) {
-    alert(`Error importing profiles: ${(error as Error).message}`);
+    alert(getMessage('errorImportingProfiles', (error as Error).message));
   }
 
   input.value = '';
@@ -654,7 +653,7 @@ async function updateDebugInfo(): Promise<void> {
  * Clear all data
  */
 async function clearAllData(): Promise<void> {
-  if (!confirm('Clear all profiles and settings? This cannot be undone!')) return;
+  if (!confirm(getMessage('confirmClearAll'))) return;
 
   await chrome.storage.local.clear();
   await loadState();

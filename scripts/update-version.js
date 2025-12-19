@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -30,6 +30,21 @@ const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'));
 manifest.version = newVersion;
 writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
 console.log('✅ Updated manifest.json');
+
+// Update HTML files: replace occurrences like v1.0.0 with the new version
+const htmlFiles = readdirSync(rootDir).filter((f) => f.endsWith('.html'));
+
+const versionRegex = /v\d+\.\d+\.\d+/g;
+
+for (const file of htmlFiles) {
+  const filePath = join(rootDir, file);
+  const content = readFileSync(filePath, 'utf-8');
+  if (versionRegex.test(content)) {
+    const updated = content.replace(versionRegex, `v${newVersion}`);
+    writeFileSync(filePath, updated);
+    console.log(`✅ Updated version string in ${file}`);
+  }
+}
 
 console.log(`🎉 Version updated to ${newVersion}`);
 console.log("Don't forget to update CHANGELOG.md!");

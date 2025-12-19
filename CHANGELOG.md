@@ -37,6 +37,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - N/A
+- Fix: multiple URL filters now use OR semantics (generate one rule per URL filter) and rules moved to TypeScript (`src/rules.ts`).
+ - Fix: welcome page now loads translations correctly (i18n loaded as module) and import/confirm/prompt strings are localized (EN/FR/ES).
 
 ### Security
 - N/A

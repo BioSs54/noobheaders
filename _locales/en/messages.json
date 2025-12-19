@@ -58,6 +58,42 @@
   "export": {
     "message": "Export"
   },
+  "enterProfileName": {
+    "message": "Enter profile name:",
+    "description": "Prompt text for entering a new profile name"
+  },
+  "enterNewName": {
+    "message": "Enter new name:",
+    "description": "Prompt text for renaming a profile"
+  },
+  "cannotDeleteLastProfile": {
+    "message": "Cannot delete the last profile",
+    "description": "Alert when user tries to delete the last profile"
+  },
+  "confirmDeleteProfile": {
+    "message": "Delete profile \"$1\"?",
+    "description": "Confirmation when deleting a profile"
+  },
+  "confirmImport": {
+    "message": "Import $1 profile(s)? This will replace existing profiles.",
+    "description": "Confirmation shown when importing profiles"
+  },
+  "confirmClearAll": {
+    "message": "Clear all profiles and settings? This cannot be undone!",
+    "description": "Confirmation shown when clearing all data"
+  },
+  "invalidProfileFormat": {
+    "message": "Invalid profile format",
+    "description": "Error shown when imported file is not valid"
+  },
+  "errorImportingProfiles": {
+    "message": "Error importing profiles: $1",
+    "description": "Error message when import fails"
+  },
+  "delete": {
+    "message": "Delete",
+    "description": "Short label for delete actions"
+  },
   "import": {
     "message": "Import"
   },

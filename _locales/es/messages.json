@@ -61,6 +61,42 @@
   "import": {
     "message": "Importar"
   },
+  "enterProfileName": {
+    "message": "Ingrese el nombre del perfil:",
+    "description": "Texto para pedir el nombre de un nuevo perfil"
+  },
+  "enterNewName": {
+    "message": "Ingrese el nuevo nombre:",
+    "description": "Texto para renombrar un perfil"
+  },
+  "cannotDeleteLastProfile": {
+    "message": "No se puede eliminar el último perfil",
+    "description": "Alerta al intentar borrar el último perfil"
+  },
+  "confirmDeleteProfile": {
+    "message": "¿Eliminar el perfil \"$1\"?",
+    "description": "Confirmación al eliminar un perfil"
+  },
+  "confirmImport": {
+    "message": "¿Importar $1 perfil(es)? Esto reemplazará los perfiles existentes.",
+    "description": "Confirmación mostrada al importar perfiles"
+  },
+  "confirmClearAll": {
+    "message": "¿Borrar todos los perfiles y ajustes? ¡Esto no se puede deshacer!",
+    "description": "Confirmación mostrada al limpiar los datos"
+  },
+  "invalidProfileFormat": {
+    "message": "Formato de perfil inválido",
+    "description": "Error mostrado cuando el archivo importado no es válido"
+  },
+  "errorImportingProfiles": {
+    "message": "Error importando perfiles: $1",
+    "description": "Mensaje de error cuando la importación falla"
+  },
+  "delete": {
+    "message": "Eliminar",
+    "description": "Etiqueta corta para acciones de eliminación"
+  },
   "debug": {
     "message": "Depuración"
   },

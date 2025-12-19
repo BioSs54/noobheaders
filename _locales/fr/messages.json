@@ -61,6 +61,42 @@
   "import": {
     "message": "Importer"
   },
+  "enterProfileName": {
+    "message": "Entrez le nom du profil:",
+    "description": "Invite pour entrer le nom d'un nouveau profil"
+  },
+  "enterNewName": {
+    "message": "Entrez le nouveau nom:",
+    "description": "Invite pour renommer un profil"
+  },
+  "cannotDeleteLastProfile": {
+    "message": "Impossible de supprimer le dernier profil",
+    "description": "Alerte lors de la suppression du dernier profil"
+  },
+  "confirmDeleteProfile": {
+    "message": "Supprimer le profil \"$1\" ?",
+    "description": "Confirmation lors de la suppression d'un profil"
+  },
+  "confirmImport": {
+    "message": "Importer $1 profil(s) ? Ceci remplacera les profils existants.",
+    "description": "Confirmation affichée lors de l'importation de profils"
+  },
+  "confirmClearAll": {
+    "message": "Effacer tous les profils et paramètres ? Ceci est irréversible !",
+    "description": "Confirmation affichée lors du nettoyage des données"
+  },
+  "invalidProfileFormat": {
+    "message": "Format de profil invalide",
+    "description": "Erreur affichée lorsque le fichier importé n'est pas valide"
+  },
+  "errorImportingProfiles": {
+    "message": "Erreur lors de l'import : $1",
+    "description": "Message d'erreur lors d'un échec d'import"
+  },
+  "delete": {
+    "message": "Supprimer",
+    "description": "Étiquette courte pour les actions de suppression"
+  },
   "debug": {
     "message": "Débogage"
   },
