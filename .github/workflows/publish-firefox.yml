@@ -54,9 +54,14 @@ jobs:
           gh release download v${{ steps.release.outputs.TAG }} --pattern "${{ steps.release.outputs.ASSET }}" --repo ${{ github.repository }}
 
       - name: Submit to Firefox Add-ons
+        if: ${{ secrets.FIREFOX_API_KEY && secrets.FIREFOX_API_SECRET && secrets.FIREFOX_ADDON_GUID }}
         uses: trmcnvn/firefox-addon@v1
         with:
           api-key: ${{ secrets.FIREFOX_API_KEY }}
           api-secret: ${{ secrets.FIREFOX_API_SECRET }}
-          addon-guid: ${{ secrets.FIREFOX_ADDON_GUID }}
+          uuid: ${{ secrets.FIREFOX_ADDON_GUID }}
           xpi: ${{ steps.release.outputs.ASSET }}
+
+      - name: Skip Firefox publish
+        if: ${{ !(secrets.FIREFOX_API_KEY && secrets.FIREFOX_API_SECRET && secrets.FIREFOX_ADDON_GUID) }}
+        run: echo "Firefox publish skipped: missing FIREFOX_API_KEY/SECRET/GUID"

@@ -1,122 +1,115 @@
 name: Verify & Upload Release Assets
 
 on:
-  release:
-    types: [published]
-  workflow_run:
-    workflows: ["Release"]
-    types: [completed]
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Release tag to verify (e.g., v1.0.2). If omitted, uses current release event or discovers latest.'
-        required: false
+    release:
+        types: [published]
+    workflow_run:
+        workflows: ["Release"]
+        types: [completed]
+    workflow_dispatch:
+        inputs:
+            tag:
+                description: "Release tag to verify (e.g., v1.0.2). If omitted, uses current release event or discovers latest."
+                required: false
 
 permissions:
-  contents: write
+    contents: write
 
 jobs:
-  verify-and-upload:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    verify-and-upload:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20.x
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20.x
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v2
+              with:
+                  version: 8
 
-      - name: Install deps
-        run: |
-          # CI can run without a lockfile or with a stale lockfile; allow install to proceed
-          if [ -f pnpm-lock.yaml ]; then
-            pnpm install --frozen-lockfile
-          else
-            echo "pnpm-lock.yaml not found, installing without frozen-lockfile"
-            pnpm install --no-frozen-lockfile
-          fi
+            - name: Install deps
+              run: pnpm install --no-frozen-lockfile
 
-      - name: Determine tag
-        id: tag
-        run: |
-          set -euo pipefail
-          if [ "${{ github.event_name }}" = "release" ]; then
-            TAG=${{ github.event.release.tag_name }}
-            echo "Using release tag from event: $TAG"
-          elif [ -n "${{ github.event.inputs.tag || '' }}" ]; then
-            TAG=${{ github.event.inputs.tag }}
-            echo "Using manual input tag: $TAG"
-          else
-            echo "Triggered by workflow_run or no input; attempting to discover latest release tag..."
-            TAG=$(gh release view --json tagName --jq .tagName 2>/dev/null || echo "")
-            if [ -z "$TAG" ]; then
-              echo "No release found. Exiting successfully." >&2
-              echo "TAG=" >> $GITHUB_OUTPUT
-              exit 0
-            fi
-            echo "Discovered tag: $TAG"
-          fi
-          echo "TAG=$TAG" >> $GITHUB_OUTPUT
+            - name: Determine tag
+              id: tag
+              run: |
+                  set -euo pipefail
+                  if [ "${{ github.event_name }}" = "release" ]; then
+                    TAG=${{ github.event.release.tag_name }}
+                    echo "Using release tag from event: $TAG"
+                  elif [ -n "${{ github.event.inputs.tag || '' }}" ]; then
+                    TAG=${{ github.event.inputs.tag }}
+                    echo "Using manual input tag: $TAG"
+                  else
+                    echo "Triggered by workflow_run or no input; attempting to discover latest release tag..."
+                    TAG=$(gh release view --json tagName --jq .tagName 2>/dev/null || echo "")
+                    if [ -z "$TAG" ]; then
+                      echo "No release found. Exiting successfully." >&2
+                      echo "TAG=" >> $GITHUB_OUTPUT
+                      exit 0
+                    fi
+                    echo "Discovered tag: $TAG"
+                  fi
+                  echo "TAG=$TAG" >> $GITHUB_OUTPUT
 
-      - name: Check release assets
-        id: check
-        run: |
-          set -euo pipefail
-          TAG=${{ steps.tag.outputs.TAG }}
-          if [ -z "$TAG" ]; then
-            echo "No tag provided or found - nothing to do"
-            exit 0
-          fi
-          CHROME_ASSET=noobheaders-chrome-v${TAG}.zip
-          FIREFOX_ASSET=noobheaders-firefox-v${TAG}.zip
-          echo "Looking for assets: $CHROME_ASSET and $FIREFOX_ASSET"
-          EXIST_CHROME=$(gh release view v$TAG --json assets --jq '.assets[].name' 2>/dev/null | grep -x "$CHROME_ASSET" || true)
-          EXIST_FIREFOX=$(gh release view v$TAG --json assets --jq '.assets[].name' 2>/dev/null | grep -x "$FIREFOX_ASSET" || true)
-          echo "exists_chrome=$EXIST_CHROME" >> $GITHUB_OUTPUT
-          echo "exists_firefox=$EXIST_FIREFOX" >> $GITHUB_OUTPUT
+            - name: Check release assets
+              id: check
+              run: |
+                  set -euo pipefail
+                  TAG=${{ steps.tag.outputs.TAG }}
+                  if [ -z "$TAG" ]; then
+                    echo "No tag provided or found - nothing to do"
+                    exit 0
+                  fi
+                  CHROME_ASSET=noobheaders-chrome-v${TAG}.zip
+                  FIREFOX_ASSET=noobheaders-firefox-v${TAG}.zip
+                  echo "Looking for assets: $CHROME_ASSET and $FIREFOX_ASSET"
+                  EXIST_CHROME=$(gh release view v$TAG --json assets --jq '.assets[].name' 2>/dev/null | grep -x "$CHROME_ASSET" || true)
+                  EXIST_FIREFOX=$(gh release view v$TAG --json assets --jq '.assets[].name' 2>/dev/null | grep -x "$FIREFOX_ASSET" || true)
+                  echo "exists_chrome=$EXIST_CHROME" >> $GITHUB_OUTPUT
+                  echo "exists_firefox=$EXIST_FIREFOX" >> $GITHUB_OUTPUT
 
-      - name: Build & package (if needed)
-        if: ${{ steps.check.outputs.exists_chrome == '' || steps.check.outputs.exists_firefox == '' }}
-        run: |
-          pnpm build
-          pnpm package
+            - name: Build & package (if needed)
+              if: ${{ steps.check.outputs.exists_chrome == '' || steps.check.outputs.exists_firefox == '' }}
+              run: |
+                  pnpm build
+                  pnpm package
 
-      - name: Upload missing assets
-        if: ${{ steps.check.outputs.exists_chrome == '' || steps.check.outputs.exists_firefox == '' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          TAG=${{ steps.tag.outputs.TAG }}
-          CHROME_FILE=packages/noobheaders-chrome-v${TAG}.zip
-          FIREFOX_FILE=packages/noobheaders-firefox-v${TAG}.zip
-          if [ -f "$CHROME_FILE" ]; then
-            if ! gh release view v$TAG --json assets --jq '.assets[].name' 2>/dev/null | grep -x "noobheaders-chrome-v${TAG}.zip" >/dev/null 2>&1; then
-              echo "Uploading $CHROME_FILE"
-              gh release upload v$TAG "$CHROME_FILE" --repo ${{ github.repository }}
-            else
-              echo "$CHROME_FILE already present - skipping"
-            fi
-          else
-            echo "$CHROME_FILE not found — cannot upload Chrome package" >&2
-          fi
+            - name: Upload missing assets
+              if: ${{ steps.check.outputs.exists_chrome == '' || steps.check.outputs.exists_firefox == '' }}
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  set -euo pipefail
+                  TAG=${{ steps.tag.outputs.TAG }}
+                  CHROME_FILE=packages/noobheaders-chrome-v${TAG}.zip
+                  FIREFOX_FILE=packages/noobheaders-firefox-v${TAG}.zip
+                  if [ -f "$CHROME_FILE" ]; then
+                    if ! gh release view v$TAG --json assets --jq '.assets[].name' 2>/dev/null | grep -x "noobheaders-chrome-v${TAG}.zip" >/dev/null 2>&1; then
+                      echo "Uploading $CHROME_FILE"
+                      gh release upload v$TAG "$CHROME_FILE" --repo ${{ github.repository }}
+                    else
+                      echo "$CHROME_FILE already present - skipping"
+                    fi
+                  else
+                    echo "$CHROME_FILE not found — cannot upload Chrome package" >&2
+                  fi
 
-          if [ -f "$FIREFOX_FILE" ]; then
-            if ! gh release view v$TAG --json assets --jq '.assets[].name' 2>/dev/null | grep -x "noobheaders-firefox-v${TAG}.zip" >/dev/null 2>&1; then
-              echo "Uploading $FIREFOX_FILE"
-              gh release upload v$TAG "$FIREFOX_FILE" --repo ${{ github.repository }}
-            else
-              echo "$FIREFOX_FILE already present - skipping"
-            fi
-          else
-            echo "$FIREFOX_FILE not found — cannot upload Firefox package" >&2
-          fi
+                  if [ -f "$FIREFOX_FILE" ]; then
+                    if ! gh release view v$TAG --json assets --jq '.assets[].name' 2>/dev/null | grep -x "noobheaders-firefox-v${TAG}.zip" >/dev/null 2>&1; then
+                      echo "Uploading $FIREFOX_FILE"
+                      gh release upload v$TAG "$FIREFOX_FILE" --repo ${{ github.repository }}
+                    else
+                      echo "$FIREFOX_FILE already present - skipping"
+                    fi
+                  else
+                    echo "$FIREFOX_FILE not found — cannot upload Firefox package" >&2
+                  fi
 
-      - name: Done
-        run: echo "Release verification complete."
+            - name: Done
+              run: echo "Release verification complete."

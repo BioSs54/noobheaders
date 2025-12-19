@@ -54,10 +54,15 @@ jobs:
           gh release download v${{ steps.release.outputs.TAG }} --pattern "${{ steps.release.outputs.ASSET }}" --repo ${{ github.repository }}
 
       - name: Upload to Chrome Web Store
+        if: ${{ secrets.CHROME_CLIENT_ID && secrets.CHROME_CLIENT_SECRET && secrets.CHROME_REFRESH_TOKEN }}
         uses: trmcnvn/chrome-addon@v2
         with:
           extension: ${{ steps.release.outputs.ASSET }}
-          extension-id: ${{ secrets.CHROME_EXTENSION_ID }}
           client-id: ${{ secrets.CHROME_CLIENT_ID }}
           client-secret: ${{ secrets.CHROME_CLIENT_SECRET }}
           refresh-token: ${{ secrets.CHROME_REFRESH_TOKEN }}
+
+      - name: Skip Chrome publish
+        # Quote the expression so YAML doesn't interpret the leading '!' as a YAML tag
+        if: '${{ !secrets.CHROME_CLIENT_ID || !secrets.CHROME_CLIENT_SECRET || !secrets.CHROME_REFRESH_TOKEN }}'
+        run: echo "Chrome publish skipped: missing CHROME_CLIENT_ID/CHROME_CLIENT_SECRET/CHROME_REFRESH_TOKEN"
