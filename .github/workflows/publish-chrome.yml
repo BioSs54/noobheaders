@@ -53,8 +53,17 @@ jobs:
           fi
           gh release download v${{ steps.release.outputs.TAG }} --pattern "${{ steps.release.outputs.ASSET }}" --repo ${{ github.repository }}
 
+      - name: Check Chrome publish secrets
+        id: chrome-secrets
+        run: |
+          if [ -n "${{ secrets.CHROME_CLIENT_ID }}" ] && [ -n "${{ secrets.CHROME_CLIENT_SECRET }}" ] && [ -n "${{ secrets.CHROME_REFRESH_TOKEN }}" ]; then
+            echo "present=true" >> $GITHUB_OUTPUT
+          else
+            echo "present=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Upload to Chrome Web Store
-        if: ${{ secrets.CHROME_CLIENT_ID && secrets.CHROME_CLIENT_SECRET && secrets.CHROME_REFRESH_TOKEN }}
+        if: ${{ steps.chrome-secrets.outputs.present == 'true' }}
         uses: trmcnvn/chrome-addon@v2
         with:
           extension: ${{ steps.release.outputs.ASSET }}
@@ -63,7 +72,6 @@ jobs:
           refresh-token: ${{ secrets.CHROME_REFRESH_TOKEN }}
 
       - name: Skip Chrome publish
-        # Skip if any required secret is missing
-        if: ${{ secrets.CHROME_CLIENT_ID == null || secrets.CHROME_CLIENT_SECRET == null || secrets.CHROME_REFRESH_TOKEN == null }}
+        if: ${{ steps.chrome-secrets.outputs.present != 'true' }}
         run: |
           echo "Chrome publish skipped: missing CHROME_CLIENT_ID/CHROME_CLIENT_SECRET/CHROME_REFRESH_TOKEN"

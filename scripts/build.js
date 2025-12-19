@@ -50,6 +50,11 @@ const builds = [
     entryPoints: ['src/rules.ts'],
     outfile: 'dist/rules.js',
   },
+  {
+    ...commonOptions,
+    entryPoints: ['src/welcome.ts'],
+    outfile: 'dist/welcome.js',
+  },
 ];
 
 async function build() {

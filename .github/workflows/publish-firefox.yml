@@ -52,9 +52,17 @@ jobs:
             exit 0;
           fi
           gh release download v${{ steps.release.outputs.TAG }} --pattern "${{ steps.release.outputs.ASSET }}" --repo ${{ github.repository }}
+      - name: Check Firefox publish secrets
+        id: firefox-secrets
+        run: |
+          if [ -n "${{ secrets.FIREFOX_API_KEY }}" ] && [ -n "${{ secrets.FIREFOX_API_SECRET }}" ] && [ -n "${{ secrets.FIREFOX_ADDON_GUID }}" ]; then
+            echo "present=true" >> $GITHUB_OUTPUT
+          else
+            echo "present=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Submit to Firefox Add-ons
-        if: ${{ secrets.FIREFOX_API_KEY && secrets.FIREFOX_API_SECRET && secrets.FIREFOX_ADDON_GUID }}
+        if: ${{ steps.firefox-secrets.outputs.present == 'true' }}
         uses: trmcnvn/firefox-addon@v1
         with:
           api-key: ${{ secrets.FIREFOX_API_KEY }}
@@ -64,6 +72,6 @@ jobs:
 
       - name: Skip Firefox publish
         # Skip if any required secret is missing
-        if: ${{ secrets.FIREFOX_API_KEY == null || secrets.FIREFOX_API_SECRET == null || secrets.FIREFOX_ADDON_GUID == null }}
+        if: ${{ steps.firefox-secrets.outputs.present != 'true' }}
         run: |
           echo "Firefox publish skipped: missing FIREFOX_API_KEY/FIREFOX_API_SECRET/FIREFOX_ADDON_GUID"
