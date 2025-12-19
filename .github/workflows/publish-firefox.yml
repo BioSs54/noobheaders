@@ -3,6 +3,9 @@ name: Publish to Firefox Add-ons
 on:
   release:
     types: [published]
+  workflow_run:
+    workflows: ["Release"]
+    types: [completed]
   workflow_dispatch:
 
 jobs:
@@ -10,17 +13,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Get version from tag
-        id: version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+      - name: Determine release asset
+        id: release
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "TAG=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+            echo "ASSET=noobheaders-firefox-v${GITHUB_REF#refs/tags/v}.zip" >> $GITHUB_OUTPUT
+          else
+            # Fallback to latest unversioned asset
+            echo "TAG=latest" >> $GITHUB_OUTPUT
+            echo "ASSET=noobheaders-firefox.zip" >> $GITHUB_OUTPUT
+          fi
 
       - name: Download Firefox package
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release download v${{ steps.version.outputs.VERSION }} \
-            --pattern "noobheaders-firefox-v${{ steps.version.outputs.VERSION }}.zip" \
-            --repo ${{ github.repository }}
+          echo "Downloading asset: ${{ steps.release.outputs.ASSET }} (tag ${{ steps.release.outputs.TAG }})"
+          if [ "${{ steps.release.outputs.TAG }}" = "latest" ]; then
+            gh release download latest --pattern "${{ steps.release.outputs.ASSET }}" --repo ${{ github.repository }}
+          else
+            gh release download v${{ steps.release.outputs.TAG }} --pattern "${{ steps.release.outputs.ASSET }}" --repo ${{ github.repository }}
+          fi
 
       - name: Submit to Firefox Add-ons
         uses: trmcnvn/firefox-addon@v1

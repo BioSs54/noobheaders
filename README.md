@@ -27,28 +27,13 @@ Coming soon!
 
 ### Manual Installation
 
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/BioSs54/noobheaders.git
-   cd noobheaders
-   ```
+#### Download from Releases (recommended)
+For the latest packaged extensions, download the release zips from GitHub Releases:
 
-2. Install dependencies and build:
-   ```bash
-   pnpm install
-   pnpm build
-   ```
+- Chrome: `https://github.com/BioSs54/noobheaders/releases/latest/download/noobheaders-chrome.zip`
+- Firefox: `https://github.com/BioSs54/noobheaders/releases/latest/download/noobheaders-firefox.zip`
 
-3. Load in Chrome:
-   - Open `chrome://extensions/`
-   - Enable "Developer mode"
-   - Click "Load unpacked"
-   - Select the `dist` directory
-
-4. Load in Firefox:
-   - Open `about:debugging#/runtime/this-firefox`
-   - Click "Load Temporary Add-on"
-   - Select the `manifest.json` file from the `dist` directory
+Unzip the archive and load the unpacked extension in your browser (Chrome: `chrome://extensions/` → "Developer mode" → "Load unpacked" → select the unzipped folder; Firefox: `about:debugging#/runtime/this-firefox` → "Load Temporary Add-on" → select the `manifest.json`).
 
 ## 📖 Usage
 

@@ -13,7 +13,7 @@
       "@semantic-release/exec",
       {
         "verifyConditionsCmd": "node scripts/verify-release-env.js",
-        "prepareCmd": "pnpm build && node scripts/update-version.js ${nextRelease.version}"
+        "prepareCmd": "pnpm build && node scripts/update-version.js ${nextRelease.version} && pnpm package"
       }
     ],
     [
@@ -36,6 +36,22 @@
         "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
       }
     ],
-    "@semantic-release/github"
+    [
+      "@semantic-release/github",
+      {
+        "assets": [
+          "packages/noobheaders-chrome-v${nextRelease.version}.zip",
+          {
+            "path": "packages/noobheaders-chrome-v${nextRelease.version}.zip",
+            "name": "noobheaders-chrome.zip"
+          },
+          "packages/noobheaders-firefox-v${nextRelease.version}.zip",
+          {
+            "path": "packages/noobheaders-firefox-v${nextRelease.version}.zip",
+            "name": "noobheaders-firefox.zip"
+          }
+        ]
+      }
+    ]
   ]
 }
