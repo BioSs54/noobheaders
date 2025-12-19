@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/BioSs54/noobheaders/compare/v1.0.1...v1.0.2) (2025-12-19)
+
+
+### Bug Fixes
+
+* **manifest:** 🛠 remove background.scripts (MV3 incompatible) ([44a5569](https://github.com/BioSs54/noobheaders/commit/44a5569d6e406e5e3fc0801618dc4066e2cfaa7c))
+
 ## [1.0.1](https://github.com/BioSs54/noobheaders/compare/v1.0.0...v1.0.1) (2025-12-19)
 
 
