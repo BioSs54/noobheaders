@@ -34,8 +34,8 @@ jobs:
               sleep 5
             done
             if [ -z "$TAG" ]; then
-              echo "No release tag found after retries; aborting"
-              exit 1
+              echo "No release tag found after retries; nothing to publish; exiting successfully"
+              exit 0
             fi
             ASSET=noobheaders-firefox-v${TAG}.zip
           fi

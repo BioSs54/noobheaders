@@ -44,22 +44,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: pnpm run semantic-release
-
-      - name: Build packages
-        if: github.ref == 'refs/heads/main'
-        run: pnpm run package
-
-      - name: Get version
-        if: github.ref == 'refs/heads/main'
-        id: version
-        run: echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
-
-      - name: Upload packages to release
-        if: github.ref == 'refs/heads/main' && steps.version.outputs.VERSION != '0.0.0-development'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release upload v${{ steps.version.outputs.VERSION }} \
-            packages/noobheaders-chrome-v${{ steps.version.outputs.VERSION }}.zip \
-            packages/noobheaders-firefox-v${{ steps.version.outputs.VERSION }}.zip \
-            --clobber
