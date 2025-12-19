@@ -28,12 +28,19 @@ Coming soon!
 ### Manual Installation
 
 #### Download from Releases (recommended)
-For the latest packaged extensions, download the release zips from GitHub Releases:
 
-- Chrome: `https://github.com/BioSs54/noobheaders/releases/latest/download/noobheaders-chrome.zip`
-- Firefox: `https://github.com/BioSs54/noobheaders/releases/latest/download/noobheaders-firefox.zip`
+Download the packaged extensions from GitHub Releases (the **latest** link points to the most recent published release):
 
-Unzip the archive and load the unpacked extension in your browser (Chrome: `chrome://extensions/` → "Developer mode" → "Load unpacked" → select the unzipped folder; Firefox: `about:debugging#/runtime/this-firefox` → "Load Temporary Add-on" → select the `manifest.json`).
+- **Chrome** (ZIP): [noobheaders-chrome.zip](https://github.com/BioSs54/noobheaders/releases/latest/download/noobheaders-chrome.zip)
+- **Firefox** (ZIP): [noobheaders-firefox.zip](https://github.com/BioSs54/noobheaders/releases/latest/download/noobheaders-firefox.zip)
+
+Installation
+
+1. Unzip the downloaded archive.
+2. Chrome: open `chrome://extensions/`, enable **Developer mode**, click **Load unpacked**, and select the unzipped folder.
+3. Firefox: open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on**, and select the `manifest.json` file inside the unzipped folder.
+
+> Tip: When available, prefer installing from the Chrome Web Store or Firefox Add-ons to receive automatic updates.
 
 ## 📖 Usage
 
