@@ -50,23 +50,17 @@ async function packageExtension() {
 
   // Create ZIP for Chrome
   console.log('🗜️  Creating Chrome ZIP...');
-  const chromeZipVersioned = join(packagesDir, `noobheaders-chrome-v${version}.zip`);
-  const chromeZipLatest = join(packagesDir, 'noobheaders-chrome.zip');
-  await createZip(chromeDir, chromeZipVersioned);
-  // Also create an unversioned copy for "latest" downloads
-  cpSync(chromeZipVersioned, chromeZipLatest);
+  const chromeZip = join(packagesDir, 'noobheaders-chrome.zip');
+  await createZip(chromeDir, chromeZip);
 
   // Create ZIP for Firefox
   console.log('🗜️  Creating Firefox ZIP...');
-  const firefoxZipVersioned = join(packagesDir, `noobheaders-firefox-v${version}.zip`);
-  const firefoxZipLatest = join(packagesDir, 'noobheaders-firefox.zip');
-  await createZip(firefoxDir, firefoxZipVersioned);
-  // Also create an unversioned copy for "latest" downloads
-  cpSync(firefoxZipVersioned, firefoxZipLatest);
+  const firefoxZip = join(packagesDir, 'noobheaders-firefox.zip');
+  await createZip(firefoxDir, firefoxZip);
 
   console.log('✅ Packaging complete!');
-  console.log(`📦 Chrome: ${chromeZipVersioned} (also ${chromeZipLatest})`);
-  console.log(`📦 Firefox: ${firefoxZipVersioned} (also ${firefoxZipLatest})`);
+  console.log(`📦 Chrome: ${chromeZip}`);
+  console.log(`📦 Firefox: ${firefoxZip}`);
 }
 
 function copyFiles(src, dest) {

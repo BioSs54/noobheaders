@@ -19,7 +19,7 @@ jobs:
           set -euo pipefail
           if [ "${{ github.event_name }}" = "release" ]; then
             TAG=${GITHUB_REF#refs/tags/v}
-            ASSET=noobheaders-firefox-v${TAG}.zip
+            ASSET=noobheaders-firefox.zip
             echo "Found release event for tag: ${TAG}"
           else
             echo "Triggered by workflow_run; discovering release tag (retries)..."
@@ -37,7 +37,7 @@ jobs:
               echo "No release tag found after retries; nothing to publish; exiting successfully"
               exit 0
             fi
-            ASSET=noobheaders-firefox-v${TAG}.zip
+            ASSET=noobheaders-firefox.zip
           fi
           echo "TAG=$TAG" >> $GITHUB_OUTPUT
           echo "ASSET=$ASSET" >> $GITHUB_OUTPUT
@@ -63,5 +63,5 @@ jobs:
           xpi: ${{ steps.release.outputs.ASSET }}
 
       - name: Skip Firefox publish
-        if: ${{ !(secrets.FIREFOX_API_KEY && secrets.FIREFOX_API_SECRET && secrets.FIREFOX_ADDON_GUID) }}
-        run: echo "Firefox publish skipped: missing FIREFOX_API_KEY/SECRET/GUID"
+        if: '${{ !secrets.FIREFOX_API_KEY || !secrets.FIREFOX_API_SECRET || !secrets.FIREFOX_ADDON_GUID }}'
+        run: echo "Firefox publish skipped: missing FIREFOX_API_KEY/FIREFOX_API_SECRET/FIREFOX_ADDON_GUID"

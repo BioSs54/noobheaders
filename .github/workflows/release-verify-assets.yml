@@ -66,8 +66,8 @@ jobs:
                     echo "No tag provided or found - nothing to do"
                     exit 0
                   fi
-                  CHROME_ASSET=noobheaders-chrome-v${TAG}.zip
-                  FIREFOX_ASSET=noobheaders-firefox-v${TAG}.zip
+                  CHROME_ASSET=noobheaders-chrome.zip
+                  FIREFOX_ASSET=noobheaders-firefox.zip
                   echo "Looking for assets: $CHROME_ASSET and $FIREFOX_ASSET"
                   EXIST_CHROME=$(gh release view v$TAG --json assets --jq '.assets[].name' 2>/dev/null | grep -x "$CHROME_ASSET" || true)
                   EXIST_FIREFOX=$(gh release view v$TAG --json assets --jq '.assets[].name' 2>/dev/null | grep -x "$FIREFOX_ASSET" || true)
@@ -87,10 +87,10 @@ jobs:
               run: |
                   set -euo pipefail
                   TAG=${{ steps.tag.outputs.TAG }}
-                  CHROME_FILE=packages/noobheaders-chrome-v${TAG}.zip
-                  FIREFOX_FILE=packages/noobheaders-firefox-v${TAG}.zip
+                  CHROME_FILE=packages/noobheaders-chrome.zip
+                  FIREFOX_FILE=packages/noobheaders-firefox.zip
                   if [ -f "$CHROME_FILE" ]; then
-                    if ! gh release view v$TAG --json assets --jq '.assets[].name' 2>/dev/null | grep -x "noobheaders-chrome-v${TAG}.zip" >/dev/null 2>&1; then
+                    if ! gh release view v$TAG --json assets --jq '.assets[].name' 2>/dev/null | grep -x "noobheaders-chrome.zip" >/dev/null 2>&1; then
                       echo "Uploading $CHROME_FILE"
                       gh release upload v$TAG "$CHROME_FILE" --repo ${{ github.repository }}
                     else
@@ -101,7 +101,7 @@ jobs:
                   fi
 
                   if [ -f "$FIREFOX_FILE" ]; then
-                    if ! gh release view v$TAG --json assets --jq '.assets[].name' 2>/dev/null | grep -x "noobheaders-firefox-v${TAG}.zip" >/dev/null 2>&1; then
+                    if ! gh release view v$TAG --json assets --jq '.assets[].name' 2>/dev/null | grep -x "noobheaders-firefox.zip" >/dev/null 2>&1; then
                       echo "Uploading $FIREFOX_FILE"
                       gh release upload v$TAG "$FIREFOX_FILE" --repo ${{ github.repository }}
                     else

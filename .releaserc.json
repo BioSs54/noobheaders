@@ -39,18 +39,7 @@
     [
       "@semantic-release/github",
       {
-        "assets": [
-          "packages/noobheaders-chrome-v${nextRelease.version}.zip",
-          {
-            "path": "packages/noobheaders-chrome-v${nextRelease.version}.zip",
-            "name": "noobheaders-chrome.zip"
-          },
-          "packages/noobheaders-firefox-v${nextRelease.version}.zip",
-          {
-            "path": "packages/noobheaders-firefox-v${nextRelease.version}.zip",
-            "name": "noobheaders-firefox.zip"
-          }
-        ]
+        "assets": ["packages/noobheaders-chrome.zip", "packages/noobheaders-firefox.zip"]
       }
     ]
   ]

@@ -8,7 +8,7 @@ import { test } from 'node:test';
 // This test simulates packaging by copying a minimal dist into a temp dir and
 // running the packaging script logic partially (create zip files) to ensure
 // both versioned and unversioned zip files are produced.
-test('package script produces versioned and unversioned zips', async () => {
+test('package script produces unversioned zips', async () => {
   const tmp = fs.mkdtempSync(join(os.tmpdir(), 'noobheaders-package-'));
   const dist = join(tmp, 'dist');
   mkdirSync(dist, { recursive: true });
@@ -38,11 +38,9 @@ test('package script produces versioned and unversioned zips', async () => {
   mkdirSync(chromeDir, { recursive: true });
   cpSync(dist, chromeDir, { recursive: true });
 
-  const chromeZipVersioned = join(packagesDir, 'noobheaders-chrome-v9.9.9.zip');
-  const chromeZipLatest = join(packagesDir, 'noobheaders-chrome.zip');
-
+  const chromeZip = join(packagesDir, 'noobheaders-chrome.zip');
   await new Promise((resolve, reject) => {
-    const output = createWriteStream(chromeZipVersioned);
+    const output = createWriteStream(chromeZip);
     const archive = archiver('zip', { zlib: { level: 9 } });
     output.on('close', () => resolve());
     archive.on('error', (err) => reject(err));
@@ -50,9 +48,5 @@ test('package script produces versioned and unversioned zips', async () => {
     archive.directory(chromeDir, false);
     archive.finalize();
   });
-
-  cpSync(chromeZipVersioned, chromeZipLatest);
-
-  assert.ok(fs.existsSync(chromeZipVersioned));
-  assert.ok(fs.existsSync(chromeZipLatest));
+  assert.ok(fs.existsSync(chromeZip));
 });
