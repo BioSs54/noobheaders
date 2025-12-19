@@ -75,18 +75,22 @@ jobs:
                   echo "exists_firefox=$EXIST_FIREFOX" >> $GITHUB_OUTPUT
 
             - name: Build & package (if needed)
-              if: ${{ steps.check.outputs.exists_chrome == '' || steps.check.outputs.exists_firefox == '' }}
+              if: ${{ steps.tag.outputs.TAG != '' && (steps.check.outputs.exists_chrome == '' || steps.check.outputs.exists_firefox == '') }}
               run: |
                   pnpm build
                   pnpm package
 
             - name: Upload missing assets
-              if: ${{ steps.check.outputs.exists_chrome == '' || steps.check.outputs.exists_firefox == '' }}
+              if: ${{ steps.tag.outputs.TAG != '' && (steps.check.outputs.exists_chrome == '' || steps.check.outputs.exists_firefox == '') }}
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
                   set -euo pipefail
                   TAG=${{ steps.tag.outputs.TAG }}
+                  if [ -z "$TAG" ]; then
+                    echo "No tag available; nothing to upload"
+                    exit 0
+                  fi
                   CHROME_FILE=packages/noobheaders-chrome.zip
                   FIREFOX_FILE=packages/noobheaders-firefox.zip
                   if [ -f "$CHROME_FILE" ]; then

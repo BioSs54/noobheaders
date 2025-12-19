@@ -63,5 +63,6 @@ jobs:
           xpi: ${{ steps.release.outputs.ASSET }}
 
       - name: Skip Firefox publish
-        if: '${{ !secrets.FIREFOX_API_KEY || !secrets.FIREFOX_API_SECRET || !secrets.FIREFOX_ADDON_GUID }}'
+        # Skip if any required secret is missing
+        if: ${{ secrets.FIREFOX_API_KEY == null || secrets.FIREFOX_API_SECRET == null || secrets.FIREFOX_ADDON_GUID == null }}
         run: echo "Firefox publish skipped: missing FIREFOX_API_KEY/FIREFOX_API_SECRET/FIREFOX_ADDON_GUID"

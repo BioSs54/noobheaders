@@ -63,6 +63,6 @@ jobs:
           refresh-token: ${{ secrets.CHROME_REFRESH_TOKEN }}
 
       - name: Skip Chrome publish
-        # Quote the expression so YAML doesn't interpret the leading '!' as a YAML tag
-        if: '${{ !secrets.CHROME_CLIENT_ID || !secrets.CHROME_CLIENT_SECRET || !secrets.CHROME_REFRESH_TOKEN }}'
+        # Skip if any required secret is missing
+        if: ${{ secrets.CHROME_CLIENT_ID == null || secrets.CHROME_CLIENT_SECRET == null || secrets.CHROME_REFRESH_TOKEN == null }}
         run: echo "Chrome publish skipped: missing CHROME_CLIENT_ID/CHROME_CLIENT_SECRET/CHROME_REFRESH_TOKEN"
