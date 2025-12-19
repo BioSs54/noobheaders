@@ -47,6 +47,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Downloading asset: ${{ steps.release.outputs.ASSET }} (tag ${{ steps.release.outputs.TAG }})"
+          if [ -z "${{ steps.release.outputs.TAG }}" ]; then
+            echo "No release tag found — nothing to download";
+            exit 0;
+          fi
           gh release download v${{ steps.release.outputs.TAG }} --pattern "${{ steps.release.outputs.ASSET }}" --repo ${{ github.repository }}
 
       - name: Upload to Chrome Web Store
