@@ -1,3 +1,10 @@
+## [1.0.4](https://github.com/BioSs54/noobheaders/compare/v1.0.3...v1.0.4) (2025-12-19)
+
+
+### Bug Fixes
+
+* **ui:** ✨ move welcome inline script to external module (CSP-safe) ([59e777d](https://github.com/BioSs54/noobheaders/commit/59e777d9ed4d9edaf15bba6c0165eebad6ed7afd))
+
 ## [1.0.3](https://github.com/BioSs54/noobheaders/compare/v1.0.2...v1.0.3) (2025-12-19)
 
 
