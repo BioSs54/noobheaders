@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/BioSs54/noobheaders/compare/v1.0.0...v1.0.1) (2025-12-19)
+
+
+### Bug Fixes
+
+* **i18n:** localize import/confirm prompts and load welcome i18n as module ([932533d](https://github.com/BioSs54/noobheaders/commit/932533df8838f665a4580e0e016db59a767290b9))
+
 # 1.0.0 (2025-12-18)
 
 
