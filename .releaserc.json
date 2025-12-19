@@ -12,7 +12,8 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "node scripts/update-version.js ${nextRelease.version}"
+        "verifyConditionsCmd": "node scripts/verify-release-env.js",
+        "prepareCmd": "pnpm build && node scripts/update-version.js ${nextRelease.version}"
       }
     ],
     [

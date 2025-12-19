@@ -1,0 +1,54 @@
+name: Dependabot CI & Auto-merge
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, labeled]
+
+jobs:
+  dependabot-check:
+    name: Run tests and package for Dependabot PRs
+    if: >-
+      github.actor == 'dependabot[bot]' || github.actor == 'dependabot-preview[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run test suite
+        run: pnpm test
+
+      - name: Build extension
+        run: pnpm build
+
+      - name: Package extension (verify packaging)
+        run: pnpm package
+
+      - name: Auto-merge if checks passed
+        if: ${{ success() }}
+        uses: peter-evans/merge-pull-request@v3
+        with:
+          pull-request-number: ${{ github.event.pull_request.number }}
+          merge-method: squash
+          commit-title: "chore(deps): bump by Dependabot (auto-merged)"
+          commit-message: "Auto-merged by CI after successful tests and packaging"

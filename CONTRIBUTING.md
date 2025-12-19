@@ -227,6 +227,27 @@ node scripts/update-version.js 1.2.3
 
 Remember to revert those changes after testing (or commit them as part of your release branch).
 
+Pre-commit and pre-push hooks
+----------------------------
+
+To keep the repository clean and avoid manual lint/fix cycles, we run auto-fixes and formatting automatically when committing and run the test-suite before pushing:
+
+- `pre-commit`: runs `pnpm lint:fix` + `pnpm format` and stages any resulting changes automatically
+- `pre-push`: runs `pnpm test` and blocks the push if tests fail
+
+These hooks are set up using `husky` and `lint-staged`. After running `pnpm install`, run `pnpm prepare` (or `husky install`) to enable the hooks locally.
+
+Automated Dependabot merges
+---------------------------
+
+Dependabot PRs that update dependencies are automatically tested and merged when all checks pass. The workflow:
+
+- Runs the project's test suite (`pnpm test`) on the PR branch
+- Builds the extension (`pnpm build`) and attempts to package it (`pnpm package`) to verify packaging for Chrome and Firefox
+- If tests and packaging succeed, the PR is auto-merged
+
+If you prefer to opt-out for a specific dependency, add a `dependabot.yml` ignore rule or remove the `dependencies` label from the PR.
+
 ### Writing Tests
 
 - Place tests in `tests/` directory

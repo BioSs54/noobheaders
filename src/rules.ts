@@ -5,7 +5,7 @@ const DEFAULT_URL_FILTER = '*://*/*';
 export function convertProfileToRules(
   profile: { headers?: Header[]; filters?: Filter[] },
   globalEnabled: boolean,
-  ruleIdOffset: number = 1
+  ruleIdOffset = 1
 ): ModifyHeaderRule[] {
   const rules: ModifyHeaderRule[] = [];
 
@@ -28,8 +28,7 @@ export function convertProfileToRules(
     if (header.type === 'request') action.requestHeaders = [headerObj];
     else action.responseHeaders = [headerObj];
 
-    const hasFilters = profile.filters && profile.filters.length > 0;
-    const activeFilters = hasFilters ? profile.filters!.filter((f) => f.enabled && f.value) : [];
+    const activeFilters = profile.filters?.filter((f) => f.enabled && f.value) ?? [];
 
     const urlFilters = activeFilters.filter((f) => f.type === 'url');
     const domainFilters = activeFilters.filter((f) => f.type === 'domain');

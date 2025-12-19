@@ -2,9 +2,9 @@
  * NoobHeaders - Popup UI Logic
  */
 
+import { getMessage } from './i18n.js';
 import type { Filter, Header, Profile } from './types/index.js';
 import { STORAGE_KEYS } from './types/index.js';
-import { getMessage } from './i18n.js';
 
 let profiles: Profile[] = [];
 let activeProfileId: string | null = null;

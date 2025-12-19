@@ -1,0 +1,3 @@
+{
+  "*.{js,ts,tsx,jsx,json,md}": ["pnpm lint:fix", "pnpm format", "git add -A"]
+}

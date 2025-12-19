@@ -3,6 +3,8 @@
  * Clean, privacy-focused HTTP header modifier
  */
 
+import { convertProfileToRules } from './rules';
+import { STORAGE_KEYS } from './types/index.js';
 import type {
   Filter,
   Header,
@@ -11,8 +13,6 @@ import type {
   Profile,
   StorageData,
 } from './types/index.js';
-import { convertProfileToRules } from './rules';
-import { STORAGE_KEYS } from './types/index.js';
 
 const RULE_ID_OFFSET = 1;
 
