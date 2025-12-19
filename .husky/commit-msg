@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Verify commit message format: conventional commit with gitmoji after the ':'
+node ./scripts/verify-commit-msg.js "$1"

@@ -16,30 +16,43 @@ jobs:
       - name: Determine release asset
         id: release
         run: |
+          set -euo pipefail
           if [ "${{ github.event_name }}" = "release" ]; then
-            echo "TAG=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-            echo "ASSET=noobheaders-chrome-v${GITHUB_REF#refs/tags/v}.zip" >> $GITHUB_OUTPUT
+            TAG=${GITHUB_REF#refs/tags/v}
+            ASSET=noobheaders-chrome-v${TAG}.zip
+            echo "Found release event for tag: ${TAG}"
           else
-            # Fallback to latest unversioned asset
-            echo "TAG=latest" >> $GITHUB_OUTPUT
-            echo "ASSET=noobheaders-chrome.zip" >> $GITHUB_OUTPUT
+            echo "Triggered by workflow_run; discovering release tag (retries)..."
+            TAG=""
+            for i in 1 2 3 4 5; do
+              TAG=$(gh release view --json tagName --jq .tagName 2>/dev/null || echo "")
+              if [ -n "$TAG" ]; then
+                echo "Discovered release tag: $TAG"
+                break
+              fi
+              echo "Release not available yet; retrying in 5s ($i)..."
+              sleep 5
+            done
+            if [ -z "$TAG" ]; then
+              echo "No release tag found after retries; aborting"
+              exit 1
+            fi
+            ASSET=noobheaders-chrome-v${TAG}.zip
           fi
+          echo "TAG=$TAG" >> $GITHUB_OUTPUT
+          echo "ASSET=$ASSET" >> $GITHUB_OUTPUT
 
       - name: Download Chrome package
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Downloading asset: ${{ steps.release.outputs.ASSET }} (tag ${{ steps.release.outputs.TAG }})"
-          if [ "${{ steps.release.outputs.TAG }}" = "latest" ]; then
-            gh release download latest --pattern "${{ steps.release.outputs.ASSET }}" --repo ${{ github.repository }}
-          else
-            gh release download v${{ steps.release.outputs.TAG }} --pattern "${{ steps.release.outputs.ASSET }}" --repo ${{ github.repository }}
-          fi
+          gh release download v${{ steps.release.outputs.TAG }} --pattern "${{ steps.release.outputs.ASSET }}" --repo ${{ github.repository }}
 
       - name: Upload to Chrome Web Store
         uses: trmcnvn/chrome-addon@v2
         with:
-          extension: noobheaders-chrome-v${{ steps.version.outputs.VERSION }}.zip
+          extension: ${{ steps.release.outputs.ASSET }}
           extension-id: ${{ secrets.CHROME_EXTENSION_ID }}
           client-id: ${{ secrets.CHROME_CLIENT_ID }}
           client-secret: ${{ secrets.CHROME_CLIENT_SECRET }}

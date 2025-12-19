@@ -203,6 +203,17 @@ Common scopes:
 - `ci` - CI/CD
 - `docs` - Documentation
 
+## Commit message format (enforced)
+
+We enforce a Conventional Commit format with this additional rule:
+
+- The commit must follow: `<type>(<scope>)?: <gitmoji> <short description>`
+   - Example: `chore(ci): 📦 publish release assets`
+   - A Husky `commit-msg` hook runs `scripts/verify-commit-msg.js` locally to validate this format.
+   - The check requires an emoji immediately after the colon (e.g., `: 📦`) and a short description following it.
+
+If a commit fails the check the hook will block the commit and show the expected format.
+
 ## Testing
 
 ### Running Tests
