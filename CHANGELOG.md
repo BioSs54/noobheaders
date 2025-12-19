@@ -1,3 +1,11 @@
+## [1.0.3](https://github.com/BioSs54/noobheaders/compare/v1.0.2...v1.0.3) (2025-12-19)
+
+
+### Bug Fixes
+
+* **ci:** 🔧 guard release-verify-assets against empty tag; use null-checks in publish workflows ([fefb35b](https://github.com/BioSs54/noobheaders/commit/fefb35bcffbdb6b2180a3ec8263ef1d018c61ed6))
+* **ci:** 🔧 prevent uploads when tag is empty; fix YAML wrapping in publish workflows ([fcbfc30](https://github.com/BioSs54/noobheaders/commit/fcbfc30c84face269108c7cb085c31c8b4ef03ee))
+
 ## [1.0.2](https://github.com/BioSs54/noobheaders/compare/v1.0.1...v1.0.2) (2025-12-19)
 
 
