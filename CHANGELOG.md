@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/BioSs54/noobheaders/compare/v1.0.4...v1.1.0) (2025-12-23)
+
+
+### Features
+
+* **build:** 🛠️ add dual manifest packaging for Chrome and Firefox ([a8a0e60](https://github.com/BioSs54/noobheaders/commit/a8a0e603d5729749a2b27437af4413faa396a2aa))
+
 ## [1.0.4](https://github.com/BioSs54/noobheaders/compare/v1.0.3...v1.0.4) (2025-12-19)
 
 
