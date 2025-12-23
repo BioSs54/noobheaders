@@ -1,12 +1,16 @@
 name: Publish to Firefox Add-ons
 
 on:
-  release:
-    types: [published]
-  workflow_run:
-    workflows: ["Release"]
-    types: [completed]
   workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "yes" to confirm manual publish'
+        required: true
+        default: 'no'
+
+# NOTE: This workflow previously ran automatically on release/workflow_run.
+# We now require a manual dispatch with `confirm: yes` to avoid accidental publishes.
+
 
 jobs:
   publish-firefox:
@@ -15,24 +19,48 @@ jobs:
     steps:
       - name: Determine release asset
         id: release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
+
+          # Require manual confirmation input for workflow_dispatch
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [ "${{ github.event.inputs.confirm || 'no' }}" != "yes" ]; then
+              echo "Manual publish not confirmed (confirm != yes); exiting"
+              exit 0
+            fi
+          fi
+
           if [ "${{ github.event_name }}" = "release" ]; then
             TAG=${GITHUB_REF#refs/tags/v}
             ASSET=noobheaders-firefox.zip
             echo "Found release event for tag: ${TAG}"
           else
-            echo "Triggered by workflow_run; discovering release tag (retries)..."
+            echo "Triggered by workflow_run or manual dispatch; discovering release tag (retries)..."
             TAG=""
-            for i in 1 2 3 4 5; do
-              TAG=$(gh release view --json tagName --jq .tagName 2>/dev/null || echo "")
-              if [ -n "$TAG" ]; then
-                echo "Discovered release tag: $TAG"
-                break
+            # Try to extract a tag from the workflow_run payload (if present)
+            if [ -f "$GITHUB_EVENT_PATH" ]; then
+              CAND=$(jq -r '.workflow_run.head_branch // empty' "$GITHUB_EVENT_PATH" 2>/dev/null || echo "")
+              if [ -n "$CAND" ]; then
+                TAG=${CAND#refs/tags/}
+                echo "Found tag from workflow_run payload: $TAG"
               fi
-              echo "Release not available yet; retrying in 5s ($i)..."
-              sleep 5
-            done
+            fi
+
+            # If not found, poll gh release view with more retries/sleep
+            if [ -z "$TAG" ]; then
+              for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
+                TAG=$(gh release view --repo "${{ github.repository }}" --json tagName --jq .tagName 2>/dev/null || echo "")
+                if [ -n "$TAG" ]; then
+                  echo "Discovered release tag: $TAG"
+                  break
+                fi
+                echo "Release not available yet; retrying in 10s ($i)..."
+                sleep 10
+              done
+            fi
+
             if [ -z "$TAG" ]; then
               echo "No release tag found after retries; nothing to publish; exiting successfully"
               exit 0

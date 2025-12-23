@@ -54,21 +54,21 @@
 <body>
   <div class="container">
     <div class="options-header">
-      <h1>⚙️ Options</h1>
-      <p class="subtitle">Configure NoobHeaders settings</p>
+      <h1 data-i18n="options">⚙️ Options</h1>
+      <p class="subtitle" data-i18n="optionsSubtitle">Configure NoobHeaders settings</p>
     </div>
 
     <section class="section options-section">
       <div class="section-header">
-        <h2>General Settings</h2>
+        <h2 data-i18n="generalSettings">General Settings</h2>
       </div>
 
       <div class="option-item">
         <div class="option-info">
-          <h3>Auto-enable profiles</h3>
-          <p>Automatically enable new profiles when created</p>
+          <h3 data-i18n="autoEnableProfilesTitle">Auto-enable profiles</h3>
+          <p data-i18n="autoEnableProfilesDesc">Automatically enable new profiles when created</p>
         </div>
-        <label class="toggle-container">
+        <label class="toggle-container" data-i18n-title="autoEnableProfilesTitle">
           <input type="checkbox" id="auto-enable" class="toggle-input">
           <span class="toggle-slider"></span>
         </label>
@@ -76,38 +76,39 @@
 
       <div class="option-item">
         <div class="option-info">
-          <h3>Show badge count</h3>
-          <p>Display number of active headers on extension icon</p>
+          <h3 data-i18n="showBadgeTitle">Show badge count</h3>
+          <p data-i18n="showBadgeDesc">Display number of active headers on extension icon</p>
         </div>
-        <label class="toggle-container">
+        <label class="toggle-container" data-i18n-title="showBadgeTitle">
           <input type="checkbox" id="show-badge" class="toggle-input" checked disabled>
           <span class="toggle-slider"></span>
         </label>
-      </div>
+      </div> 
     </section>
 
     <section class="section options-section">
       <div class="section-header">
-        <h2>About</h2>
+        <h2 data-i18n="aboutTitle">About</h2>
       </div>
 
       <div style="padding: 16px; background: var(--background); border: 1px solid var(--border); border-radius: 8px;">
         <p style="margin-bottom: 8px;"><strong>NoobHeaders</strong> v1.1.0</p>
-        <p style="margin-bottom: 8px; font-size: 13px; color: var(--text-secondary);">
+        <p style="margin-bottom: 8px; font-size: 13px; color: var(--text-secondary);" data-i18n="aboutDesc">
           A clean, privacy-focused HTTP header modifier for developers and noobs.
         </p>
         <p style="font-size: 13px; color: var(--text-secondary);">
           Made with 💜 by <a href="https://github.com/BioSs54" target="_blank">BioSs54</a>
         </p>
         <p style="margin-top: 12px; font-size: 13px;">
-          <a href="https://github.com/BioSs54/noobheaders" target="_blank">GitHub</a> •
-          <a href="https://github.com/BioSs54/noobheaders/issues" target="_blank">Report Issue</a> •
-          <a href="https://github.com/BioSs54/noobheaders/blob/main/LICENSE" target="_blank">MIT License</a>
+          <a href="https://github.com/BioSs54/noobheaders" target="_blank" data-i18n="github">GitHub</a> •
+          <a href="https://github.com/BioSs54/noobheaders/issues" target="_blank" data-i18n="reportIssue">Report Issue</a> •
+          <a href="https://github.com/BioSs54/noobheaders/blob/main/LICENSE" target="_blank" data-i18n="mitLicense">MIT License</a>
         </p>
       </div>
     </section>
   </div>
 
+  <script type="module" src="i18n.js"></script>
   <script type="module" src="options.js"></script>
 </body>
 

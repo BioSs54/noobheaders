@@ -8,13 +8,15 @@
     "description": "Description of the extension"
   },
   "subtitle": {
-    "message": "Clean HTTP Header Modifier"
+    "message": "Modify HTTP headers easily",
+    "description": "Short app subtitle"
   },
   "headerModificationEnabled": {
-    "message": "Header Modification Enabled"
+    "message": "Enable header modifications",
+    "description": "Label for the global toggle that enables header modifications"
   },
   "activeProfile": {
-    "message": "Active Profile"
+    "message": "Selected Profile"
   },
   "addProfile": {
     "message": "Add Profile"
@@ -127,6 +129,24 @@
   "options": {
     "message": "Options"
   },
+  "optionsSubtitle": {
+    "message": "Configure NoobHeaders settings"
+  },
+  "generalSettings": {
+    "message": "General Settings"
+  },
+  "autoEnableProfilesTitle": {
+    "message": "Auto-enable profiles"
+  },
+  "autoEnableProfilesDesc": {
+    "message": "Automatically enable the extension when creating a new profile"
+  },
+  "showBadgeTitle": {
+    "message": "Show badge count"
+  },
+  "showBadgeDesc": {
+    "message": "Display number of active headers on the extension icon"
+  },
   "welcomeTitle": {
     "message": "Welcome to NoobHeaders!"
   },
@@ -198,6 +218,59 @@
   },
   "welcomeMadeWith": {
     "message": "Made with 💜 by"
+  },
+
+  "profileActivePrefix": {
+    "message": "Selected:"
+  },
+  "aboutTitle": {
+    "message": "About"
+  },
+  "aboutDesc": {
+    "message": "A clean, privacy-focused HTTP header modifier for developers and noobs."
+  },
+  "github": {
+    "message": "GitHub"
+  },
+  "reportIssue": {
+    "message": "Report Issue"
+  },
+  "mitLicense": {
+    "message": "MIT License"
+  },
+  "filterEditorType": {
+    "message": "Type"
+  },
+  "filterEditorValue": {
+    "message": "Value"
+  },
+  "filterValuePlaceholder": {
+    "message": "Enter domain or URL pattern"
+  },
+  "invalidDomain": {
+    "message": "Invalid domain or URL"
+  },
+  "errorAddingFilter": {
+    "message": "Failed to add filter"
+  },
+
+  "editorSave": {
+    "message": "Save"
+  },
+  "editorDelete": {
+    "message": "Delete"
+  },
+  "edit": {
+    "message": "Edit"
+  },
+  "editorCancel": {
+    "message": "Cancel"
+  },
+  "exportProfiles": {
+    "message": "📥 Export Profiles"
+  },
+  "importProfiles": {
+    "message": "📤 Import Profiles"
   },
   "welcomeReportIssue": {
     "message": "Report Issue"

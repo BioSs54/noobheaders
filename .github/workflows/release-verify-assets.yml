@@ -37,6 +37,8 @@ jobs:
 
             - name: Determine tag
               id: tag
+              env:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
                   set -euo pipefail
                   if [ "${{ github.event_name }}" = "release" ]; then
@@ -47,7 +49,29 @@ jobs:
                     echo "Using manual input tag: $TAG"
                   else
                     echo "Triggered by workflow_run or no input; attempting to discover latest release tag..."
-                    TAG=$(gh release view --json tagName --jq .tagName 2>/dev/null || echo "")
+
+                    # Try to extract tag from workflow_run payload if available
+                    if [ -f "$GITHUB_EVENT_PATH" ]; then
+                      CAND=$(jq -r '.workflow_run.head_branch // empty' "$GITHUB_EVENT_PATH" 2>/dev/null || echo "")
+                      if [ -n "$CAND" ]; then
+                        TAG=${CAND#refs/tags/}
+                        echo "Found tag from workflow_run payload: $TAG"
+                      fi
+                    fi
+
+                    # If still not found, poll gh release view with more retries
+                    if [ -z "$TAG" ]; then
+                      for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
+                        TAG=$(gh release view --repo "${{ github.repository }}" --json tagName --jq .tagName 2>/dev/null || echo "")
+                        if [ -n "$TAG" ]; then
+                          echo "Discovered tag: $TAG"
+                          break
+                        fi
+                        echo "No release found yet; retrying in 10s ($i)..."
+                        sleep 10
+                      done
+                    fi
+
                     if [ -z "$TAG" ]; then
                       echo "No release found. Exiting successfully." >&2
                       echo "TAG=" >> $GITHUB_OUTPUT

@@ -62,15 +62,28 @@ async function handleUpdateRules(): Promise<void> {
     const activeProfileId: string = data[STORAGE_KEYS.ACTIVE_PROFILE];
     const globalEnabled: boolean = data[STORAGE_KEYS.GLOBAL_ENABLED] || false;
 
-    const activeProfile = profiles.find((p) => p.id === activeProfileId);
-
-    if (!activeProfile) {
+    // If global is disabled, clear rules
+    if (!globalEnabled) {
       await applyRules([]);
       return;
     }
 
-    const rules = convertProfileToRules(activeProfile, globalEnabled);
-    await applyRules(rules);
+    // Merge rules from all enabled profiles. If none explicitly enabled, fall back to active profile.
+    const enabledProfiles = profiles.filter((p) => p.enabled);
+    const profilesToApply =
+      enabledProfiles.length > 0
+        ? enabledProfiles
+        : profiles.filter((p) => p.id === activeProfileId);
+
+    let rules: any[] = [];
+    let ruleIdOffset = RULE_ID_OFFSET;
+    for (const p of profilesToApply) {
+      const prs = convertProfileToRules(p, true, ruleIdOffset);
+      rules = rules.concat(prs);
+      ruleIdOffset += prs.length;
+    }
+
+    await applyRules(rules as any);
   } catch (error) {
     // Silent error handling
   }
@@ -91,21 +104,36 @@ async function updateBadge(): Promise<void> {
     const activeProfileId: string = data[STORAGE_KEYS.ACTIVE_PROFILE];
     const globalEnabled: boolean = data[STORAGE_KEYS.GLOBAL_ENABLED] || false;
 
-    const activeProfile = profiles.find((p) => p.id === activeProfileId);
-
-    if (!globalEnabled || !activeProfile) {
+    if (!globalEnabled) {
       await chrome.action.setBadgeText({ text: '' });
       await chrome.action.setBadgeBackgroundColor({ color: '#808080' });
       return;
     }
 
-    // Count active headers
-    const activeHeaders = activeProfile.headers.filter((h) => h.enabled).length;
+    // Determine profiles that contribute: enabled profiles if any, otherwise the active profile
+    const enabledProfiles = profiles.filter((p) => p.enabled);
+    const profilesToCheck =
+      enabledProfiles.length > 0
+        ? enabledProfiles
+        : profiles.filter((p) => p.id === activeProfileId);
 
-    if (activeHeaders === 0) {
+    // Get active tab URL to compute which headers actually apply
+    let url: string | undefined;
+    try {
+      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tabs && tabs.length > 0) url = tabs[0].url;
+    } catch (e) {
+      // ignore
+    }
+
+    // Count headers that are enabled and whose filters match the active URL
+    const { countApplicableHeadersForUrl } = await import('./header-utils.js');
+    const applicableCount = countApplicableHeadersForUrl(profilesToCheck, url);
+
+    if (applicableCount === 0) {
       await chrome.action.setBadgeText({ text: '' });
     } else {
-      await chrome.action.setBadgeText({ text: activeHeaders.toString() });
+      await chrome.action.setBadgeText({ text: applicableCount.toString() });
       await chrome.action.setBadgeBackgroundColor({ color: '#667eea' });
     }
   } catch (error) {
@@ -149,6 +177,41 @@ chrome.storage.onChanged.addListener(async (changes, namespace) => {
     await handleUpdateRules();
     await updateBadge();
   }
+});
+
+// Auto-switch profiles based on active tab URL
+import { selectProfileForUrl } from './auto-switch.js';
+
+async function tryAutoSwitch(tabId: number) {
+  try {
+    const tab = await chrome.tabs.get(tabId);
+    if (!tab || !tab.url) return;
+
+    const data = await chrome.storage.local.get([
+      STORAGE_KEYS.PROFILES,
+      STORAGE_KEYS.ACTIVE_PROFILE,
+    ]);
+    const profiles: Profile[] = data[STORAGE_KEYS.PROFILES] || [];
+    const activeProfileId: string = data[STORAGE_KEYS.ACTIVE_PROFILE];
+
+    const matched = selectProfileForUrl(profiles, tab.url);
+    if (matched && matched.id !== activeProfileId) {
+      await chrome.storage.local.set({ [STORAGE_KEYS.ACTIVE_PROFILE]: matched.id });
+      // handleUpdateRules will be triggered via storage.onChanged
+    }
+  } catch (e) {
+    // ignore
+  }
+}
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status === 'complete' || changeInfo.url) {
+    tryAutoSwitch(tabId);
+  }
+});
+
+chrome.tabs.onActivated.addListener(async (activeInfo) => {
+  tryAutoSwitch(activeInfo.tabId);
 });
 
 // Handle messages from popup/options

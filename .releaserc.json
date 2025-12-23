@@ -27,7 +27,7 @@
       {
         "assets": [
           "CHANGELOG.md",
-          "manifest.json",
+          "manifest*.json",
           "package.json",
           "welcome.html",
           "options.html",

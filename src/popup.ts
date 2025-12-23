@@ -2,6 +2,13 @@
  * NoobHeaders - Popup UI Logic
  */
 
+import { isValidDomain } from './auto-switch.js';
+import {
+  clearSelection,
+  getSelectedFilter,
+  selectFilter as selectFilterIndex,
+} from './filter-selection.js';
+import { detectFilterType } from './filter-utils.js';
 import { getMessage } from './i18n.js';
 import type { Filter, Header, Profile } from './types/index.js';
 import { STORAGE_KEYS } from './types/index.js';
@@ -62,11 +69,24 @@ async function loadState(): Promise<void> {
  * Save state to storage
  */
 async function saveState(): Promise<void> {
-  await chrome.storage.local.set({
-    [STORAGE_KEYS.PROFILES]: profiles,
-    [STORAGE_KEYS.ACTIVE_PROFILE]: activeProfileId,
-    [STORAGE_KEYS.GLOBAL_ENABLED]: globalEnabled,
-  });
+  try {
+    if (
+      typeof chrome === 'undefined' ||
+      !chrome.storage ||
+      !chrome.storage.local ||
+      !chrome.storage.local.set
+    ) {
+      throw new Error('chrome.storage.local.set is not available');
+    }
+    await chrome.storage.local.set({
+      [STORAGE_KEYS.PROFILES]: profiles,
+      [STORAGE_KEYS.ACTIVE_PROFILE]: activeProfileId,
+      [STORAGE_KEYS.GLOBAL_ENABLED]: globalEnabled,
+    });
+  } catch (err) {
+    console.error('saveState failed:', err);
+    throw new Error(`saveState failed: ${(err as Error).message}`);
+  }
 }
 
 /**
@@ -77,7 +97,6 @@ function setupEventListeners(): void {
   document.getElementById('global-enabled')?.addEventListener('change', toggleGlobalEnabled);
 
   // Profile controls
-  document.getElementById('profile-select')?.addEventListener('change', handleProfileChange);
   document.getElementById('add-profile-btn')?.addEventListener('click', addProfile);
   document.getElementById('delete-profile-btn')?.addEventListener('click', deleteProfile);
   document.getElementById('rename-profile-btn')?.addEventListener('click', renameProfile);
@@ -113,18 +132,97 @@ function setupEventListeners(): void {
  * Render profiles dropdown
  */
 function renderProfiles(): void {
-  const select = document.getElementById('profile-select') as HTMLSelectElement;
-  if (!select) return;
+  const radioGroup = document.getElementById('profiles-radio') as HTMLDivElement;
+  if (!radioGroup) return;
 
-  select.innerHTML = '';
+  radioGroup.innerHTML = '';
+
   profiles.forEach((profile) => {
-    const option = document.createElement('option');
-    option.value = profile.id;
-    option.textContent = profile.name;
+    const row = document.createElement('div');
+    row.className = 'profile-row';
+    row.style.display = 'flex';
+    row.style.alignItems = 'center';
+    row.style.justifyContent = 'space-between';
+    row.style.gap = '8px';
+
+    const left = document.createElement('div');
+    left.style.display = 'flex';
+    left.style.alignItems = 'center';
+    left.style.gap = '12px';
+
+    // Clickable name selects the profile (accessible)
+    const nameBtn = document.createElement('button');
+    nameBtn.className = 'btn-link profile-name-btn';
+    nameBtn.type = 'button';
+    nameBtn.textContent = profile.name;
+    nameBtn.title = chrome.i18n.getMessage('activeProfile') || 'Active Profile';
+    nameBtn.addEventListener('click', async () => {
+      activeProfileId = profile.id;
+      await saveState();
+      renderProfiles();
+      renderHeaders();
+    });
+
+    // Small toggle to enable/disable profile
+    const toggleLabel = document.createElement('label');
+    toggleLabel.className = 'toggle-container mini';
+
+    const toggleInput = document.createElement('input');
+    toggleInput.type = 'checkbox';
+    toggleInput.className = 'toggle-input';
+    toggleInput.checked = !!profile.enabled;
+    toggleInput.addEventListener('change', async (e) => {
+      profile.enabled = (e.target as HTMLInputElement).checked;
+      await saveState();
+      chrome.runtime.sendMessage({ action: 'updateRules' });
+      chrome.runtime.sendMessage({ action: 'updateBadge' });
+      renderProfiles();
+      renderHeaders();
+    });
+
+    const toggleSlider = document.createElement('span');
+    toggleSlider.className = 'toggle-slider';
+
+    toggleLabel.appendChild(toggleInput);
+    toggleLabel.appendChild(toggleSlider);
+
+    // No textual "active" marker — active profile is highlighted visually
+    left.appendChild(toggleLabel);
+    left.appendChild(nameBtn);
+
+    // Visual active state on the row
     if (profile.id === activeProfileId) {
-      option.selected = true;
+      row.classList.add('active');
+    } else {
+      row.classList.remove('active');
     }
-    select.appendChild(option);
+
+    row.appendChild(left);
+
+    // actions on the right
+    const actions = document.createElement('div');
+    actions.className = 'button-group';
+    const renameBtn = document.createElement('button');
+    renameBtn.className = 'btn-secondary';
+    renameBtn.textContent = chrome.i18n.getMessage('rename');
+    renameBtn.addEventListener('click', () => {
+      activeProfileId = profile.id;
+      renameProfile();
+    });
+
+    const dupBtn = document.createElement('button');
+    dupBtn.className = 'btn-secondary';
+    dupBtn.textContent = chrome.i18n.getMessage('duplicate');
+    dupBtn.addEventListener('click', () => {
+      activeProfileId = profile.id;
+      duplicateProfile();
+    });
+
+    actions.appendChild(renameBtn);
+    actions.appendChild(dupBtn);
+    row.appendChild(actions);
+
+    radioGroup.appendChild(row);
   });
 
   // Update delete button state
@@ -132,12 +230,93 @@ function renderProfiles(): void {
   if (deleteBtn) {
     deleteBtn.disabled = profiles.length <= 1;
   }
+
+  // Update active profile display elsewhere in the UI
+  updateActiveProfileDisplay();
+}
+
+/**
+ * Update the small divider that shows the active profile name
+ */
+function updateActiveProfileDisplay(): void {
+  const nameEl = document.getElementById('active-profile-name');
+  const container = document.getElementById('active-profile-display');
+  const active = getActiveProfile();
+  if (container) {
+    container.style.display = active ? 'flex' : 'none';
+  }
+  if (nameEl) {
+    nameEl.textContent = active ? active.name : '';
+  }
+}
+
+/**
+ * Render selected filter editor
+ */
+function renderFilterEditor(): void {
+  const editor = document.getElementById('filter-editor') as HTMLElement | null;
+  const activeProfile = getActiveProfile();
+  if (!editor || !activeProfile) return;
+
+  const sel = getSelectedFilter();
+  if (sel === null || sel < 0 || sel >= (activeProfile.filters?.length || 0)) {
+    editor.style.display = 'none';
+    return;
+  }
+
+  const filter = activeProfile.filters[sel];
+  // Populate editor fields
+  const typeEl = document.getElementById('editor-filter-type') as HTMLSelectElement;
+  const valueEl = document.getElementById('editor-filter-value') as HTMLInputElement;
+  const saveBtn = document.getElementById('editor-save-btn') as HTMLButtonElement;
+  const deleteBtn = document.getElementById('editor-delete-btn') as HTMLButtonElement;
+  const cancelBtn = document.getElementById('editor-cancel-btn') as HTMLButtonElement;
+
+  // Prepare type select
+  typeEl.innerHTML = '';
+  const urlOpt = document.createElement('option');
+  urlOpt.value = 'url';
+  urlOpt.textContent = chrome.i18n.getMessage('urlPattern');
+  const domOpt = document.createElement('option');
+  domOpt.value = 'domain';
+  domOpt.textContent = chrome.i18n.getMessage('domain');
+  typeEl.appendChild(urlOpt);
+  typeEl.appendChild(domOpt);
+  typeEl.value = filter.type;
+
+  valueEl.value = filter.value || '';
+
+  // Wire actions
+  saveBtn.onclick = async () => {
+    updateFilterType(sel, typeEl.value as 'url' | 'domain');
+    updateFilterValue(sel, valueEl.value);
+    // ensure UI updates
+    await saveState();
+    renderFilters();
+    editor.style.display = 'none';
+  };
+
+  deleteBtn.onclick = async () => {
+    await deleteFilter(sel);
+    clearSelection();
+    editor.style.display = 'none';
+  };
+
+  cancelBtn.onclick = () => {
+    clearSelection();
+    editor.style.display = 'none';
+    renderFilters();
+  };
+
+  editor.style.display = 'block';
 }
 
 /**
  * Render headers list
  */
 function renderHeaders(): void {
+  // ensure active profile display is current
+  updateActiveProfileDisplay();
   const container = document.getElementById('headers-list');
   const emptyState = document.getElementById('empty-headers') as HTMLElement;
   const activeProfile = getActiveProfile();
@@ -153,10 +332,46 @@ function renderHeaders(): void {
 
   emptyState.style.display = 'none';
 
+  // Preserve focus/selection in header inputs across re-renders
+  const active = document.activeElement as HTMLElement | null;
+  let focusedIndex: string | null = null;
+  let focusedField: string | null = null;
+  let selStart: number | null = null;
+  let selEnd: number | null = null;
+
+  if (active?.closest?.('#headers-list')) {
+    const idx = (active as HTMLElement).getAttribute('data-index');
+    const field = (active as HTMLElement).getAttribute('data-field');
+    if (idx && field) {
+      focusedIndex = idx;
+      focusedField = field;
+      if ((active as HTMLInputElement).selectionStart !== null) {
+        selStart = (active as HTMLInputElement).selectionStart;
+        selEnd = (active as HTMLInputElement).selectionEnd;
+      }
+    }
+  }
+
   activeProfile.headers.forEach((header, index) => {
     const headerEl = createHeaderElement(header, index);
     container.appendChild(headerEl);
   });
+
+  // Restore focus and selection if possible
+  if (focusedIndex !== null && focusedField !== null) {
+    const selector = `input[data-index="${focusedIndex}"][data-field="${focusedField}"]`;
+    const el = container.querySelector(selector) as HTMLInputElement | null;
+    if (el) {
+      el.focus();
+      if (selStart !== null && selEnd !== null) {
+        try {
+          el.setSelectionRange(selStart, selEnd);
+        } catch (e) {
+          // ignore if unavailable
+        }
+      }
+    }
+  }
 }
 
 /**
@@ -174,10 +389,13 @@ function createHeaderElement(header: Header, index: number): HTMLDivElement {
   toggleInput.type = 'checkbox';
   toggleInput.className = 'toggle-input';
   toggleInput.checked = header.enabled;
+  // prevent clicks on the toggle from bubbling to the row
+  toggleInput.addEventListener('click', (e) => e.stopPropagation());
   toggleInput.addEventListener('change', () => toggleHeader(index));
 
   const toggleSlider = document.createElement('span');
   toggleSlider.className = 'toggle-slider';
+  toggleLabel.addEventListener('click', (e) => e.stopPropagation());
 
   toggleLabel.appendChild(toggleInput);
   toggleLabel.appendChild(toggleSlider);
@@ -208,6 +426,9 @@ function createHeaderElement(header: Header, index: number): HTMLDivElement {
   nameInput.className = 'header-name';
   nameInput.placeholder = chrome.i18n.getMessage('headerName');
   nameInput.value = header.name || '';
+  // mark for focus preservation
+  nameInput.setAttribute('data-index', index.toString());
+  nameInput.setAttribute('data-field', 'name');
   nameInput.addEventListener('input', (e) =>
     updateHeaderName(index, (e.target as HTMLInputElement).value)
   );
@@ -218,6 +439,9 @@ function createHeaderElement(header: Header, index: number): HTMLDivElement {
   valueInput.className = 'header-value';
   valueInput.placeholder = chrome.i18n.getMessage('headerValue');
   valueInput.value = header.value || '';
+  // mark for focus preservation
+  valueInput.setAttribute('data-index', index.toString());
+  valueInput.setAttribute('data-field', 'value');
   valueInput.addEventListener('input', (e) =>
     updateHeaderValue(index, (e.target as HTMLInputElement).value)
   );
@@ -242,6 +466,8 @@ function createHeaderElement(header: Header, index: number): HTMLDivElement {
  * Render filters list
  */
 function renderFilters(): void {
+  // ensure active profile display is current
+  updateActiveProfileDisplay();
   const container = document.getElementById('filters-list');
   const emptyState = document.getElementById('empty-filters') as HTMLElement;
   const activeProfile = getActiveProfile();
@@ -252,15 +478,81 @@ function renderFilters(): void {
 
   if (!activeProfile || !activeProfile.filters || activeProfile.filters.length === 0) {
     emptyState.style.display = 'block';
+    // hide editor when there are no filters
+    const editor = document.getElementById('filter-editor') as HTMLElement | null;
+    if (editor) editor.style.display = 'none';
     return;
   }
 
   emptyState.style.display = 'none';
 
+  // Preserve focus/selection in filter inputs across re-renders
+  const active = document.activeElement as HTMLElement | null;
+  let focusedIndex: string | null = null;
+  let focusedField: string | null = null;
+  let selStart: number | null = null;
+  let selEnd: number | null = null;
+
+  if (active?.closest?.('#filters-list')) {
+    const idx = (active as HTMLElement).getAttribute('data-index');
+    const field = (active as HTMLElement).getAttribute('data-field');
+    if (idx && field) {
+      focusedIndex = idx;
+      focusedField = field;
+      if ((active as HTMLInputElement).selectionStart !== null) {
+        selStart = (active as HTMLInputElement).selectionStart;
+        selEnd = (active as HTMLInputElement).selectionEnd;
+      }
+    }
+  }
+
   activeProfile.filters.forEach((filter, index) => {
     const filterEl = createFilterElement(filter, index);
+    // highlight if selected
+    if (getSelectedFilter() === index) filterEl.classList.add('selected');
+    filterEl.addEventListener('click', (e) => {
+      // if the click originated from an interactive child (input/select/button), do nothing
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.closest('input') || target.closest('select') || target.closest('button'))
+      ) {
+        return;
+      }
+
+      // select this filter and focus inline value input (inline editing)
+      selectFilterIndex(index);
+      renderFilters();
+      // focus the input after re-render
+      const selector = `input[data-index="${index}"][data-field="value"]`;
+      const el = container.querySelector(selector) as HTMLInputElement | null;
+      if (el) {
+        el.focus();
+        try {
+          el.select();
+        } catch (e) {
+          // ignore
+        }
+      }
+    });
     container.appendChild(filterEl);
   });
+
+  // Restore focus and selection if possible
+  if (focusedIndex !== null && focusedField !== null) {
+    const selector = `input[data-index="${focusedIndex}"][data-field="${focusedField}"]`;
+    const el = container.querySelector(selector) as HTMLInputElement | null;
+    if (el) {
+      el.focus();
+      if (selStart !== null && selEnd !== null) {
+        try {
+          el.setSelectionRange(selStart, selEnd);
+        } catch (e) {
+          // ignore if unavailable
+        }
+      }
+    }
+  }
 }
 
 /**
@@ -278,17 +570,28 @@ function createFilterElement(filter: Filter, index: number): HTMLDivElement {
   toggleInput.type = 'checkbox';
   toggleInput.className = 'toggle-input';
   toggleInput.checked = filter.enabled;
+  // ensure clicking the toggle doesn't bubble up to the row click handler
+  toggleInput.addEventListener('click', (e) => {
+    e.stopPropagation();
+  });
   toggleInput.addEventListener('change', () => toggleFilter(index));
 
   const toggleSlider = document.createElement('span');
   toggleSlider.className = 'toggle-slider';
+  // also prevent label clicks from bubbling
+  toggleLabel.addEventListener('click', (e) => e.stopPropagation());
 
   toggleLabel.appendChild(toggleInput);
   toggleLabel.appendChild(toggleSlider);
 
-  // Type select
+  // Type is detected automatically by input heuristics; we don't show a type select to simplify the UI
   const typeSelect = document.createElement('select');
   typeSelect.className = 'filter-type';
+  typeSelect.style.display = 'none';
+  // mark for focus preservation
+  typeSelect.setAttribute('data-index', index.toString());
+  typeSelect.setAttribute('data-field', 'type');
+  // keep listener for internal updates only
   typeSelect.addEventListener('change', (e) =>
     updateFilterType(index, (e.target as HTMLSelectElement).value as 'url' | 'domain')
   );
@@ -310,23 +613,90 @@ function createFilterElement(filter: Filter, index: number): HTMLDivElement {
   const valueInput = document.createElement('input');
   valueInput.type = 'text';
   valueInput.className = 'filter-value';
-  valueInput.placeholder = filter.type === 'domain' ? 'example.com' : '*://example.com/*';
+  valueInput.placeholder = chrome.i18n.getMessage('filterValuePlaceholder');
   valueInput.value = filter.value || '';
-  valueInput.addEventListener('input', (e) =>
-    updateFilterValue(index, (e.target as HTMLInputElement).value)
-  );
+  // mark for focus preservation
+  valueInput.setAttribute('data-index', index.toString());
+  valueInput.setAttribute('data-field', 'value');
+  valueInput.addEventListener('input', (e) => {
+    const v = (e.target as HTMLInputElement).value;
+    updateFilterValue(index, v);
+
+    // Detect type automatically and update stored type
+    const detected = detectFilterType(v);
+    if (detected !== filter.type) {
+      updateFilterType(index, detected);
+      // reflect in select value (kept hidden)
+      typeSelect.value = detected;
+    }
+
+    // inline validation for domain filters
+    const effectiveType = typeSelect.value as 'url' | 'domain';
+    const isValid = effectiveType !== 'domain' ? true : isValidDomain(v);
+    // toggle disable if invalid
+    toggleInput.disabled = !isValid;
+    if (!isValid) {
+      div.classList.add('invalid');
+      errorSpan.style.display = 'block';
+    } else {
+      div.classList.remove('invalid');
+      errorSpan.style.display = 'none';
+    }
+  });
+  // prevent clicks on the input from bubbling up to the row (avoids immediate rerender)
+  valueInput.addEventListener('click', (e) => e.stopPropagation());
+  valueInput.addEventListener('focus', (e) => e.stopPropagation());
+
+  // Edit button (opens editor panel)
+  const editBtn = document.createElement('button');
+  editBtn.className = 'icon-btn';
+  editBtn.textContent = '✏️';
+  editBtn.title = chrome.i18n.getMessage('edit') || 'Edit';
+  editBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    selectFilterIndex(index);
+    renderFilters();
+    renderFilterEditor();
+  });
+
+  // Error span for invalid domain
+  const errorSpan = document.createElement('span');
+  errorSpan.className = 'field-error';
+  errorSpan.style.display = 'none';
+  errorSpan.textContent = chrome.i18n.getMessage('invalidDomain');
 
   // Delete button
   const deleteBtn = document.createElement('button');
   deleteBtn.className = 'icon-btn delete-btn';
   deleteBtn.textContent = '🗑️';
   deleteBtn.title = chrome.i18n.getMessage('delete');
-  deleteBtn.addEventListener('click', () => deleteFilter(index));
+  deleteBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    deleteFilter(index);
+  });
 
   div.appendChild(toggleLabel);
   div.appendChild(typeSelect);
   div.appendChild(valueInput);
+  div.appendChild(errorSpan);
+  div.appendChild(editBtn);
   div.appendChild(deleteBtn);
+
+  // initial validation and detection
+  const initialDetected = detectFilterType(filter.value || '');
+  if (!filter.type || filter.type !== initialDetected) {
+    // set stored type to detected initially (no override)
+    updateFilterType(index, initialDetected);
+    typeSelect.value = initialDetected;
+  }
+
+  const initialValid =
+    (filter.type || initialDetected) !== 'domain' ? true : isValidDomain(filter.value || '');
+  if (!initialValid) {
+    div.classList.add('invalid');
+    toggleInput.disabled = true;
+    errorSpan.style.display = 'block';
+  }
 
   return div;
 }
@@ -358,6 +728,13 @@ async function addProfile(): Promise<void> {
 
   profiles.push(newProfile);
   activeProfileId = newProfile.id;
+
+  // If user opted to auto-enable profiles, mark new profile as enabled
+  const { autoEnable } = (await chrome.storage.local.get('autoEnable')) as { autoEnable?: boolean };
+  if (autoEnable) {
+    newProfile.enabled = true;
+  }
+
   await saveState();
   renderProfiles();
   renderHeaders();
@@ -460,6 +837,10 @@ async function toggleHeader(index: number): Promise<void> {
   if (!activeProfile || !activeProfile.headers[index]) return;
   activeProfile.headers[index].enabled = !activeProfile.headers[index].enabled;
   await saveState();
+  // notify background and update badge
+  chrome.runtime.sendMessage({ action: 'updateRules' });
+  chrome.runtime.sendMessage({ action: 'updateBadge' });
+  renderHeaders();
 }
 
 /**
@@ -475,11 +856,27 @@ async function updateHeaderType(index: number, type: 'request' | 'response'): Pr
 /**
  * Update header name
  */
+let saveTimeout: number | null = null;
+
+function scheduleSave(delay = 300): void {
+  if (saveTimeout) {
+    clearTimeout(saveTimeout);
+  }
+  saveTimeout = window.setTimeout(async () => {
+    saveTimeout = null;
+    await saveState();
+    // Notify background and update badge after saving
+    chrome.runtime.sendMessage({ action: 'updateRules' });
+    chrome.runtime.sendMessage({ action: 'updateBadge' });
+  }, delay);
+}
+
 async function updateHeaderName(index: number, name: string): Promise<void> {
   const activeProfile = getActiveProfile();
   if (!activeProfile || !activeProfile.headers[index]) return;
   activeProfile.headers[index].name = name;
-  await saveState();
+  // Debounce writes to avoid re-rendering on every keystroke
+  scheduleSave();
 }
 
 /**
@@ -489,7 +886,7 @@ async function updateHeaderValue(index: number, value: string): Promise<void> {
   const activeProfile = getActiveProfile();
   if (!activeProfile || !activeProfile.headers[index]) return;
   activeProfile.headers[index].value = value;
-  await saveState();
+  scheduleSave();
 }
 
 /**
@@ -507,21 +904,41 @@ async function deleteHeader(index: number): Promise<void> {
  * Add filter
  */
 async function addFilter(): Promise<void> {
-  const activeProfile = getActiveProfile();
-  if (!activeProfile) return;
+  try {
+    const activeProfile = getActiveProfile();
+    if (!activeProfile) {
+      console.warn('No active profile found when adding filter');
+      return;
+    }
 
-  if (!activeProfile.filters) {
-    activeProfile.filters = [];
+    if (!activeProfile.filters) {
+      activeProfile.filters = [];
+    }
+
+    activeProfile.filters.push({
+      enabled: true,
+      type: 'url',
+      value: '',
+    });
+
+    try {
+      await saveState();
+    } catch (err) {
+      console.error('addFilter: saveState failed', err);
+      // Inform the user with the underlying error message for easier debugging
+      alert(
+        `${getMessage('errorAddingFilter') || 'Failed to add filter'}: ${(err as Error).message}`
+      );
+      // Still render UI to reflect in-memory change
+      renderFilters();
+      return;
+    }
+
+    renderFilters();
+  } catch (err) {
+    console.error('Failed to add filter', err);
+    alert(getMessage('errorAddingFilter') || 'Failed to add filter');
   }
-
-  activeProfile.filters.push({
-    enabled: true,
-    type: 'url',
-    value: '',
-  });
-
-  await saveState();
-  renderFilters();
 }
 
 /**
@@ -532,6 +949,11 @@ async function toggleFilter(index: number): Promise<void> {
   if (!activeProfile || !activeProfile.filters[index]) return;
   activeProfile.filters[index].enabled = !activeProfile.filters[index].enabled;
   await saveState();
+  // ensure background rules and badge update and UI reflects changes
+  chrome.runtime.sendMessage({ action: 'updateRules' });
+  chrome.runtime.sendMessage({ action: 'updateBadge' });
+  renderFilters();
+  renderFilterEditor();
 }
 
 /**
@@ -552,7 +974,8 @@ async function updateFilterValue(index: number, value: string): Promise<void> {
   const activeProfile = getActiveProfile();
   if (!activeProfile || !activeProfile.filters[index]) return;
   activeProfile.filters[index].value = value;
-  await saveState();
+  // Debounce saves to avoid re-render during typing
+  scheduleSave();
 }
 
 /**
@@ -687,4 +1110,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderHeaders();
   renderFilters();
   await updateDebugInfo();
+
+  // React to external storage changes (e.g., auto-switch from background)
+  chrome.storage.onChanged.addListener(async (changes, area) => {
+    if (
+      area === 'local' &&
+      (changes[STORAGE_KEYS.PROFILES] ||
+        changes[STORAGE_KEYS.ACTIVE_PROFILE] ||
+        changes[STORAGE_KEYS.GLOBAL_ENABLED])
+    ) {
+      await loadState();
+      renderProfiles();
+      renderHeaders();
+      renderFilters();
+      await updateDebugInfo();
+    }
+  });
 });

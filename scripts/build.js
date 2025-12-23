@@ -52,6 +52,26 @@ const builds = [
   },
   {
     ...commonOptions,
+    entryPoints: ['src/auto-switch.ts'],
+    outfile: 'dist/auto-switch.js',
+  },
+  {
+    ...commonOptions,
+    entryPoints: ['src/header-utils.ts'],
+    outfile: 'dist/header-utils.js',
+  },
+  {
+    ...commonOptions,
+    entryPoints: ['src/filter-selection.ts'],
+    outfile: 'dist/filter-selection.js',
+  },
+  {
+    ...commonOptions,
+    entryPoints: ['src/filter-utils.ts'],
+    outfile: 'dist/filter-utils.js',
+  },
+  {
+    ...commonOptions,
     entryPoints: ['src/welcome.ts'],
     outfile: 'dist/welcome.js',
   },

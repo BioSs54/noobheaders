@@ -2,14 +2,19 @@ import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
 export function updateVersionInDir(rootDir, newVersion) {
-  // Update manifest.json if present
-  const manifestPath = join(rootDir, 'manifest.json');
-  try {
-    const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'));
-    manifest.version = newVersion;
-    writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
-  } catch (e) {
-    // ignore if manifest doesn't exist
+  // Update any manifest*.json files (support manifest.json, manifest.chrome.json, manifest.firefox.json, ...)
+  const manifestFiles = readdirSync(rootDir).filter((f) => /^manifest.*\.json$/i.test(f));
+  for (const file of manifestFiles) {
+    const manifestPath = join(rootDir, file);
+    try {
+      const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'));
+      if (manifest && typeof manifest === 'object') {
+        manifest.version = newVersion;
+        writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+      }
+    } catch (e) {
+      // ignore files that are not valid JSON
+    }
   }
 
   // Update top-level HTML files

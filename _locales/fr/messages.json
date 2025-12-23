@@ -8,13 +8,14 @@
     "description": "Description de l'extension"
   },
   "subtitle": {
-    "message": "Modificateur d'En-têtes HTTP"
+    "message": "Modifiez facilement vos en‑têtes HTTP"
   },
   "headerModificationEnabled": {
-    "message": "Modification des En-têtes Activée"
+    "message": "Activer la modification des en-têtes",
+    "description": "Libellé pour le bouton global qui active la modification des en-têtes"
   },
   "activeProfile": {
-    "message": "Profil Actif"
+    "message": "Profil sélectionné"
   },
   "addProfile": {
     "message": "Ajouter un Profil"
@@ -126,6 +127,77 @@
   },
   "options": {
     "message": "Options"
+  },
+  "optionsSubtitle": {
+    "message": "Configurer les paramètres de NoobHeaders"
+  },
+  "generalSettings": {
+    "message": "Paramètres généraux"
+  },
+  "autoEnableProfilesTitle": {
+    "message": "Activation automatique des profils"
+  },
+  "autoEnableProfilesDesc": {
+    "message": "Activer automatiquement l'extension lors de la création d'un nouveau profil"
+  },
+  "showBadgeTitle": {
+    "message": "Afficher le compteur"
+  },
+  "showBadgeDesc": {
+    "message": "Afficher le nombre d'en-têtes actifs sur l'icône de l'extension"
+  },
+
+  "profileActivePrefix": {
+    "message": "Profil sélectionné :"
+  },
+  "aboutTitle": {
+    "message": "À propos"
+  },
+  "aboutDesc": {
+    "message": "Modificateur d'en-têtes HTTP propre et respectueux de la vie privée pour développeurs et noobs."
+  },
+  "github": {
+    "message": "GitHub"
+  },
+  "reportIssue": {
+    "message": "Signaler un problème"
+  },
+  "mitLicense": {
+    "message": "Licence MIT"
+  },
+  "filterEditorType": {
+    "message": "Type"
+  },
+  "filterEditorValue": {
+    "message": "Valeur"
+  },
+  "filterValuePlaceholder": {
+    "message": "Entrez un domaine ou un motif d'URL"
+  },
+  "invalidDomain": {
+    "message": "Domaine ou URL invalide"
+  },
+  "errorAddingFilter": {
+    "message": "Échec lors de l'ajout du filtre"
+  },
+
+  "editorSave": {
+    "message": "Enregistrer"
+  },
+  "editorDelete": {
+    "message": "Supprimer"
+  },
+  "edit": {
+    "message": "Éditer"
+  },
+  "editorCancel": {
+    "message": "Annuler"
+  },
+  "exportProfiles": {
+    "message": "📥 Exporter les profils"
+  },
+  "importProfiles": {
+    "message": "📤 Importer les profils"
   },
   "welcomeTitle": {
     "message": "Bienvenue sur NoobHeaders !"

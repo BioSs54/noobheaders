@@ -37,6 +37,8 @@ export interface Profile {
   id: string;
   /** Human-readable profile name */
   name: string;
+  /** Whether this profile is enabled (contributes rules when global enabled) */
+  enabled?: boolean;
   /** List of header modifications */
   headers: Header[];
   /** List of URL/domain filters */

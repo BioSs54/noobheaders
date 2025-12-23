@@ -42,7 +42,7 @@
       </div>
 
       <div class="profile-controls">
-        <select id="profile-select" class="profile-select-full"></select>
+        <div id="profiles-radio" class="profiles-radio" role="list" aria-label="Profiles"></div>
 
         <div class="button-group">
           <button id="rename-profile-btn" class="btn-secondary" data-i18n="rename">Rename</button>
@@ -50,6 +50,15 @@
         </div>
       </div>
     </section>
+
+    <div class="section-divider">
+      <hr class="divider-line" />
+      <div id="active-profile-display" class="active-profile-name">
+        <span data-i18n="profileActivePrefix">Active:</span>
+        <strong id="active-profile-name"></strong>
+      </div>
+      <hr class="divider-line" />
+    </div>
 
     <!-- Headers Section -->
     <section class="section">
@@ -79,6 +88,23 @@
         <!-- Filters will be inserted here -->
       </div>
 
+      <div id="filter-editor" class="filter-editor" style="display:none; margin-top:12px; padding:12px; border-radius:6px; background:var(--background); border:1px solid var(--border);">
+        <!-- Editor for selected filter -->
+        <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+          <label data-i18n="filterEditorType" style="min-width:70px; font-weight:600;">Type</label>
+          <select id="editor-filter-type" class="filter-type"></select>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center; margin-bottom:12px;">
+          <label data-i18n="filterEditorValue" style="min-width:70px; font-weight:600;">Value</label>
+          <input id="editor-filter-value" type="text" data-i18n-placeholder="filterValuePlaceholder" style="flex:1; padding:6px 8px; border-radius:4px; border:1px solid var(--border);" />
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button id="editor-save-btn" class="btn-primary" data-i18n="editorSave">Save</button>
+          <button id="editor-delete-btn" class="btn-danger" data-i18n="editorDelete">Delete</button>
+          <button id="editor-cancel-btn" class="btn-secondary" data-i18n="editorCancel">Cancel</button>
+        </div>
+      </div>
+
       <div class="empty-state" id="empty-filters" style="display: none;">
         <p data-i18n="noFiltersConfigured">No filters configured</p>
         <p class="empty-hint" data-i18n="headersApplyAllRequests">Headers will apply to all requests</p>
@@ -92,10 +118,8 @@
       </div>
 
       <div class="button-group">
-        <button id="export-btn" class="btn-secondary">📥 <span data-i18n="export">Export</span>
-          Profiles</button>
-        <button id="import-btn" class="btn-secondary">📤 <span data-i18n="import">Import</span>
-          Profiles</button>
+        <button id="export-btn" class="btn-secondary" data-i18n="exportProfiles">📥 Export Profiles</button>
+        <button id="import-btn" class="btn-secondary" data-i18n="importProfiles">📤 Import Profiles</button>
         <input type="file" id="import-input" accept=".json" style="display: none;">
       </div>
     </section>

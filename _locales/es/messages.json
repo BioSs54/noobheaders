@@ -8,13 +8,14 @@
     "description": "Descripción de la extensión"
   },
   "subtitle": {
-    "message": "Modificador de Encabezados HTTP"
+    "message": "Modifica fácilmente tus encabezados HTTP"
   },
   "headerModificationEnabled": {
-    "message": "Modificación de Encabezados Activada"
+    "message": "Habilitar modificación de encabezados",
+    "description": "Etiqueta para el interruptor global que habilita la modificación de encabezados"
   },
   "activeProfile": {
-    "message": "Perfil Activo"
+    "message": "Perfil seleccionado"
   },
   "addProfile": {
     "message": "Añadir Perfil"
@@ -126,6 +127,77 @@
   },
   "options": {
     "message": "Opciones"
+  },
+  "optionsSubtitle": {
+    "message": "Configurar los ajustes de NoobHeaders"
+  },
+  "aboutTitle": {
+    "message": "Acerca de"
+  },
+  "aboutDesc": {
+    "message": "Modificador de encabezados HTTP limpio y centrado en la privacidad para desarrolladores y noobs."
+  },
+  "github": {
+    "message": "GitHub"
+  },
+  "reportIssue": {
+    "message": "Reportar problema"
+  },
+  "mitLicense": {
+    "message": "Licencia MIT"
+  },
+  "filterEditorType": {
+    "message": "Tipo"
+  },
+  "filterEditorValue": {
+    "message": "Valor"
+  },
+  "filterValuePlaceholder": {
+    "message": "Ingrese dominio o patrón de URL"
+  },
+  "invalidDomain": {
+    "message": "Dominio o URL inválido"
+  },
+  "errorAddingFilter": {
+    "message": "No se pudo añadir el filtro"
+  },
+
+  "editorSave": {
+    "message": "Guardar"
+  },
+  "editorDelete": {
+    "message": "Eliminar"
+  },
+  "edit": {
+    "message": "Editar"
+  },
+  "editorCancel": {
+    "message": "Cancelar"
+  },
+  "exportProfiles": {
+    "message": "📥 Exportar perfiles"
+  },
+  "importProfiles": {
+    "message": "📤 Importar perfiles"
+  },
+
+  "profileActivePrefix": {
+    "message": "Seleccionado:"
+  },
+  "generalSettings": {
+    "message": "Ajustes generales"
+  },
+  "autoEnableProfilesTitle": {
+    "message": "Activar perfiles automáticamente"
+  },
+  "autoEnableProfilesDesc": {
+    "message": "Activar la extensión automáticamente al crear un nuevo perfil"
+  },
+  "showBadgeTitle": {
+    "message": "Mostrar contador"
+  },
+  "showBadgeDesc": {
+    "message": "Mostrar el número de encabezados activos en el icono de la extensión"
   },
   "welcomeTitle": {
     "message": "¡Bienvenido a NoobHeaders!"
