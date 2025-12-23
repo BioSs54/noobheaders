@@ -43,10 +43,14 @@ async function packageExtension() {
   // Copy files for Chrome from dist
   console.log('📁 Copying files for Chrome...');
   copyFiles(buildDistDir, chromeDir);
+  // Replace manifest.json with manifest.chrome.json
+  cpSync(join(rootDir, 'manifest.chrome.json'), join(chromeDir, 'manifest.json'));
 
-  // Copy files for Firefox (same for now)
+  // Copy files for Firefox from dist
   console.log('📁 Copying files for Firefox...');
   copyFiles(buildDistDir, firefoxDir);
+  // Replace manifest.json with manifest.firefox.json
+  cpSync(join(rootDir, 'manifest.firefox.json'), join(firefoxDir, 'manifest.json'));
 
   // Create ZIP for Chrome
   console.log('🗜️  Creating Chrome ZIP...');
