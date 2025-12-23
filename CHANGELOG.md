@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/BioSs54/noobheaders/compare/v1.1.0...v1.2.0) (2025-12-23)
+
+
+### Features
+
+* **profiles:** ✨ add activatable profiles, domain auto-switch, and popup indicators ([59ec546](https://github.com/BioSs54/noobheaders/commit/59ec5467558e0b600f13dabfe937f5bc08d1842e))
+
 # [1.1.0](https://github.com/BioSs54/noobheaders/compare/v1.0.4...v1.1.0) (2025-12-23)
 
 
