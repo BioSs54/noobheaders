@@ -20,10 +20,10 @@
 ## 🚀 Installation
 
 ### Chrome Web Store
-Coming soon!
+Available on the Chrome Web Store: [NoobHeaders — Chrome](https://chromewebstore.google.com/detail/noobheaders/djhidebmcofpbfcjfodfjhfjhmcpknkk)
 
 ### Firefox Add-ons
-Coming soon!
+Available on Mozilla Add-ons: [NoobHeaders — Firefox](https://addons.mozilla.org/fr/firefox/addon/noobheaders/)
 
 ### Manual Installation
 
