@@ -1,3 +1,10 @@
+## [2.0.1](https://github.com/BioSs54/noobheaders/compare/v2.0.0...v2.0.1) (2026-01-07)
+
+
+### Bug Fixes
+
+* **e2e:** 🐛 add biome-ignore for Playwright fixture API ([96d7225](https://github.com/BioSs54/noobheaders/commit/96d7225f7e77d420677c80c396c8ae763de1890a))
+
 # [2.0.0](https://github.com/BioSs54/noobheaders/compare/v1.2.0...v2.0.0) (2026-01-07)
 
 
