@@ -1,3 +1,15 @@
+# [2.0.0](https://github.com/BioSs54/noobheaders/compare/v1.2.0...v2.0.0) (2026-01-07)
+
+
+### Features
+
+* **ui:** ✨ improve UX with modals, focus fix, and import/export enhancements ([95160f5](https://github.com/BioSs54/noobheaders/commit/95160f58d729bf2bd3017e16e46c5837c70a9622))
+
+
+### BREAKING CHANGES
+
+* **ui:** Import/export buttons removed from popup, now accessible via Options page only
+
 # [1.2.0](https://github.com/BioSs54/noobheaders/compare/v1.1.0...v1.2.0) (2025-12-23)
 
 

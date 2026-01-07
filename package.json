@@ -1,6 +1,6 @@
 {
   "name": "noobheaders",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "description": "Clean, open-source browser extension to modify HTTP headers. No ads, no tracking. Perfect for developers and noobs 🎓",
   "private": true,
   "type": "module",
