@@ -17,7 +17,8 @@ export const test = base.extend<
 >({
   // Worker-scoped fixture: one test server per worker
   testServer: [
-    async (_context, use) => {
+    // biome-ignore lint/correctness/noEmptyPattern: Playwright fixture API requires destructured first parameter
+    async ({}, use) => {
       const server = await createTestServer(3456);
       console.log('✅ Test server started');
       await use(server);
