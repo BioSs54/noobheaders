@@ -70,11 +70,6 @@ const builds = [
     entryPoints: ['src/filter-utils.ts'],
     outfile: 'dist/filter-utils.js',
   },
-  {
-    ...commonOptions,
-    entryPoints: ['src/welcome.ts'],
-    outfile: 'dist/welcome.js',
-  },
 ];
 
 async function build() {

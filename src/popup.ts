@@ -17,6 +17,156 @@ let profiles: Profile[] = [];
 let activeProfileId: string | null = null;
 let globalEnabled = false;
 
+// Debounce timer for save operations
+let saveTimer: number | null = null;
+
+// Flag to prevent re-rendering when popup itself updates storage
+let isUpdatingStorage = false;
+
+/**
+ * Show toast notification
+ */
+function showToast(message: string, type: 'success' | 'error' | 'warning' = 'success'): void {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+
+  const icon = document.createElement('span');
+  icon.className = 'toast-icon';
+  icon.textContent = type === 'success' ? '✓' : type === 'error' ? '✕' : '⚠';
+
+  const messageEl = document.createElement('span');
+  messageEl.className = 'toast-message';
+  messageEl.textContent = message;
+
+  toast.appendChild(icon);
+  toast.appendChild(messageEl);
+  container.appendChild(toast);
+
+  // Auto-remove after 3 seconds
+  setTimeout(() => {
+    toast.classList.add('fade-out');
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+/**
+ * Show confirmation modal
+ */
+function showConfirm(title: string, message: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    const modal = document.getElementById('confirm-modal');
+    const titleEl = document.getElementById('confirm-title');
+    const messageEl = document.getElementById('confirm-message');
+    const okBtn = document.getElementById('confirm-ok');
+    const cancelBtn = document.getElementById('confirm-cancel');
+
+    if (!modal || !titleEl || !messageEl || !okBtn || !cancelBtn) {
+      resolve(false);
+      return;
+    }
+
+    titleEl.textContent = title;
+    messageEl.textContent = message;
+    modal.style.display = 'flex';
+
+    const cleanup = () => {
+      modal.style.display = 'none';
+      okBtn.removeEventListener('click', handleOk);
+      cancelBtn.removeEventListener('click', handleCancel);
+    };
+
+    const handleOk = () => {
+      cleanup();
+      resolve(true);
+    };
+
+    const handleCancel = () => {
+      cleanup();
+      resolve(false);
+    };
+
+    okBtn.addEventListener('click', handleOk);
+    cancelBtn.addEventListener('click', handleCancel);
+
+    // Close on overlay click
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        handleCancel();
+      }
+    });
+  });
+}
+
+/**
+ * Show prompt modal
+ */
+function showPrompt(title: string, message: string, defaultValue = ''): Promise<string | null> {
+  return new Promise((resolve) => {
+    const modal = document.getElementById('prompt-modal');
+    const titleEl = document.getElementById('prompt-title');
+    const messageEl = document.getElementById('prompt-message');
+    const input = document.getElementById('prompt-input') as HTMLInputElement;
+    const okBtn = document.getElementById('prompt-ok');
+    const cancelBtn = document.getElementById('prompt-cancel');
+
+    if (!modal || !titleEl || !messageEl || !input || !okBtn || !cancelBtn) {
+      resolve(null);
+      return;
+    }
+
+    titleEl.textContent = title;
+    messageEl.textContent = message;
+    input.value = defaultValue;
+    modal.style.display = 'flex';
+
+    // Focus input and select text
+    setTimeout(() => {
+      input.focus();
+      input.select();
+    }, 50);
+
+    const cleanup = () => {
+      modal.style.display = 'none';
+      okBtn.removeEventListener('click', handleOk);
+      cancelBtn.removeEventListener('click', handleCancel);
+      input.removeEventListener('keydown', handleKeydown);
+    };
+
+    const handleOk = () => {
+      const value = input.value.trim();
+      cleanup();
+      resolve(value || null);
+    };
+
+    const handleCancel = () => {
+      cleanup();
+      resolve(null);
+    };
+
+    const handleKeydown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        handleOk();
+      } else if (e.key === 'Escape') {
+        handleCancel();
+      }
+    };
+
+    okBtn.addEventListener('click', handleOk);
+    cancelBtn.addEventListener('click', handleCancel);
+    input.addEventListener('keydown', handleKeydown);
+
+    // Close on overlay click
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        handleCancel();
+      }
+    });
+  });
+}
+
 /**
  * Generate unique ID
  */
@@ -41,9 +191,9 @@ async function loadState(): Promise<void> {
     STORAGE_KEYS.GLOBAL_ENABLED,
   ]);
 
-  profiles = data[STORAGE_KEYS.PROFILES] || [];
-  activeProfileId = data[STORAGE_KEYS.ACTIVE_PROFILE];
-  globalEnabled = data[STORAGE_KEYS.GLOBAL_ENABLED] || false;
+  profiles = (data[STORAGE_KEYS.PROFILES] as Profile[]) || [];
+  activeProfileId = (data[STORAGE_KEYS.ACTIVE_PROFILE] as string) || null;
+  globalEnabled = (data[STORAGE_KEYS.GLOBAL_ENABLED] as boolean) || false;
 
   // Create default profile if none exist
   if (profiles.length === 0) {
@@ -78,15 +228,36 @@ async function saveState(): Promise<void> {
     ) {
       throw new Error('chrome.storage.local.set is not available');
     }
+    isUpdatingStorage = true;
     await chrome.storage.local.set({
       [STORAGE_KEYS.PROFILES]: profiles,
       [STORAGE_KEYS.ACTIVE_PROFILE]: activeProfileId,
       [STORAGE_KEYS.GLOBAL_ENABLED]: globalEnabled,
     });
+    // Reset flag after a short delay to catch the storage change event
+    setTimeout(() => {
+      isUpdatingStorage = false;
+    }, 100);
   } catch (err) {
     console.error('saveState failed:', err);
+    isUpdatingStorage = false;
     throw new Error(`saveState failed: ${(err as Error).message}`);
   }
+}
+
+/**
+ * Schedule save with debounce to avoid saving on every keystroke
+ */
+function scheduleSave(delay = 500): void {
+  if (saveTimer !== null) {
+    clearTimeout(saveTimer);
+  }
+  saveTimer = window.setTimeout(async () => {
+    await saveState();
+    chrome.runtime.sendMessage({ action: 'updateRules' });
+    chrome.runtime.sendMessage({ action: 'updateBadge' });
+    saveTimer = null;
+  }, delay); // 500ms debounce
 }
 
 /**
@@ -107,13 +278,6 @@ function setupEventListeners(): void {
 
   // Filter controls
   document.getElementById('add-filter-btn')?.addEventListener('click', addFilter);
-
-  // Import/Export
-  document.getElementById('export-btn')?.addEventListener('click', exportProfiles);
-  document.getElementById('import-btn')?.addEventListener('click', () => {
-    (document.getElementById('import-input') as HTMLInputElement).click();
-  });
-  document.getElementById('import-input')?.addEventListener('change', importProfiles);
 
   // Debug
   document.getElementById('toggle-debug-btn')?.addEventListener('click', toggleDebug);
@@ -702,21 +866,10 @@ function createFilterElement(filter: Filter, index: number): HTMLDivElement {
 }
 
 /**
- * Handle profile change
- */
-async function handleProfileChange(e: Event): Promise<void> {
-  activeProfileId = (e.target as HTMLSelectElement).value;
-  await saveState();
-  renderProfiles();
-  renderHeaders();
-  renderFilters();
-}
-
-/**
  * Add new profile
  */
 async function addProfile(): Promise<void> {
-  const name = prompt(getMessage('enterProfileName'));
+  const name = await showPrompt(getMessage('addProfile'), getMessage('enterProfileName'));
   if (!name) return;
 
   const newProfile: Profile = {
@@ -739,6 +892,7 @@ async function addProfile(): Promise<void> {
   renderProfiles();
   renderHeaders();
   renderFilters();
+  showToast(getMessage('profileAdded') || 'Profile added successfully', 'success');
 }
 
 /**
@@ -746,14 +900,18 @@ async function addProfile(): Promise<void> {
  */
 async function deleteProfile(): Promise<void> {
   if (profiles.length <= 1) {
-    alert(getMessage('cannotDeleteLastProfile'));
+    showToast(getMessage('cannotDeleteLastProfile'), 'warning');
     return;
   }
 
   const activeProfile = getActiveProfile();
   if (!activeProfile) return;
 
-  if (!confirm(getMessage('confirmDeleteProfile', activeProfile.name))) return;
+  const confirmed = await showConfirm(
+    getMessage('deleteProfile'),
+    getMessage('confirmDeleteProfile', activeProfile.name)
+  );
+  if (!confirmed) return;
 
   profiles = profiles.filter((p) => p.id !== activeProfileId);
   activeProfileId = profiles[0].id;
@@ -761,6 +919,7 @@ async function deleteProfile(): Promise<void> {
   renderProfiles();
   renderHeaders();
   renderFilters();
+  showToast(getMessage('profileDeleted') || 'Profile deleted', 'success');
 }
 
 /**
@@ -770,12 +929,17 @@ async function renameProfile(): Promise<void> {
   const activeProfile = getActiveProfile();
   if (!activeProfile) return;
 
-  const newName = prompt(getMessage('enterNewName'), activeProfile.name);
+  const newName = await showPrompt(
+    getMessage('rename'),
+    getMessage('enterNewName'),
+    activeProfile.name
+  );
   if (!newName) return;
 
   activeProfile.name = newName.trim();
   await saveState();
   renderProfiles();
+  showToast(getMessage('profileRenamed') || 'Profile renamed', 'success');
 }
 
 /**
@@ -856,21 +1020,6 @@ async function updateHeaderType(index: number, type: 'request' | 'response'): Pr
 /**
  * Update header name
  */
-let saveTimeout: number | null = null;
-
-function scheduleSave(delay = 300): void {
-  if (saveTimeout) {
-    clearTimeout(saveTimeout);
-  }
-  saveTimeout = window.setTimeout(async () => {
-    saveTimeout = null;
-    await saveState();
-    // Notify background and update badge after saving
-    chrome.runtime.sendMessage({ action: 'updateRules' });
-    chrome.runtime.sendMessage({ action: 'updateBadge' });
-  }, delay);
-}
-
 async function updateHeaderName(index: number, name: string): Promise<void> {
   const activeProfile = getActiveProfile();
   if (!activeProfile || !activeProfile.headers[index]) return;
@@ -926,8 +1075,9 @@ async function addFilter(): Promise<void> {
     } catch (err) {
       console.error('addFilter: saveState failed', err);
       // Inform the user with the underlying error message for easier debugging
-      alert(
-        `${getMessage('errorAddingFilter') || 'Failed to add filter'}: ${(err as Error).message}`
+      showToast(
+        `${getMessage('errorAddingFilter') || 'Failed to add filter'}: ${(err as Error).message}`,
+        'error'
       );
       // Still render UI to reflect in-memory change
       renderFilters();
@@ -937,7 +1087,7 @@ async function addFilter(): Promise<void> {
     renderFilters();
   } catch (err) {
     console.error('Failed to add filter', err);
-    alert(getMessage('errorAddingFilter') || 'Failed to add filter');
+    showToast(getMessage('errorAddingFilter') || 'Failed to add filter', 'error');
   }
 }
 
@@ -990,52 +1140,6 @@ async function deleteFilter(index: number): Promise<void> {
 }
 
 /**
- * Export profiles
- */
-function exportProfiles(): void {
-  const dataStr = JSON.stringify(profiles, null, 2);
-  const dataBlob = new Blob([dataStr], { type: 'application/json' });
-  const url = URL.createObjectURL(dataBlob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `noobheaders-profiles-${Date.now()}.json`;
-  link.click();
-  URL.revokeObjectURL(url);
-}
-
-/**
- * Import profiles
- */
-async function importProfiles(e: Event): Promise<void> {
-  const input = e.target as HTMLInputElement;
-  const file = input.files?.[0];
-  if (!file) return;
-
-  try {
-    const text = await file.text();
-    const importedProfiles: Profile[] = JSON.parse(text);
-
-    if (!Array.isArray(importedProfiles)) {
-      alert(getMessage('invalidProfileFormat'));
-      return;
-    }
-
-    if (confirm(getMessage('confirmImport', String(importedProfiles.length)))) {
-      profiles = importedProfiles;
-      activeProfileId = profiles[0]?.id || generateId();
-      await saveState();
-      renderProfiles();
-      renderHeaders();
-      renderFilters();
-    }
-  } catch (error) {
-    alert(getMessage('errorImportingProfiles', (error as Error).message));
-  }
-
-  input.value = '';
-}
-
-/**
  * Toggle debug section
  */
 function toggleDebug(): void {
@@ -1076,7 +1180,8 @@ async function updateDebugInfo(): Promise<void> {
  * Clear all data
  */
 async function clearAllData(): Promise<void> {
-  if (!confirm(getMessage('confirmClearAll'))) return;
+  const confirmed = await showConfirm(getMessage('clearAllData'), getMessage('confirmClearAll'));
+  if (!confirmed) return;
 
   await chrome.storage.local.clear();
   await loadState();
@@ -1084,6 +1189,7 @@ async function clearAllData(): Promise<void> {
   renderHeaders();
   renderFilters();
   await updateDebugInfo();
+  showToast(getMessage('dataCleared') || 'All data cleared', 'success');
 }
 
 /**
@@ -1113,6 +1219,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // React to external storage changes (e.g., auto-switch from background)
   chrome.storage.onChanged.addListener(async (changes, area) => {
+    // Ignore changes that we caused ourselves to prevent re-render during typing
+    if (isUpdatingStorage) {
+      return;
+    }
+
     if (
       area === 'local' &&
       (changes[STORAGE_KEYS.PROFILES] ||

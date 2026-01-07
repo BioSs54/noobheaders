@@ -57,6 +57,12 @@
   "importExport": {
     "message": "Import/Export"
   },
+  "importExportDesc": {
+    "message": "Backup your profiles or import profiles from a JSON file"
+  },
+  "importExportNote": {
+    "message": "Opens the Options page to avoid closing the popup"
+  },
   "export": {
     "message": "Export"
   },
@@ -98,6 +104,9 @@
   },
   "import": {
     "message": "Import"
+  },
+  "profilesExported": {
+    "message": "Profiles exported successfully"
   },
   "debug": {
     "message": "Debug"
@@ -219,7 +228,6 @@
   "welcomeMadeWith": {
     "message": "Made with 💜 by"
   },
-
   "profileActivePrefix": {
     "message": "Selected:"
   },
@@ -253,7 +261,6 @@
   "errorAddingFilter": {
     "message": "Failed to add filter"
   },
-
   "editorSave": {
     "message": "Save"
   },
@@ -274,5 +281,29 @@
   },
   "welcomeReportIssue": {
     "message": "Report Issue"
+  },
+  "cancel": {
+    "message": "Cancel"
+  },
+  "confirm": {
+    "message": "Confirm"
+  },
+  "ok": {
+    "message": "OK"
+  },
+  "profileAdded": {
+    "message": "Profile added successfully"
+  },
+  "profileDeleted": {
+    "message": "Profile deleted"
+  },
+  "profileRenamed": {
+    "message": "Profile renamed"
+  },
+  "profilesImported": {
+    "message": "Profiles imported successfully"
+  },
+  "dataCleared": {
+    "message": "All data cleared"
   }
 }

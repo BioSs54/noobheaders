@@ -9,6 +9,34 @@
 </head>
 
 <body>
+  <!-- Toast notification system -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Confirmation modal -->
+  <div id="confirm-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <h3 id="confirm-title" class="modal-title"></h3>
+      <p id="confirm-message" class="modal-message"></p>
+      <div class="modal-actions">
+        <button id="confirm-cancel" class="btn-secondary" data-i18n="cancel">Cancel</button>
+        <button id="confirm-ok" class="btn-danger" data-i18n="confirm">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prompt modal -->
+  <div id="prompt-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <h3 id="prompt-title" class="modal-title"></h3>
+      <p id="prompt-message" class="modal-message"></p>
+      <input type="text" id="prompt-input" class="modal-input" />
+      <div class="modal-actions">
+        <button id="prompt-cancel" class="btn-secondary" data-i18n="cancel">Cancel</button>
+        <button id="prompt-ok" class="btn-primary" data-i18n="ok">OK</button>
+      </div>
+    </div>
+  </div>
+
   <div class="container">
     <!-- Header -->
     <header class="header">
@@ -88,7 +116,8 @@
         <!-- Filters will be inserted here -->
       </div>
 
-      <div id="filter-editor" class="filter-editor" style="display:none; margin-top:12px; padding:12px; border-radius:6px; background:var(--background); border:1px solid var(--border);">
+      <div id="filter-editor" class="filter-editor"
+        style="display:none; margin-top:12px; padding:12px; border-radius:6px; background:var(--background); border:1px solid var(--border);">
         <!-- Editor for selected filter -->
         <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
           <label data-i18n="filterEditorType" style="min-width:70px; font-weight:600;">Type</label>
@@ -96,7 +125,8 @@
         </div>
         <div style="display:flex; gap:8px; align-items:center; margin-bottom:12px;">
           <label data-i18n="filterEditorValue" style="min-width:70px; font-weight:600;">Value</label>
-          <input id="editor-filter-value" type="text" data-i18n-placeholder="filterValuePlaceholder" style="flex:1; padding:6px 8px; border-radius:4px; border:1px solid var(--border);" />
+          <input id="editor-filter-value" type="text" data-i18n-placeholder="filterValuePlaceholder"
+            style="flex:1; padding:6px 8px; border-radius:4px; border:1px solid var(--border);" />
         </div>
         <div style="display:flex; gap:8px;">
           <button id="editor-save-btn" class="btn-primary" data-i18n="editorSave">Save</button>
@@ -108,19 +138,6 @@
       <div class="empty-state" id="empty-filters" style="display: none;">
         <p data-i18n="noFiltersConfigured">No filters configured</p>
         <p class="empty-hint" data-i18n="headersApplyAllRequests">Headers will apply to all requests</p>
-      </div>
-    </section>
-
-    <!-- Import/Export Section -->
-    <section class="section">
-      <div class="section-header">
-        <h2 data-i18n="importExport">Import/Export</h2>
-      </div>
-
-      <div class="button-group">
-        <button id="export-btn" class="btn-secondary" data-i18n="exportProfiles">📥 Export Profiles</button>
-        <button id="import-btn" class="btn-secondary" data-i18n="importProfiles">📤 Import Profiles</button>
-        <input type="file" id="import-input" accept=".json" style="display: none;">
       </div>
     </section>
 

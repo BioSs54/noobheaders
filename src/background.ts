@@ -69,7 +69,8 @@ async function handleUpdateRules(): Promise<void> {
     }
 
     // Merge rules from all enabled profiles. If none explicitly enabled, fall back to active profile.
-    const enabledProfiles = profiles.filter((p) => p.enabled);
+    // A profile is considered enabled if profile.enabled === true
+    const enabledProfiles = profiles.filter((p) => p.enabled === true);
     const profilesToApply =
       enabledProfiles.length > 0
         ? enabledProfiles
@@ -85,7 +86,7 @@ async function handleUpdateRules(): Promise<void> {
 
     await applyRules(rules as any);
   } catch (error) {
-    // Silent error handling
+    console.error('Error in handleUpdateRules:', error);
   }
 }
 
@@ -111,7 +112,8 @@ async function updateBadge(): Promise<void> {
     }
 
     // Determine profiles that contribute: enabled profiles if any, otherwise the active profile
-    const enabledProfiles = profiles.filter((p) => p.enabled);
+    // A profile is considered enabled if profile.enabled === true
+    const enabledProfiles = profiles.filter((p) => p.enabled === true);
     const profilesToCheck =
       enabledProfiles.length > 0
         ? enabledProfiles
@@ -137,7 +139,7 @@ async function updateBadge(): Promise<void> {
       await chrome.action.setBadgeBackgroundColor({ color: '#667eea' });
     }
   } catch (error) {
-    // Silent error handling
+    console.error('Error in updateBadge:', error);
   }
 }
 

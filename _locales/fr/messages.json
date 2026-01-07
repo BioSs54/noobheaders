@@ -54,13 +54,22 @@
     "message": "Les en-têtes s'appliqueront à toutes les requêtes"
   },
   "importExport": {
-    "message": "Importer/Exporter"
+    "message": "Import/Export"
+  },
+  "importExportDesc": {
+    "message": "Sauvegardez vos profils ou importez des profils depuis un fichier JSON"
+  },
+  "importExportNote": {
+    "message": "Ouvre la page Options pour éviter de fermer le popup"
   },
   "export": {
     "message": "Exporter"
   },
   "import": {
     "message": "Importer"
+  },
+  "profilesExported": {
+    "message": "Profils exportés avec succès"
   },
   "enterProfileName": {
     "message": "Entrez le nom du profil:",
@@ -146,7 +155,6 @@
   "showBadgeDesc": {
     "message": "Afficher le nombre d'en-têtes actifs sur l'icône de l'extension"
   },
-
   "profileActivePrefix": {
     "message": "Profil sélectionné :"
   },
@@ -180,7 +188,6 @@
   "errorAddingFilter": {
     "message": "Échec lors de l'ajout du filtre"
   },
-
   "editorSave": {
     "message": "Enregistrer"
   },
@@ -273,5 +280,29 @@
   },
   "welcomeReportIssue": {
     "message": "Signaler un Problème"
+  },
+  "cancel": {
+    "message": "Annuler"
+  },
+  "confirm": {
+    "message": "Confirmer"
+  },
+  "ok": {
+    "message": "OK"
+  },
+  "profileAdded": {
+    "message": "Profil ajouté avec succès"
+  },
+  "profileDeleted": {
+    "message": "Profil supprimé"
+  },
+  "profileRenamed": {
+    "message": "Profil renommé"
+  },
+  "profilesImported": {
+    "message": "Profils importés avec succès"
+  },
+  "dataCleared": {
+    "message": "Toutes les données effacées"
   }
 }

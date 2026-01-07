@@ -56,11 +56,20 @@
   "importExport": {
     "message": "Importar/Exportar"
   },
+  "importExportDesc": {
+    "message": "Haga una copia de seguridad de sus perfiles o importe perfiles desde un archivo JSON"
+  },
+  "importExportNote": {
+    "message": "Abre la página de Opciones para evitar cerrar el popup"
+  },
   "export": {
     "message": "Exportar"
   },
   "import": {
     "message": "Importar"
+  },
+  "profilesExported": {
+    "message": "Perfiles exportados con éxito"
   },
   "enterProfileName": {
     "message": "Ingrese el nombre del perfil:",
@@ -161,7 +170,6 @@
   "errorAddingFilter": {
     "message": "No se pudo añadir el filtro"
   },
-
   "editorSave": {
     "message": "Guardar"
   },
@@ -180,7 +188,6 @@
   "importProfiles": {
     "message": "📤 Importar perfiles"
   },
-
   "profileActivePrefix": {
     "message": "Seleccionado:"
   },
@@ -273,5 +280,29 @@
   },
   "welcomeReportIssue": {
     "message": "Reportar Problema"
+  },
+  "cancel": {
+    "message": "Cancelar"
+  },
+  "confirm": {
+    "message": "Confirmar"
+  },
+  "ok": {
+    "message": "OK"
+  },
+  "profileAdded": {
+    "message": "Perfil agregado exitosamente"
+  },
+  "profileDeleted": {
+    "message": "Perfil eliminado"
+  },
+  "profileRenamed": {
+    "message": "Perfil renombrado"
+  },
+  "profilesImported": {
+    "message": "Perfiles importados exitosamente"
+  },
+  "dataCleared": {
+    "message": "Todos los datos borrados"
   }
 }

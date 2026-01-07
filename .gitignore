@@ -42,3 +42,7 @@ pnpm-debug.log*
 
 # Web extension artifacts
 web-ext-artifacts/
+
+# Playwright test results
+playwright-report/
+test-results/

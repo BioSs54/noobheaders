@@ -13,7 +13,8 @@
   --text-secondary: #718096;
   --shadow: rgba(0, 0, 0, 0.1);
   --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --link-color: #2b6cb0; /* accessible link color */
+  --link-color: #2b6cb0;
+  /* accessible link color */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -27,9 +28,11 @@ a {
   color: var(--link-color);
   text-decoration: underline;
 }
+
 a:hover {
   color: var(--primary-dark);
 }
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #1a202c;
@@ -436,7 +439,8 @@ body {
   align-items: center;
   justify-content: center;
   gap: 12px;
-  margin: 18px 0 12px; /* larger top margin as requested */
+  margin: 18px 0 12px;
+  /* larger top margin as requested */
 }
 
 .section-divider .divider-line {
@@ -498,6 +502,7 @@ body {
 .filter-editor {
   box-shadow: 0 4px 12px var(--shadow);
 }
+
 .debug-content {
   margin-top: 12px;
 }
@@ -617,4 +622,199 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-secondary);
+}
+
+/* Toast Notification System */
+.toast-container {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 380px;
+  width: calc(100% - 40px);
+}
+
+.toast {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  box-shadow: 0 4px 12px var(--shadow);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: slideIn 0.3s ease-out;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.toast.error {
+  background: #fef2f2;
+  border-color: var(--danger-color);
+  color: #991b1b;
+}
+
+@media (prefers-color-scheme: dark) {
+  .toast.error {
+    background: #7f1d1d;
+    border-color: var(--danger-color);
+    color: #fecaca;
+  }
+}
+
+.toast.success {
+  background: #f0fdf4;
+  border-color: var(--success-color);
+  color: #166534;
+}
+
+@media (prefers-color-scheme: dark) {
+  .toast.success {
+    background: #14532d;
+    border-color: var(--success-color);
+    color: #bbf7d0;
+  }
+}
+
+.toast.warning {
+  background: #fefce8;
+  border-color: #facc15;
+  color: #854d0e;
+}
+
+@media (prefers-color-scheme: dark) {
+  .toast.warning {
+    background: #713f12;
+    border-color: #facc15;
+    color: #fef9c3;
+  }
+}
+
+.toast-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.toast-message {
+  flex: 1;
+  word-wrap: break-word;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.toast.fade-out {
+  animation: fadeOut 0.3s ease-out forwards;
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+/* Modal System */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-content {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 360px;
+  width: calc(100% - 40px);
+  box-shadow: 0 8px 24px var(--shadow);
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.modal-message {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.modal-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 14px;
+  background: var(--background);
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+.modal-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.modal-actions button {
+  min-width: 80px;
 }

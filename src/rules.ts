@@ -33,8 +33,8 @@ export function convertProfileToRules(
     const urlFilters = activeFilters.filter((f) => f.type === 'url');
     const domainFilters = activeFilters.filter((f) => f.type === 'domain');
 
-    const initiatorDomains =
-      domainFilters.length > 0 ? domainFilters.map((f) => f.value) : undefined;
+    // Use requestDomains to filter by destination domain, not initiatorDomains
+    const requestDomains = domainFilters.length > 0 ? domainFilters.map((f) => f.value) : undefined;
 
     if (urlFilters.length > 0) {
       urlFilters.forEach((uf) => {
@@ -57,7 +57,7 @@ export function convertProfileToRules(
           ],
         } as any;
 
-        if (initiatorDomains) condition.initiatorDomains = initiatorDomains;
+        if (requestDomains) condition.requestDomains = requestDomains;
 
         rules.push({ id: ruleId++, priority: 1, action, condition });
       });
@@ -81,7 +81,7 @@ export function convertProfileToRules(
         ],
       } as any;
 
-      if (initiatorDomains) condition.initiatorDomains = initiatorDomains;
+      if (requestDomains) condition.requestDomains = requestDomains;
 
       rules.push({ id: ruleId++, priority: 1, action, condition });
     }

@@ -83,7 +83,24 @@
           <input type="checkbox" id="show-badge" class="toggle-input" checked disabled>
           <span class="toggle-slider"></span>
         </label>
-      </div> 
+      </div>
+    </section>
+
+    <section class="section options-section">
+      <div class="section-header">
+        <h2 data-i18n="importExport">Import/Export</h2>
+      </div>
+
+      <div style="padding: 16px; background: var(--background); border: 1px solid var(--border); border-radius: 8px;">
+        <p style="margin-bottom: 16px; font-size: 13px; color: var(--text-secondary);" data-i18n="importExportDesc">
+          Backup your profiles or import profiles from a JSON file.
+        </p>
+        <div class="button-group">
+          <button id="export-profiles-btn" class="btn-secondary" data-i18n="exportProfiles">📥 Export Profiles</button>
+          <button id="import-profiles-btn" class="btn-secondary" data-i18n="importProfiles">📤 Import Profiles</button>
+          <input type="file" id="import-profiles-input" accept=".json" style="display: none;">
+        </div>
+      </div>
     </section>
 
     <section class="section options-section">
@@ -101,8 +118,10 @@
         </p>
         <p style="margin-top: 12px; font-size: 13px;">
           <a href="https://github.com/BioSs54/noobheaders" target="_blank" data-i18n="github">GitHub</a> •
-          <a href="https://github.com/BioSs54/noobheaders/issues" target="_blank" data-i18n="reportIssue">Report Issue</a> •
-          <a href="https://github.com/BioSs54/noobheaders/blob/main/LICENSE" target="_blank" data-i18n="mitLicense">MIT License</a>
+          <a href="https://github.com/BioSs54/noobheaders/issues" target="_blank" data-i18n="reportIssue">Report
+            Issue</a> •
+          <a href="https://github.com/BioSs54/noobheaders/blob/main/LICENSE" target="_blank" data-i18n="mitLicense">MIT
+            License</a>
         </p>
       </div>
     </section>
