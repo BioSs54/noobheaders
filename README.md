@@ -150,10 +150,16 @@ Run all tests:
 pnpm test
 ```
 
+Run E2E tests:
+```bash
+pnpm test:e2e
+```
+
 Tests include:
+- Unit tests for core functionality
+- E2E tests with Playwright
 - Manifest validation
 - i18n completeness
-- Utility functions
 
 ## 🤝 Contributing
 
