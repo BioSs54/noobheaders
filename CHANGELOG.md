@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/BioSs54/noobheaders/compare/v2.0.1...v2.1.0) (2026-04-17)
+
+
+### Features
+
+* **ui:** ✨ add tests and improve profile handling ([386fd19](https://github.com/BioSs54/noobheaders/commit/386fd1937d9d7c2d46122cb071423b5401d04d68))
+
 ## [2.0.1](https://github.com/BioSs54/noobheaders/compare/v2.0.0...v2.0.1) (2026-01-07)
 
 

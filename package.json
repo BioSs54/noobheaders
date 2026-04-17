@@ -1,6 +1,6 @@
 {
   "name": "noobheaders",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "Simple, privacy-focused, local-first browser extension to modify HTTP headers. No ads, no tracking. Built for developers and noobs 🚀",
   "private": true,
   "type": "module",
