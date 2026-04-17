@@ -1,11 +1,24 @@
-import type { Filter, Header, ModifyHeaderRule } from './types/index.js';
+import type { Filter, Header, ModifyHeaderRule, Profile } from './types/index.js';
 
 const DEFAULT_URL_FILTER = '*://*/*';
+
+export function resolveProfilesToApply(
+  profiles: Profile[],
+  activeProfileId?: string | null
+): Profile[] {
+  const activeProfile = profiles.find((profile) => profile.id === activeProfileId);
+  const enabledProfiles = profiles.filter(
+    (profile) => profile.enabled === true && profile.id !== activeProfileId
+  );
+
+  return activeProfile ? [...enabledProfiles, activeProfile] : enabledProfiles;
+}
 
 export function convertProfileToRules(
   profile: { headers?: Header[]; filters?: Filter[] },
   globalEnabled: boolean,
-  ruleIdOffset = 1
+  ruleIdOffset = 1,
+  priority = 1
 ): ModifyHeaderRule[] {
   const rules: ModifyHeaderRule[] = [];
 
@@ -59,7 +72,7 @@ export function convertProfileToRules(
 
         if (requestDomains) condition.requestDomains = requestDomains;
 
-        rules.push({ id: ruleId++, priority: 1, action, condition });
+        rules.push({ id: ruleId++, priority, action, condition });
       });
     } else {
       const condition: ModifyHeaderRule['condition'] = {
@@ -83,7 +96,7 @@ export function convertProfileToRules(
 
       if (requestDomains) condition.requestDomains = requestDomains;
 
-      rules.push({ id: ruleId++, priority: 1, action, condition });
+      rules.push({ id: ruleId++, priority, action, condition });
     }
   });
 

@@ -18,6 +18,12 @@ export function createTestServer(port = 3456) {
       return;
     }
 
+    if (req.url === '/favicon.ico') {
+      res.writeHead(204);
+      res.end();
+      return;
+    }
+
     if (req.url === '/headers') {
       // Return request headers as JSON
       res.setHeader('Content-Type', 'application/json');
@@ -60,13 +66,13 @@ export function createTestServer(port = 3456) {
   });
 
   return new Promise((resolve, reject) => {
-    server.listen(port, (err) => {
-      if (err) {
-        reject(err);
-      } else {
-        console.log(`Test server listening on http://localhost:${port}`);
-        resolve(server);
-      }
+    server.once('error', reject);
+    server.listen(port, () => {
+      server.off('error', reject);
+      const address = server.address();
+      const resolvedPort = typeof address === 'object' && address ? address.port : port;
+      console.log(`Test server listening on http://localhost:${resolvedPort}`);
+      resolve(server);
     });
   });
 }

@@ -31,6 +31,16 @@ describe('Popup Modal System', () => {
     assert.ok(html.includes('id="prompt-input"'), 'Prompt modal should have input element');
     assert.ok(html.includes('id="prompt-ok"'), 'Prompt modal should have OK button');
     assert.ok(html.includes('id="prompt-cancel"'), 'Prompt modal should have Cancel button');
+
+    assert.ok(html.includes('class="footer footer-compact"'), 'Footer should use compact layout');
+    assert.ok(
+      html.includes('id="easter-egg-trigger"'),
+      'Footer should expose the easter egg trigger'
+    );
+    assert.ok(
+      !html.includes('https://github.com/BioSs54"'),
+      'Footer should no longer include a separate BioSs54 profile link'
+    );
   });
 
   it('should have CSS styles for modals and toasts', async () => {
@@ -78,6 +88,10 @@ describe('Popup Modal System', () => {
     assert.ok(src.includes('function showToast('), 'Should have showToast function');
     assert.ok(src.includes('function showConfirm('), 'Should have showConfirm function');
     assert.ok(src.includes('function showPrompt('), 'Should have showPrompt function');
+    assert.ok(
+      src.includes('const EASTER_EGG_TRIGGER_COUNT = 3;'),
+      'Easter egg should trigger on triple click'
+    );
   });
 
   it('should have i18n keys for modals', async () => {
@@ -95,5 +109,6 @@ describe('Popup Modal System', () => {
     assert.ok(messages.profileRenamed, 'Should have profileRenamed key');
     assert.ok(messages.profilesImported, 'Should have profilesImported key');
     assert.ok(messages.dataCleared, 'Should have dataCleared key');
+    assert.ok(messages.noobModeActivated, 'Should have noobModeActivated key');
   });
 });

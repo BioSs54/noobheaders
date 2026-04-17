@@ -65,6 +65,11 @@ async function packageExtension() {
   console.log('✅ Packaging complete!');
   console.log(`📦 Chrome: ${chromeZip}`);
   console.log(`📦 Firefox: ${firefoxZip}`);
+  console.log(`📂 Chrome unpacked: ${chromeDir}`);
+  console.log(
+    'ℹ️  Chrome local test: unzip the archive or use packages/chrome, then chrome://extensions → Developer mode → Load unpacked.'
+  );
+  console.log('ℹ️  Do not import the ZIP directly into chrome://extensions for local testing.');
 }
 
 function copyFiles(src, dest) {

@@ -4,7 +4,7 @@
     "description": "Name of the extension"
   },
   "extensionDescription": {
-    "message": "Clean, privacy-focused HTTP header modifier for developers and noobs. No ads, no tracking.",
+    "message": "Simple, local-first HTTP header modifier for developers and noobs. No ads, no tracking.",
     "description": "Description of the extension"
   },
   "subtitle": {
@@ -160,13 +160,13 @@
     "message": "Welcome to NoobHeaders!"
   },
   "welcomeSubtitle": {
-    "message": "Clean, privacy-focused HTTP header modifier"
+    "message": "Simple, local-first HTTP header modifier"
   },
   "getStarted": {
     "message": "Get Started"
   },
   "welcomeFeatureSimpleTitle": {
-    "message": "Simple & Clean"
+    "message": "Simple & Clear"
   },
   "welcomeFeatureSimpleDesc": {
     "message": "Intuitive interface designed for developers and noobs alike. No clutter, just headers."
@@ -226,7 +226,7 @@
     "message": "Check the Debug section if something isn't working"
   },
   "welcomeMadeWith": {
-    "message": "Made with 💜 by"
+    "message": "Made by"
   },
   "profileActivePrefix": {
     "message": "Selected:"
@@ -235,10 +235,13 @@
     "message": "About"
   },
   "aboutDesc": {
-    "message": "A clean, privacy-focused HTTP header modifier for developers and noobs."
+    "message": "A simple, local-first HTTP header modifier for developers and noobs."
   },
   "github": {
     "message": "GitHub"
+  },
+  "noobModeActivated": {
+    "message": "Noob mode unlocked"
   },
   "reportIssue": {
     "message": "Report Issue"
@@ -253,7 +256,10 @@
     "message": "Value"
   },
   "filterValuePlaceholder": {
-    "message": "Enter domain or URL pattern"
+    "message": "example.com or *://*.example.com/*"
+  },
+  "filterHelpText": {
+    "message": "example.com matches the domain, while *://*.example.com/* also matches protocol and path with wildcards."
   },
   "invalidDomain": {
     "message": "Invalid domain or URL"
@@ -274,10 +280,10 @@
     "message": "Cancel"
   },
   "exportProfiles": {
-    "message": "📥 Export Profiles"
+    "message": "Export Profiles"
   },
   "importProfiles": {
-    "message": "📤 Import Profiles"
+    "message": "Import Profiles"
   },
   "welcomeReportIssue": {
     "message": "Report Issue"

@@ -2,9 +2,13 @@
  * NoobHeaders - Options Page
  */
 
+import { getBrowserApi } from './browser-compat.js';
 import { getMessage } from './i18n.js';
 import type { Profile } from './types/index.js';
 import { STORAGE_KEYS } from './types/index.js';
+import { createIcon } from './ui-icons.js';
+
+const browserAPI = getBrowserApi();
 
 interface OptionsData {
   autoEnable?: boolean;
@@ -13,7 +17,7 @@ interface OptionsData {
 }
 
 async function loadOptions(): Promise<void> {
-  const data = (await chrome.storage.local.get([
+  const data = (await browserAPI.storage.local.get([
     'autoEnable',
     'showBadge',
     'pendingAction',
@@ -33,7 +37,7 @@ async function loadOptions(): Promise<void> {
   // Handle pending action from popup
   if (data.pendingAction) {
     // Clear the pending action
-    await chrome.storage.local.remove('pendingAction');
+    await browserAPI.storage.local.remove('pendingAction');
 
     // Execute the action after a small delay to ensure UI is ready
     setTimeout(() => {
@@ -48,12 +52,12 @@ async function loadOptions(): Promise<void> {
 
 function setupListeners(): void {
   document.getElementById('auto-enable')?.addEventListener('change', async (e) => {
-    await chrome.storage.local.set({ autoEnable: (e.target as HTMLInputElement).checked });
+    await browserAPI.storage.local.set({ autoEnable: (e.target as HTMLInputElement).checked });
   });
 
   document.getElementById('show-badge')?.addEventListener('change', async (e) => {
-    await chrome.storage.local.set({ showBadge: (e.target as HTMLInputElement).checked });
-    await chrome.runtime.sendMessage({ action: 'updateBadge' });
+    await browserAPI.storage.local.set({ showBadge: (e.target as HTMLInputElement).checked });
+    await browserAPI.runtime.sendMessage({ action: 'updateBadge' });
   });
 
   // Import/Export
@@ -67,20 +71,19 @@ function setupListeners(): void {
 /**
  * Export profiles to JSON file
  */
-function exportProfiles(): void {
-  chrome.storage.local.get([STORAGE_KEYS.PROFILES], (data) => {
-    const profiles = data[STORAGE_KEYS.PROFILES] || [];
-    const dataStr = JSON.stringify(profiles, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `noobheaders-profiles-${Date.now()}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
+async function exportProfiles(): Promise<void> {
+  const data = await browserAPI.storage.local.get([STORAGE_KEYS.PROFILES]);
+  const profiles = data[STORAGE_KEYS.PROFILES] || [];
+  const dataStr = JSON.stringify(profiles, null, 2);
+  const dataBlob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(dataBlob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `noobheaders-profiles-${Date.now()}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
 
-    showToast(getMessage('profilesExported') || 'Profiles exported successfully', 'success');
-  });
+  showToast(getMessage('profilesExported') || 'Profiles exported successfully', 'success');
 }
 
 /**
@@ -93,7 +96,7 @@ async function importProfiles(e: Event): Promise<void> {
 
   try {
     const text = await file.text();
-    const importedProfiles: Profile[] = JSON.parse(text);
+    const importedProfiles = JSON.parse(text) as Profile[];
 
     if (!Array.isArray(importedProfiles)) {
       showToast(getMessage('invalidProfileFormat'), 'error');
@@ -107,7 +110,7 @@ async function importProfiles(e: Event): Promise<void> {
         typeof profile === 'object' &&
         typeof profile.id === 'string' &&
         typeof profile.name === 'string' &&
-        typeof profile.enabled === 'boolean' &&
+        (typeof profile.enabled === 'boolean' || typeof profile.enabled === 'undefined') &&
         Array.isArray(profile.headers) &&
         Array.isArray(profile.filters)
       );
@@ -124,11 +127,18 @@ async function importProfiles(e: Event): Promise<void> {
     );
 
     if (confirmed) {
-      await chrome.storage.local.set({ [STORAGE_KEYS.PROFILES]: importedProfiles });
+      const normalizedProfiles = importedProfiles.map((profile) => ({
+        ...profile,
+        enabled: profile.enabled === true,
+      }));
+
+      await browserAPI.storage.local.set({ [STORAGE_KEYS.PROFILES]: normalizedProfiles });
 
       // Select the first profile if profiles were imported
-      if (importedProfiles.length > 0) {
-        await chrome.storage.local.set({ [STORAGE_KEYS.ACTIVE_PROFILE]: importedProfiles[0].id });
+      if (normalizedProfiles.length > 0) {
+        await browserAPI.storage.local.set({
+          [STORAGE_KEYS.ACTIVE_PROFILE]: normalizedProfiles[0].id,
+        });
       }
 
       showToast(getMessage('profilesImported') || 'Profiles imported successfully', 'success');
@@ -146,10 +156,22 @@ async function importProfiles(e: Event): Promise<void> {
 function showToast(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
-  toast.innerHTML = `
-    <span class="toast-icon">${type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ'}</span>
-    <span class="toast-message">${message}</span>
-  `;
+
+  const icon = document.createElement('span');
+  icon.className = 'toast-icon';
+  icon.appendChild(
+    createIcon(
+      type === 'success' ? 'check' : type === 'error' ? 'x-mark' : 'info',
+      'ui-icon ui-icon--sm'
+    )
+  );
+
+  const text = document.createElement('span');
+  text.className = 'toast-message';
+  text.textContent = message;
+
+  toast.appendChild(icon);
+  toast.appendChild(text);
 
   document.body.appendChild(toast);
 

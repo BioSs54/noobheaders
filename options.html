@@ -20,6 +20,10 @@
     }
 
     .options-header h1 {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
       font-size: 32px;
       margin-bottom: 8px;
     }
@@ -40,13 +44,14 @@
     }
 
     .option-info h3 {
-      font-size: 16px;
+      font-size: 18px;
       margin-bottom: 4px;
     }
 
     .option-info p {
-      font-size: 13px;
+      font-size: 15px;
       color: var(--text-secondary);
+      line-height: 1.5;
     }
   </style>
 </head>
@@ -54,7 +59,12 @@
 <body>
   <div class="container">
     <div class="options-header">
-      <h1 data-i18n="options">⚙️ Options</h1>
+      <h1>
+        <svg class="ui-icon ui-icon--lg" focusable="false" aria-hidden="true">
+          <use href="icons/ui-sprite.svg#settings"></use>
+        </svg>
+        <span data-i18n="options">Options</span>
+      </h1>
       <p class="subtitle" data-i18n="optionsSubtitle">Configure NoobHeaders settings</p>
     </div>
 
@@ -96,8 +106,18 @@
           Backup your profiles or import profiles from a JSON file.
         </p>
         <div class="button-group">
-          <button id="export-profiles-btn" class="btn-secondary" data-i18n="exportProfiles">📥 Export Profiles</button>
-          <button id="import-profiles-btn" class="btn-secondary" data-i18n="importProfiles">📤 Import Profiles</button>
+          <button id="export-profiles-btn" class="btn-secondary btn-with-icon" type="button">
+            <svg class="ui-icon ui-icon--sm" focusable="false" aria-hidden="true">
+              <use href="icons/ui-sprite.svg#download"></use>
+            </svg>
+            <span data-i18n="exportProfiles">Export Profiles</span>
+          </button>
+          <button id="import-profiles-btn" class="btn-secondary btn-with-icon" type="button">
+            <svg class="ui-icon ui-icon--sm" focusable="false" aria-hidden="true">
+              <use href="icons/ui-sprite.svg#upload"></use>
+            </svg>
+            <span data-i18n="importProfiles">Import Profiles</span>
+          </button>
           <input type="file" id="import-profiles-input" accept=".json" style="display: none;">
         </div>
       </div>
@@ -111,18 +131,35 @@
       <div style="padding: 16px; background: var(--background); border: 1px solid var(--border); border-radius: 8px;">
         <p style="margin-bottom: 8px;"><strong>NoobHeaders</strong> v2.0.1</p>
         <p style="margin-bottom: 8px; font-size: 13px; color: var(--text-secondary);" data-i18n="aboutDesc">
-          A clean, privacy-focused HTTP header modifier for developers and noobs.
+          A simple, local-first HTTP header modifier for developers and noobs.
         </p>
-        <p style="font-size: 13px; color: var(--text-secondary);">
-          Made with 💜 by <a href="https://github.com/BioSs54" target="_blank">BioSs54</a>
+        <p style="font-size: 15px; color: var(--text-secondary); line-height: 1.5;">
+          <span data-i18n="welcomeMadeWith">Made by</span> <a href="https://github.com/BioSs54" target="_blank">BioSs54</a>
         </p>
-        <p style="margin-top: 12px; font-size: 13px;">
+        <p style="margin-top: 12px; font-size: 15px; line-height: 1.5;">
           <a href="https://github.com/BioSs54/noobheaders" target="_blank" data-i18n="github">GitHub</a> •
           <a href="https://github.com/BioSs54/noobheaders/issues" target="_blank" data-i18n="reportIssue">Report
             Issue</a> •
           <a href="https://github.com/BioSs54/noobheaders/blob/main/LICENSE" target="_blank" data-i18n="mitLicense">MIT
             License</a>
         </p>
+        <div class="footer-donations">
+          <p class="donations-title">Donations</p>
+          <div class="donations-links">
+            <a href="https://github.com/sponsors/BioSs54" target="_blank" rel="noreferrer" class="donation-link donation-link--sponsor">
+              <svg class="ui-icon ui-icon--sm" focusable="false" aria-hidden="true">
+                <use href="icons/ui-sprite.svg#heart"></use>
+              </svg>
+              GitHub Sponsors
+            </a>
+            <a href="https://www.paypal.com/paypalme/bioss54" target="_blank" rel="noreferrer" class="donation-link donation-link--paypal">
+              <svg class="ui-icon ui-icon--sm" focusable="false" aria-hidden="true">
+                <use href="icons/ui-sprite.svg#wallet"></use>
+              </svg>
+              PayPal
+            </a>
+          </div>
+        </div>
       </div>
     </section>
   </div>

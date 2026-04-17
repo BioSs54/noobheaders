@@ -83,6 +83,12 @@ We actively welcome your pull requests:
 # Run tests
 pnpm test
 
+# Run Chromium E2E tests
+pnpm test:e2e
+
+# Run Firefox manual validation
+pnpm test:firefox
+
 # Lint code
 pnpm run lint
 

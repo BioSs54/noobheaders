@@ -9,20 +9,28 @@ describe('Profile Enable/Disable Logic', () => {
   it('should filter enabled profiles correctly in background.ts', async () => {
     const fs = await import('node:fs/promises');
     const path = await import('node:path');
-    const src = await fs.readFile(path.join(process.cwd(), 'src/background.ts'), 'utf-8');
+    const backgroundSrc = await fs.readFile(path.join(process.cwd(), 'src/background.ts'), 'utf-8');
+    const rulesSrc = await fs.readFile(path.join(process.cwd(), 'src/rules.ts'), 'utf-8');
 
     // Should use strict equality to check enabled status
-    assert.ok(src.includes('p.enabled === true'), 'Should use strict equality for enabled check');
+    assert.ok(
+      rulesSrc.includes('profile.enabled === true'),
+      'Should use strict equality for enabled check'
+    );
+    assert.ok(
+      backgroundSrc.includes('resolveProfilesToApply(profiles, activeProfileId)'),
+      'Background should resolve contributing profiles from the selected profile plus any enabled profiles'
+    );
 
     // Should handle updateRules message
     assert.ok(
-      src.includes("message.action === 'updateRules'"),
+      backgroundSrc.includes("message.action === 'updateRules'"),
       'Should handle updateRules message'
     );
 
     // Should handle updateBadge message
     assert.ok(
-      src.includes("message.action === 'updateBadge'"),
+      backgroundSrc.includes("message.action === 'updateBadge'"),
       'Should handle updateBadge message'
     );
   });
@@ -32,18 +40,23 @@ describe('Profile Enable/Disable Logic', () => {
     const path = await import('node:path');
     const src = await fs.readFile(path.join(process.cwd(), 'src/popup.ts'), 'utf-8');
 
-    // Should send updateRules after changing profile.enabled
+    // Should trigger extension sync after changing profile.enabled
     const lines = src.split('\n');
     let foundToggle = false;
-    let foundUpdate = false;
+    let foundSync = false;
 
     for (let i = 0; i < lines.length; i++) {
       if (lines[i].includes('profile.enabled =')) {
         foundToggle = true;
-        // Check next few lines for updateRules
+        // Check next few lines for an explicit extension sync path
         for (let j = i; j < Math.min(i + 10, lines.length); j++) {
-          if (lines[j].includes('updateRules')) {
-            foundUpdate = true;
+          if (
+            lines[j].includes('syncExtension: true') ||
+            lines[j].includes('syncExtensionState(') ||
+            lines[j].includes('activateProfile(') ||
+            lines[j].includes('updateRules')
+          ) {
+            foundSync = true;
             break;
           }
         }
@@ -51,7 +64,7 @@ describe('Profile Enable/Disable Logic', () => {
     }
 
     assert.ok(foundToggle, 'Should set profile.enabled');
-    assert.ok(foundUpdate, 'Should call updateRules after toggling');
+    assert.ok(foundSync, 'Should trigger extension sync after toggling');
   });
 
   it('should have Profile type with optional enabled property', async () => {
@@ -73,7 +86,7 @@ describe('Profile Enable/Disable Logic', () => {
 
     // Find handleUpdateRules function
     const handleUpdateRulesMatch = src.match(
-      /async function handleUpdateRules\(\)[^}]+\{[\s\S]+?\n\}/
+      /async function handleUpdateRules\([^)]*\)[^}]+\{[\s\S]+?\n\}/
     );
 
     assert.ok(handleUpdateRulesMatch, 'Should have handleUpdateRules function');

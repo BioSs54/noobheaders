@@ -2,10 +2,12 @@ import { defineConfig, devices } from '@playwright/test';
 
 /**
  * Playwright configuration for E2E testing of NoobHeaders extension
- * Tests the extension in Chrome/Chromium browser
+ * Automatic E2E coverage is limited to Chromium.
+ * Firefox validation is handled manually through web-ext.
  */
 export default defineConfig({
   testDir: './e2e',
+  testIgnore: ['**/firefox-debug.spec.ts'],
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,

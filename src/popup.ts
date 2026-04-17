@@ -3,6 +3,7 @@
  */
 
 import { isValidDomain } from './auto-switch.js';
+import { getBrowserApi } from './browser-compat.js';
 import {
   clearSelection,
   getSelectedFilter,
@@ -11,17 +12,85 @@ import {
 import { detectFilterType } from './filter-utils.js';
 import { getMessage } from './i18n.js';
 import type { Filter, Header, Profile } from './types/index.js';
-import { STORAGE_KEYS } from './types/index.js';
+import { STORAGE_KEYS, createDefaultProfile, normalizeProfiles } from './types/index.js';
+import { createIcon, replaceWithIcon } from './ui-icons.js';
+
+const browserAPI = getBrowserApi();
+const EASTER_EGG_TRIGGER_COUNT = 3;
+const EASTER_EGG_RESET_DELAY_MS = 1200;
+const EASTER_EGG_DURATION_MS = 300000;
+const NOOB_MODE_UNTIL_KEY = 'noobheaders_noob_mode_until';
+const POPUP_DRAFT_STATE_KEY = 'noobheaders_popup_draft_state';
 
 let profiles: Profile[] = [];
 let activeProfileId: string | null = null;
 let globalEnabled = false;
 
-// Debounce timer for save operations
+// Debounce timer for extension sync after text input updates
 let saveTimer: number | null = null;
+let saveQueued = false;
+let saveInFlightPromise: Promise<void> | null = null;
 
 // Flag to prevent re-rendering when popup itself updates storage
 let isUpdatingStorage = false;
+let easterEggClickCount = 0;
+let easterEggResetTimer: number | null = null;
+let noobModeCountdownTimer: number | null = null;
+let noobModeUntil = 0;
+
+function persistDraftState(): void {
+  try {
+    window.localStorage.setItem(
+      POPUP_DRAFT_STATE_KEY,
+      JSON.stringify({
+        profiles,
+        activeProfileId,
+        globalEnabled,
+      })
+    );
+  } catch (error) {
+    console.warn('Failed to persist popup draft state', error);
+  }
+}
+
+function consumeDraftState(): {
+  profiles: Profile[];
+  activeProfileId: string | null;
+  globalEnabled: boolean;
+} | null {
+  try {
+    const rawDraft = window.localStorage.getItem(POPUP_DRAFT_STATE_KEY);
+    if (!rawDraft) {
+      return null;
+    }
+
+    const parsedDraft = JSON.parse(rawDraft) as {
+      profiles?: unknown;
+      activeProfileId?: string | null;
+      globalEnabled?: boolean;
+    };
+
+    window.localStorage.removeItem(POPUP_DRAFT_STATE_KEY);
+
+    return {
+      profiles: normalizeProfiles(parsedDraft.profiles),
+      activeProfileId:
+        typeof parsedDraft.activeProfileId === 'string' ? parsedDraft.activeProfileId : null,
+      globalEnabled: Boolean(parsedDraft.globalEnabled),
+    };
+  } catch (error) {
+    console.warn('Failed to restore popup draft state', error);
+    return null;
+  }
+}
+
+function clearDraftState(): void {
+  try {
+    window.localStorage.removeItem(POPUP_DRAFT_STATE_KEY);
+  } catch (error) {
+    console.warn('Failed to clear popup draft state', error);
+  }
+}
 
 /**
  * Show toast notification
@@ -35,7 +104,12 @@ function showToast(message: string, type: 'success' | 'error' | 'warning' = 'suc
 
   const icon = document.createElement('span');
   icon.className = 'toast-icon';
-  icon.textContent = type === 'success' ? '✓' : type === 'error' ? '✕' : '⚠';
+  icon.appendChild(
+    createIcon(
+      type === 'success' ? 'check' : type === 'error' ? 'x-mark' : 'alert',
+      'ui-icon ui-icon--sm'
+    )
+  );
 
   const messageEl = document.createElement('span');
   messageEl.className = 'toast-message';
@@ -185,27 +259,33 @@ function getActiveProfile(): Profile | undefined {
  * Load state from storage
  */
 async function loadState(): Promise<void> {
-  const data = await chrome.storage.local.get([
+  const data = await browserAPI.storage.local.get([
     STORAGE_KEYS.PROFILES,
     STORAGE_KEYS.ACTIVE_PROFILE,
     STORAGE_KEYS.GLOBAL_ENABLED,
   ]);
 
-  profiles = (data[STORAGE_KEYS.PROFILES] as Profile[]) || [];
+  // Deep clone profiles to avoid shared references
+  const storedProfiles = normalizeProfiles(data[STORAGE_KEYS.PROFILES]);
+  profiles = JSON.parse(JSON.stringify(storedProfiles));
   activeProfileId = (data[STORAGE_KEYS.ACTIVE_PROFILE] as string) || null;
   globalEnabled = (data[STORAGE_KEYS.GLOBAL_ENABLED] as boolean) || false;
 
   // Create default profile if none exist
   if (profiles.length === 0) {
-    const defaultProfile: Profile = {
-      id: generateId(),
-      name: 'Default Profile',
-      headers: [],
-      filters: [],
-    };
+    const defaultProfile: Profile = createDefaultProfile(generateId());
     profiles = [defaultProfile];
     activeProfileId = defaultProfile.id;
     await saveState();
+  }
+
+  const draftState = consumeDraftState();
+  if (draftState) {
+    profiles = JSON.parse(JSON.stringify(draftState.profiles));
+    activeProfileId = draftState.activeProfileId;
+    globalEnabled = draftState.globalEnabled;
+    await saveState();
+    await syncExtensionState();
   }
 
   // Update UI
@@ -220,20 +300,16 @@ async function loadState(): Promise<void> {
  */
 async function saveState(): Promise<void> {
   try {
-    if (
-      typeof chrome === 'undefined' ||
-      !chrome.storage ||
-      !chrome.storage.local ||
-      !chrome.storage.local.set
-    ) {
-      throw new Error('chrome.storage.local.set is not available');
+    if (!browserAPI.storage || !browserAPI.storage.local || !browserAPI.storage.local.set) {
+      throw new Error('browserAPI.storage.local.set is not available');
     }
     isUpdatingStorage = true;
-    await chrome.storage.local.set({
+    await browserAPI.storage.local.set({
       [STORAGE_KEYS.PROFILES]: profiles,
       [STORAGE_KEYS.ACTIVE_PROFILE]: activeProfileId,
       [STORAGE_KEYS.GLOBAL_ENABLED]: globalEnabled,
     });
+    clearDraftState();
     // Reset flag after a short delay to catch the storage change event
     setTimeout(() => {
       isUpdatingStorage = false;
@@ -245,19 +321,132 @@ async function saveState(): Promise<void> {
   }
 }
 
+async function saveStateImmediately(): Promise<void> {
+  if (saveInFlightPromise) {
+    saveQueued = true;
+    await saveInFlightPromise;
+    return;
+  }
+
+  saveInFlightPromise = (async () => {
+    do {
+      saveQueued = false;
+      await saveState();
+    } while (saveQueued);
+  })();
+
+  try {
+    await saveInFlightPromise;
+  } finally {
+    saveInFlightPromise = null;
+  }
+}
+
+interface PersistOptions {
+  refresh?: boolean;
+  syncExtension?: boolean;
+}
+
+function getCurrentStateSnapshot() {
+  return {
+    profiles: JSON.stringify(profiles),
+    activeProfileId: activeProfileId ?? null,
+    globalEnabled,
+  };
+}
+
+function matchesCurrentState(changes: { [key: string]: chrome.storage.StorageChange }): boolean {
+  const current = getCurrentStateSnapshot();
+
+  if (changes[STORAGE_KEYS.PROFILES]) {
+    const nextProfiles = JSON.stringify(normalizeProfiles(changes[STORAGE_KEYS.PROFILES].newValue));
+    if (nextProfiles !== current.profiles) {
+      return false;
+    }
+  }
+
+  if (changes[STORAGE_KEYS.ACTIVE_PROFILE]) {
+    if ((changes[STORAGE_KEYS.ACTIVE_PROFILE].newValue ?? null) !== current.activeProfileId) {
+      return false;
+    }
+  }
+
+  if (changes[STORAGE_KEYS.GLOBAL_ENABLED]) {
+    if (Boolean(changes[STORAGE_KEYS.GLOBAL_ENABLED].newValue) !== current.globalEnabled) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+async function syncExtensionState(): Promise<void> {
+  await browserAPI.runtime.sendMessage({
+    action: 'updateRules',
+    state: {
+      profiles,
+      activeProfileId,
+      globalEnabled,
+    },
+  });
+  await browserAPI.runtime.sendMessage({ action: 'updateBadge' });
+  await updateDebugInfo();
+}
+
+async function getBackgroundDebugState(): Promise<any | null> {
+  try {
+    return await browserAPI.runtime.sendMessage({ action: 'getDebugState' });
+  } catch (error) {
+    console.warn('Failed to read background debug state', error);
+    return null;
+  }
+}
+
+async function persistPopupState(options: PersistOptions = {}): Promise<void> {
+  const { refresh = false, syncExtension = false } = options;
+
+  await saveState();
+
+  if (syncExtension) {
+    await syncExtensionState();
+  }
+
+  if (refresh) {
+    await refreshPopupUi();
+  }
+}
+
+async function flushPendingSave(syncExtension = true): Promise<void> {
+  await saveStateImmediately();
+
+  if (saveTimer !== null) {
+    clearTimeout(saveTimer);
+    saveTimer = null;
+  }
+
+  if (syncExtension) {
+    await syncExtensionState();
+  }
+}
+
 /**
- * Schedule save with debounce to avoid saving on every keystroke
+ * Save to storage immediately, but debounce extension rule updates while typing
  */
 function scheduleSave(delay = 500): void {
+  persistDraftState();
+  void saveStateImmediately();
+
   if (saveTimer !== null) {
     clearTimeout(saveTimer);
   }
+
   saveTimer = window.setTimeout(async () => {
-    await saveState();
-    chrome.runtime.sendMessage({ action: 'updateRules' });
-    chrome.runtime.sendMessage({ action: 'updateBadge' });
-    saveTimer = null;
-  }, delay); // 500ms debounce
+    try {
+      await syncExtensionState();
+    } finally {
+      saveTimer = null;
+    }
+  }, delay);
 }
 
 /**
@@ -285,11 +474,21 @@ function setupEventListeners(): void {
 
   // Options
   document.getElementById('options-btn')?.addEventListener('click', () => {
-    chrome.runtime.openOptionsPage();
+    browserAPI.runtime.openOptionsPage();
   });
 
   // Easter egg
   document.getElementById('easter-egg-trigger')?.addEventListener('click', triggerEasterEgg);
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      void flushPendingSave();
+    }
+  });
+
+  window.addEventListener('pagehide', () => {
+    void flushPendingSave();
+  });
 }
 
 /**
@@ -304,27 +503,24 @@ function renderProfiles(): void {
   profiles.forEach((profile) => {
     const row = document.createElement('div');
     row.className = 'profile-row';
-    row.style.display = 'flex';
-    row.style.alignItems = 'center';
-    row.style.justifyContent = 'space-between';
-    row.style.gap = '8px';
 
-    const left = document.createElement('div');
-    left.style.display = 'flex';
-    left.style.alignItems = 'center';
-    left.style.gap = '12px';
+    const main = document.createElement('div');
+    main.className = 'profile-row-main';
+
+    const copy = document.createElement('div');
+    copy.className = 'profile-row-copy';
+
+    const headline = document.createElement('div');
+    headline.className = 'profile-row-headline';
 
     // Clickable name selects the profile (accessible)
     const nameBtn = document.createElement('button');
     nameBtn.className = 'btn-link profile-name-btn';
     nameBtn.type = 'button';
     nameBtn.textContent = profile.name;
-    nameBtn.title = chrome.i18n.getMessage('activeProfile') || 'Active Profile';
+    nameBtn.title = browserAPI.i18n.getMessage('activeProfile') || 'Active Profile';
     nameBtn.addEventListener('click', async () => {
-      activeProfileId = profile.id;
-      await saveState();
-      renderProfiles();
-      renderHeaders();
+      await activateProfile(profile.id);
     });
 
     // Small toggle to enable/disable profile
@@ -337,11 +533,7 @@ function renderProfiles(): void {
     toggleInput.checked = !!profile.enabled;
     toggleInput.addEventListener('change', async (e) => {
       profile.enabled = (e.target as HTMLInputElement).checked;
-      await saveState();
-      chrome.runtime.sendMessage({ action: 'updateRules' });
-      chrome.runtime.sendMessage({ action: 'updateBadge' });
-      renderProfiles();
-      renderHeaders();
+      await activateProfile(profile.id);
     });
 
     const toggleSlider = document.createElement('span');
@@ -350,41 +542,28 @@ function renderProfiles(): void {
     toggleLabel.appendChild(toggleInput);
     toggleLabel.appendChild(toggleSlider);
 
-    // No textual "active" marker — active profile is highlighted visually
-    left.appendChild(toggleLabel);
-    left.appendChild(nameBtn);
+    const meta = document.createElement('div');
+    meta.className = 'profile-row-meta';
+    meta.textContent = `${profile.headers?.length || 0} ${getMessage('headers')} • ${profile.filters?.length || 0} ${getMessage('filters')}`;
 
-    // Visual active state on the row
     if (profile.id === activeProfileId) {
+      const badge = document.createElement('span');
+      badge.className = 'profile-status-badge';
+      badge.textContent = (getMessage('profileActivePrefix') || 'Selected')
+        .replace(/\s*:\s*$/, '')
+        .trim();
+      headline.appendChild(badge);
       row.classList.add('active');
     } else {
       row.classList.remove('active');
     }
 
-    row.appendChild(left);
-
-    // actions on the right
-    const actions = document.createElement('div');
-    actions.className = 'button-group';
-    const renameBtn = document.createElement('button');
-    renameBtn.className = 'btn-secondary';
-    renameBtn.textContent = chrome.i18n.getMessage('rename');
-    renameBtn.addEventListener('click', () => {
-      activeProfileId = profile.id;
-      renameProfile();
-    });
-
-    const dupBtn = document.createElement('button');
-    dupBtn.className = 'btn-secondary';
-    dupBtn.textContent = chrome.i18n.getMessage('duplicate');
-    dupBtn.addEventListener('click', () => {
-      activeProfileId = profile.id;
-      duplicateProfile();
-    });
-
-    actions.appendChild(renameBtn);
-    actions.appendChild(dupBtn);
-    row.appendChild(actions);
+    headline.appendChild(nameBtn);
+    copy.appendChild(headline);
+    copy.appendChild(meta);
+    main.appendChild(toggleLabel);
+    main.appendChild(copy);
+    row.appendChild(main);
 
     radioGroup.appendChild(row);
   });
@@ -405,6 +584,8 @@ function renderProfiles(): void {
 function updateActiveProfileDisplay(): void {
   const nameEl = document.getElementById('active-profile-name');
   const container = document.getElementById('active-profile-display');
+  const renameBtn = document.getElementById('rename-profile-btn') as HTMLButtonElement | null;
+  const duplicateBtn = document.getElementById('duplicate-profile-btn') as HTMLButtonElement | null;
   const active = getActiveProfile();
   if (container) {
     container.style.display = active ? 'flex' : 'none';
@@ -412,6 +593,35 @@ function updateActiveProfileDisplay(): void {
   if (nameEl) {
     nameEl.textContent = active ? active.name : '';
   }
+  if (renameBtn) {
+    renameBtn.disabled = !active;
+  }
+  if (duplicateBtn) {
+    duplicateBtn.disabled = !active;
+  }
+}
+
+function refreshProfileViews(): void {
+  renderProfiles();
+  renderHeaders();
+  renderFilters();
+  renderFilterEditor();
+}
+
+async function refreshPopupUi(): Promise<void> {
+  refreshProfileViews();
+  await updateDebugInfo();
+}
+
+async function activateProfile(profileId: string, persist = true): Promise<void> {
+  activeProfileId = profileId;
+
+  if (persist) {
+    await saveState();
+    await syncExtensionState();
+  }
+
+  await refreshPopupUi();
 }
 
 /**
@@ -422,7 +632,7 @@ function renderFilterEditor(): void {
   const activeProfile = getActiveProfile();
   if (!editor || !activeProfile) return;
 
-  const sel = getSelectedFilter();
+  const sel = getSelectedFilter(activeProfileId);
   if (sel === null || sel < 0 || sel >= (activeProfile.filters?.length || 0)) {
     editor.style.display = 'none';
     return;
@@ -430,44 +640,30 @@ function renderFilterEditor(): void {
 
   const filter = activeProfile.filters[sel];
   // Populate editor fields
-  const typeEl = document.getElementById('editor-filter-type') as HTMLSelectElement;
   const valueEl = document.getElementById('editor-filter-value') as HTMLInputElement;
   const saveBtn = document.getElementById('editor-save-btn') as HTMLButtonElement;
   const deleteBtn = document.getElementById('editor-delete-btn') as HTMLButtonElement;
   const cancelBtn = document.getElementById('editor-cancel-btn') as HTMLButtonElement;
 
-  // Prepare type select
-  typeEl.innerHTML = '';
-  const urlOpt = document.createElement('option');
-  urlOpt.value = 'url';
-  urlOpt.textContent = chrome.i18n.getMessage('urlPattern');
-  const domOpt = document.createElement('option');
-  domOpt.value = 'domain';
-  domOpt.textContent = chrome.i18n.getMessage('domain');
-  typeEl.appendChild(urlOpt);
-  typeEl.appendChild(domOpt);
-  typeEl.value = filter.type;
-
   valueEl.value = filter.value || '';
 
   // Wire actions
   saveBtn.onclick = async () => {
-    updateFilterType(sel, typeEl.value as 'url' | 'domain');
-    updateFilterValue(sel, valueEl.value);
-    // ensure UI updates
+    setFilterType(sel, detectFilterType(valueEl.value));
+    setFilterValue(sel, valueEl.value);
     await saveState();
-    renderFilters();
+    await refreshPopupUi();
     editor.style.display = 'none';
   };
 
   deleteBtn.onclick = async () => {
     await deleteFilter(sel);
-    clearSelection();
+    clearSelection(activeProfileId);
     editor.style.display = 'none';
   };
 
   cancelBtn.onclick = () => {
-    clearSelection();
+    clearSelection(activeProfileId);
     editor.style.display = 'none';
     renderFilters();
   };
@@ -573,12 +769,12 @@ function createHeaderElement(header: Header, index: number): HTMLDivElement {
 
   const requestOption = document.createElement('option');
   requestOption.value = 'request';
-  requestOption.textContent = chrome.i18n.getMessage('request');
+  requestOption.textContent = browserAPI.i18n.getMessage('request');
   requestOption.selected = header.type === 'request';
 
   const responseOption = document.createElement('option');
   responseOption.value = 'response';
-  responseOption.textContent = chrome.i18n.getMessage('response');
+  responseOption.textContent = browserAPI.i18n.getMessage('response');
   responseOption.selected = header.type === 'response';
 
   typeSelect.appendChild(requestOption);
@@ -588,7 +784,7 @@ function createHeaderElement(header: Header, index: number): HTMLDivElement {
   const nameInput = document.createElement('input');
   nameInput.type = 'text';
   nameInput.className = 'header-name';
-  nameInput.placeholder = chrome.i18n.getMessage('headerName');
+  nameInput.placeholder = browserAPI.i18n.getMessage('headerName');
   nameInput.value = header.name || '';
   // mark for focus preservation
   nameInput.setAttribute('data-index', index.toString());
@@ -596,12 +792,15 @@ function createHeaderElement(header: Header, index: number): HTMLDivElement {
   nameInput.addEventListener('input', (e) =>
     updateHeaderName(index, (e.target as HTMLInputElement).value)
   );
+  nameInput.addEventListener('blur', () => {
+    void flushPendingSave();
+  });
 
   // Value input
   const valueInput = document.createElement('input');
   valueInput.type = 'text';
   valueInput.className = 'header-value';
-  valueInput.placeholder = chrome.i18n.getMessage('headerValue');
+  valueInput.placeholder = browserAPI.i18n.getMessage('headerValue');
   valueInput.value = header.value || '';
   // mark for focus preservation
   valueInput.setAttribute('data-index', index.toString());
@@ -609,12 +808,16 @@ function createHeaderElement(header: Header, index: number): HTMLDivElement {
   valueInput.addEventListener('input', (e) =>
     updateHeaderValue(index, (e.target as HTMLInputElement).value)
   );
+  valueInput.addEventListener('blur', () => {
+    void flushPendingSave();
+  });
 
   // Delete button
   const deleteBtn = document.createElement('button');
   deleteBtn.className = 'icon-btn delete-btn';
-  deleteBtn.textContent = '🗑️';
-  deleteBtn.title = chrome.i18n.getMessage('delete');
+  deleteBtn.title = browserAPI.i18n.getMessage('delete');
+  deleteBtn.setAttribute('aria-label', deleteBtn.title);
+  deleteBtn.appendChild(createIcon('trash', 'ui-icon ui-icon--sm'));
   deleteBtn.addEventListener('click', () => deleteHeader(index));
 
   div.appendChild(toggleLabel);
@@ -673,7 +876,7 @@ function renderFilters(): void {
   activeProfile.filters.forEach((filter, index) => {
     const filterEl = createFilterElement(filter, index);
     // highlight if selected
-    if (getSelectedFilter() === index) filterEl.classList.add('selected');
+    if (getSelectedFilter(activeProfileId) === index) filterEl.classList.add('selected');
     filterEl.addEventListener('click', (e) => {
       // if the click originated from an interactive child (input/select/button), do nothing
       const target = e.target as HTMLElement | null;
@@ -685,7 +888,7 @@ function renderFilters(): void {
       }
 
       // select this filter and focus inline value input (inline editing)
-      selectFilterIndex(index);
+      selectFilterIndex(activeProfileId, index);
       renderFilters();
       // focus the input after re-render
       const selector = `input[data-index="${index}"][data-field="value"]`;
@@ -762,12 +965,12 @@ function createFilterElement(filter: Filter, index: number): HTMLDivElement {
 
   const urlOption = document.createElement('option');
   urlOption.value = 'url';
-  urlOption.textContent = chrome.i18n.getMessage('urlPattern');
+  urlOption.textContent = browserAPI.i18n.getMessage('urlPattern');
   urlOption.selected = filter.type === 'url';
 
   const domainOption = document.createElement('option');
   domainOption.value = 'domain';
-  domainOption.textContent = chrome.i18n.getMessage('domain');
+  domainOption.textContent = browserAPI.i18n.getMessage('domain');
   domainOption.selected = filter.type === 'domain';
 
   typeSelect.appendChild(urlOption);
@@ -777,21 +980,22 @@ function createFilterElement(filter: Filter, index: number): HTMLDivElement {
   const valueInput = document.createElement('input');
   valueInput.type = 'text';
   valueInput.className = 'filter-value';
-  valueInput.placeholder = chrome.i18n.getMessage('filterValuePlaceholder');
+  valueInput.placeholder = browserAPI.i18n.getMessage('filterValuePlaceholder');
   valueInput.value = filter.value || '';
   // mark for focus preservation
   valueInput.setAttribute('data-index', index.toString());
   valueInput.setAttribute('data-field', 'value');
   valueInput.addEventListener('input', (e) => {
     const v = (e.target as HTMLInputElement).value;
-    updateFilterValue(index, v);
+    setFilterValue(index, v);
+    scheduleSave();
 
     // Detect type automatically and update stored type
     const detected = detectFilterType(v);
-    if (detected !== filter.type) {
-      updateFilterType(index, detected);
-      // reflect in select value (kept hidden)
+    if (detected !== typeSelect.value) {
+      setFilterType(index, detected);
       typeSelect.value = detected;
+      scheduleSave();
     }
 
     // inline validation for domain filters
@@ -810,15 +1014,19 @@ function createFilterElement(filter: Filter, index: number): HTMLDivElement {
   // prevent clicks on the input from bubbling up to the row (avoids immediate rerender)
   valueInput.addEventListener('click', (e) => e.stopPropagation());
   valueInput.addEventListener('focus', (e) => e.stopPropagation());
+  valueInput.addEventListener('blur', () => {
+    void flushPendingSave();
+  });
 
   // Edit button (opens editor panel)
   const editBtn = document.createElement('button');
   editBtn.className = 'icon-btn';
-  editBtn.textContent = '✏️';
-  editBtn.title = chrome.i18n.getMessage('edit') || 'Edit';
+  editBtn.title = browserAPI.i18n.getMessage('edit') || 'Edit';
+  editBtn.setAttribute('aria-label', editBtn.title);
+  editBtn.appendChild(createIcon('edit', 'ui-icon ui-icon--sm'));
   editBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    selectFilterIndex(index);
+    selectFilterIndex(activeProfileId, index);
     renderFilters();
     renderFilterEditor();
   });
@@ -827,13 +1035,14 @@ function createFilterElement(filter: Filter, index: number): HTMLDivElement {
   const errorSpan = document.createElement('span');
   errorSpan.className = 'field-error';
   errorSpan.style.display = 'none';
-  errorSpan.textContent = chrome.i18n.getMessage('invalidDomain');
+  errorSpan.textContent = browserAPI.i18n.getMessage('invalidDomain');
 
   // Delete button
   const deleteBtn = document.createElement('button');
   deleteBtn.className = 'icon-btn delete-btn';
-  deleteBtn.textContent = '🗑️';
-  deleteBtn.title = chrome.i18n.getMessage('delete');
+  deleteBtn.title = browserAPI.i18n.getMessage('delete');
+  deleteBtn.setAttribute('aria-label', deleteBtn.title);
+  deleteBtn.appendChild(createIcon('trash', 'ui-icon ui-icon--sm'));
   deleteBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     deleteFilter(index);
@@ -848,14 +1057,10 @@ function createFilterElement(filter: Filter, index: number): HTMLDivElement {
 
   // initial validation and detection
   const initialDetected = detectFilterType(filter.value || '');
-  if (!filter.type || filter.type !== initialDetected) {
-    // set stored type to detected initially (no override)
-    updateFilterType(index, initialDetected);
-    typeSelect.value = initialDetected;
-  }
+  const effectiveInitialType = filter.type || initialDetected;
+  typeSelect.value = effectiveInitialType;
 
-  const initialValid =
-    (filter.type || initialDetected) !== 'domain' ? true : isValidDomain(filter.value || '');
+  const initialValid = effectiveInitialType !== 'domain' ? true : isValidDomain(filter.value || '');
   if (!initialValid) {
     div.classList.add('invalid');
     toggleInput.disabled = true;
@@ -883,15 +1088,14 @@ async function addProfile(): Promise<void> {
   activeProfileId = newProfile.id;
 
   // If user opted to auto-enable profiles, mark new profile as enabled
-  const { autoEnable } = (await chrome.storage.local.get('autoEnable')) as { autoEnable?: boolean };
+  const { autoEnable } = (await browserAPI.storage.local.get('autoEnable')) as {
+    autoEnable?: boolean;
+  };
   if (autoEnable) {
     newProfile.enabled = true;
   }
 
-  await saveState();
-  renderProfiles();
-  renderHeaders();
-  renderFilters();
+  await persistPopupState({ refresh: true });
   showToast(getMessage('profileAdded') || 'Profile added successfully', 'success');
 }
 
@@ -914,11 +1118,9 @@ async function deleteProfile(): Promise<void> {
   if (!confirmed) return;
 
   profiles = profiles.filter((p) => p.id !== activeProfileId);
+  clearSelection(activeProfileId);
   activeProfileId = profiles[0].id;
-  await saveState();
-  renderProfiles();
-  renderHeaders();
-  renderFilters();
+  await persistPopupState({ refresh: true });
   showToast(getMessage('profileDeleted') || 'Profile deleted', 'success');
 }
 
@@ -937,8 +1139,7 @@ async function renameProfile(): Promise<void> {
   if (!newName) return;
 
   activeProfile.name = newName.trim();
-  await saveState();
-  renderProfiles();
+  await persistPopupState({ refresh: true });
   showToast(getMessage('profileRenamed') || 'Profile renamed', 'success');
 }
 
@@ -957,10 +1158,7 @@ async function duplicateProfile(): Promise<void> {
 
   profiles.push(newProfile);
   activeProfileId = newProfile.id;
-  await saveState();
-  renderProfiles();
-  renderHeaders();
-  renderFilters();
+  await persistPopupState({ refresh: true });
 }
 
 /**
@@ -968,7 +1166,7 @@ async function duplicateProfile(): Promise<void> {
  */
 async function toggleGlobalEnabled(e: Event): Promise<void> {
   globalEnabled = (e.target as HTMLInputElement).checked;
-  await saveState();
+  await persistPopupState({ syncExtension: true });
 }
 
 /**
@@ -989,8 +1187,7 @@ async function addHeader(): Promise<void> {
     value: '',
   });
 
-  await saveState();
-  renderHeaders();
+  await persistPopupState({ refresh: true });
 }
 
 /**
@@ -1000,11 +1197,7 @@ async function toggleHeader(index: number): Promise<void> {
   const activeProfile = getActiveProfile();
   if (!activeProfile || !activeProfile.headers[index]) return;
   activeProfile.headers[index].enabled = !activeProfile.headers[index].enabled;
-  await saveState();
-  // notify background and update badge
-  chrome.runtime.sendMessage({ action: 'updateRules' });
-  chrome.runtime.sendMessage({ action: 'updateBadge' });
-  renderHeaders();
+  await persistPopupState({ refresh: true, syncExtension: true });
 }
 
 /**
@@ -1014,7 +1207,7 @@ async function updateHeaderType(index: number, type: 'request' | 'response'): Pr
   const activeProfile = getActiveProfile();
   if (!activeProfile || !activeProfile.headers[index]) return;
   activeProfile.headers[index].type = type;
-  await saveState();
+  await persistPopupState({ syncExtension: true });
 }
 
 /**
@@ -1024,6 +1217,7 @@ async function updateHeaderName(index: number, name: string): Promise<void> {
   const activeProfile = getActiveProfile();
   if (!activeProfile || !activeProfile.headers[index]) return;
   activeProfile.headers[index].name = name;
+  persistDraftState();
   // Debounce writes to avoid re-rendering on every keystroke
   scheduleSave();
 }
@@ -1035,6 +1229,7 @@ async function updateHeaderValue(index: number, value: string): Promise<void> {
   const activeProfile = getActiveProfile();
   if (!activeProfile || !activeProfile.headers[index]) return;
   activeProfile.headers[index].value = value;
+  persistDraftState();
   scheduleSave();
 }
 
@@ -1045,8 +1240,7 @@ async function deleteHeader(index: number): Promise<void> {
   const activeProfile = getActiveProfile();
   if (!activeProfile) return;
   activeProfile.headers.splice(index, 1);
-  await saveState();
-  renderHeaders();
+  await persistPopupState({ refresh: true, syncExtension: true });
 }
 
 /**
@@ -1071,7 +1265,7 @@ async function addFilter(): Promise<void> {
     });
 
     try {
-      await saveState();
+      await persistPopupState({ refresh: true });
     } catch (err) {
       console.error('addFilter: saveState failed', err);
       // Inform the user with the underlying error message for easier debugging
@@ -1080,11 +1274,9 @@ async function addFilter(): Promise<void> {
         'error'
       );
       // Still render UI to reflect in-memory change
-      renderFilters();
+      refreshProfileViews();
       return;
     }
-
-    renderFilters();
   } catch (err) {
     console.error('Failed to add filter', err);
     showToast(getMessage('errorAddingFilter') || 'Failed to add filter', 'error');
@@ -1098,32 +1290,35 @@ async function toggleFilter(index: number): Promise<void> {
   const activeProfile = getActiveProfile();
   if (!activeProfile || !activeProfile.filters[index]) return;
   activeProfile.filters[index].enabled = !activeProfile.filters[index].enabled;
-  await saveState();
-  // ensure background rules and badge update and UI reflects changes
-  chrome.runtime.sendMessage({ action: 'updateRules' });
-  chrome.runtime.sendMessage({ action: 'updateBadge' });
-  renderFilters();
-  renderFilterEditor();
+  await persistPopupState({ refresh: true, syncExtension: true });
 }
 
 /**
  * Update filter type
  */
-async function updateFilterType(index: number, type: 'url' | 'domain'): Promise<void> {
+function setFilterType(index: number, type: 'url' | 'domain'): void {
   const activeProfile = getActiveProfile();
   if (!activeProfile || !activeProfile.filters[index]) return;
   activeProfile.filters[index].type = type;
-  await saveState();
-  renderFilters();
+}
+
+async function updateFilterType(index: number, type: 'url' | 'domain'): Promise<void> {
+  setFilterType(index, type);
+  await persistPopupState({ refresh: true, syncExtension: true });
 }
 
 /**
  * Update filter value
  */
-async function updateFilterValue(index: number, value: string): Promise<void> {
+function setFilterValue(index: number, value: string): void {
   const activeProfile = getActiveProfile();
   if (!activeProfile || !activeProfile.filters[index]) return;
   activeProfile.filters[index].value = value;
+  persistDraftState();
+}
+
+async function updateFilterValue(index: number, value: string): Promise<void> {
+  setFilterValue(index, value);
   // Debounce saves to avoid re-render during typing
   scheduleSave();
 }
@@ -1134,9 +1329,78 @@ async function updateFilterValue(index: number, value: string): Promise<void> {
 async function deleteFilter(index: number): Promise<void> {
   const activeProfile = getActiveProfile();
   if (!activeProfile) return;
+
+  const selectedFilterIndex = getSelectedFilter(activeProfileId);
   activeProfile.filters.splice(index, 1);
-  await saveState();
-  renderFilters();
+  if (selectedFilterIndex === index) {
+    clearSelection(activeProfileId);
+  } else if (selectedFilterIndex !== null && selectedFilterIndex > index) {
+    selectFilterIndex(activeProfileId, selectedFilterIndex - 1);
+  }
+  await persistPopupState({ refresh: true, syncExtension: true });
+}
+
+function formatNoobCountdown(remainingMs: number): string {
+  const totalSeconds = Math.max(0, Math.ceil(remainingMs / 1000));
+  const minutes = Math.floor(totalSeconds / 60)
+    .toString()
+    .padStart(2, '0');
+  const seconds = (totalSeconds % 60).toString().padStart(2, '0');
+  return `${minutes}:${seconds}`;
+}
+
+function updateNoobModeLabel(): void {
+  const remainingMs = noobModeUntil - Date.now();
+  if (remainingMs <= 0) {
+    clearNoobMode().catch((error) => {
+      console.warn('Failed to clear noob mode', error);
+    });
+    return;
+  }
+
+  const baseLabel = getMessage('noobModeActivated') || 'Noob mode unlocked';
+  document.body.dataset.noobModeLabel = `${baseLabel} · ${formatNoobCountdown(remainingMs)}`;
+}
+
+function startNoobModeCountdown(until: number): void {
+  noobModeUntil = until;
+  document.body.classList.add('noob-mode');
+  updateNoobModeLabel();
+
+  if (noobModeCountdownTimer !== null) {
+    clearInterval(noobModeCountdownTimer);
+  }
+
+  noobModeCountdownTimer = window.setInterval(() => {
+    updateNoobModeLabel();
+  }, 1000);
+}
+
+async function clearNoobMode(persist = true): Promise<void> {
+  noobModeUntil = 0;
+  document.body.classList.remove('noob-mode');
+  delete document.body.dataset.noobModeLabel;
+
+  if (noobModeCountdownTimer !== null) {
+    clearInterval(noobModeCountdownTimer);
+    noobModeCountdownTimer = null;
+  }
+
+  if (persist) {
+    await browserAPI.storage.local.remove(NOOB_MODE_UNTIL_KEY);
+  }
+}
+
+async function initializeNoobMode(): Promise<void> {
+  const data = await browserAPI.storage.local.get(NOOB_MODE_UNTIL_KEY);
+  const until = Number(data[NOOB_MODE_UNTIL_KEY] || 0);
+
+  if (until > Date.now()) {
+    startNoobModeCountdown(until);
+    return;
+  }
+
+  await clearNoobMode(false);
 }
 
 /**
@@ -1144,16 +1408,18 @@ async function deleteFilter(index: number): Promise<void> {
  */
 function toggleDebug(): void {
   const content = document.getElementById('debug-content') as HTMLElement;
-  const btn = document.getElementById('toggle-debug-btn');
+  const btn = document.getElementById('toggle-debug-btn') as HTMLButtonElement | null;
 
   if (!content || !btn) return;
 
   if (content.style.display === 'none') {
     content.style.display = 'block';
-    btn.textContent = '🔼';
+    btn.setAttribute('aria-expanded', 'true');
+    replaceWithIcon(btn, 'chevron-up', 'ui-icon ui-icon--sm');
   } else {
     content.style.display = 'none';
-    btn.textContent = '🔽';
+    btn.setAttribute('aria-expanded', 'false');
+    replaceWithIcon(btn, 'chevron-down', 'ui-icon ui-icon--sm');
   }
 }
 
@@ -1163,16 +1429,110 @@ function toggleDebug(): void {
 async function updateDebugInfo(): Promise<void> {
   const activeProfile = getActiveProfile();
   const activeHeaders = activeProfile?.headers?.filter((h) => h.enabled).length || 0;
+  let activeRuleCount = activeHeaders;
+  let dynamicRules: chrome.declarativeNetRequest.Rule[] = [];
+  let syncStatus = '-';
+  let storageSnapshot: any = null;
+
+  let debugState = await getBackgroundDebugState();
+
+  if (
+    debugState?.success &&
+    globalEnabled &&
+    activeHeaders > 0 &&
+    Array.isArray(debugState.dynamicRules) &&
+    debugState.dynamicRules.length === 0
+  ) {
+    await browserAPI.runtime.sendMessage({
+      action: 'updateRules',
+      state: {
+        profiles,
+        activeProfileId,
+        globalEnabled,
+      },
+    });
+    debugState = await getBackgroundDebugState();
+  }
+
+  if (debugState?.success) {
+    dynamicRules = Array.isArray(debugState.dynamicRules) ? debugState.dynamicRules : [];
+    activeRuleCount = dynamicRules.length;
+    syncStatus = `${debugState.lastComputedRuleCount}/${debugState.lastAppliedRuleCount}`;
+    storageSnapshot = debugState.storageSnapshot || null;
+    if (debugState.lastError) {
+      syncStatus = `ERR: ${debugState.lastError}`;
+    }
+    if (storageSnapshot && !debugState.lastError) {
+      syncStatus += ` | storage:${storageSnapshot.profileCount}/${storageSnapshot.profilesToApplyCount}/${storageSnapshot.globalEnabled ? 'on' : 'off'}`;
+    }
+  }
 
   const rulesCountEl = document.getElementById('debug-rules-count');
   if (rulesCountEl) {
-    rulesCountEl.textContent = activeHeaders.toString();
+    rulesCountEl.textContent = activeRuleCount.toString();
   }
 
-  const bytesUsed = await chrome.storage.local.getBytesInUse();
+  const globalEnabledEl = document.getElementById('debug-global-enabled');
+  if (globalEnabledEl) {
+    globalEnabledEl.textContent = globalEnabled ? 'Yes' : 'No';
+  }
+
+  const activeProfileEl = document.getElementById('debug-active-profile');
+  if (activeProfileEl) {
+    activeProfileEl.textContent = activeProfile?.name || '-';
+  }
+
+  const bytesUsed = await browserAPI.storage.local.getBytesInUse();
   const storageSizeEl = document.getElementById('debug-storage-size');
   if (storageSizeEl) {
     storageSizeEl.textContent = `${(bytesUsed / 1024).toFixed(2)} KB`;
+  }
+
+  const syncEl = document.getElementById('debug-rule-sync');
+  if (syncEl) {
+    syncEl.textContent = syncStatus;
+  }
+
+  const previewEl = document.getElementById('debug-rules-preview');
+  if (previewEl) {
+    if (dynamicRules.length === 0) {
+      const debugLines = ['No dynamic rules yet.'];
+      if (storageSnapshot) {
+        debugLines.push(`Storage profiles: ${storageSnapshot.profileCount}`);
+        debugLines.push(`Storage profiles to apply: ${storageSnapshot.profilesToApplyCount}`);
+        debugLines.push(`Storage global enabled: ${storageSnapshot.globalEnabled ? 'Yes' : 'No'}`);
+        debugLines.push(`Storage active profile: ${storageSnapshot.activeProfileName || '-'}`);
+        debugLines.push(
+          `Storage active headers: ${storageSnapshot.activeProfileHeaderCount} (${storageSnapshot.activeProfileEnabledHeaderCount} enabled)`
+        );
+        debugLines.push(
+          `Storage active filters: ${storageSnapshot.activeProfileFilterCount} (${storageSnapshot.activeProfileEnabledFilterCount} enabled)`
+        );
+        for (const [index, header] of (storageSnapshot.activeProfileHeaders || []).entries()) {
+          debugLines.push(
+            `Header ${index + 1}: ${header.enabled ? 'on' : 'off'} ${header.type} ${header.name || '<empty>'} = ${header.value || '<empty>'}`
+          );
+        }
+        for (const [index, filter] of (storageSnapshot.activeProfileFilters || []).entries()) {
+          debugLines.push(
+            `Filter ${index + 1}: ${filter.enabled ? 'on' : 'off'} ${filter.type} ${filter.value || '<empty>'}`
+          );
+        }
+      }
+      previewEl.textContent = debugLines.join('\n');
+    } else {
+      previewEl.textContent = dynamicRules
+        .slice(0, 8)
+        .map((rule) => {
+          const requestHeader = rule.action.requestHeaders?.[0];
+          const responseHeader = rule.action.responseHeaders?.[0];
+          const header = requestHeader ?? responseHeader;
+          const direction = requestHeader ? 'REQ' : 'RES';
+          const operation = header?.operation === 'remove' ? 'remove' : header?.value || 'set';
+          return `${rule.id}. ${direction} ${header?.header || 'unknown'} = ${operation} :: ${rule.condition.urlFilter}`;
+        })
+        .join('\n');
+    }
   }
 }
 
@@ -1183,42 +1543,54 @@ async function clearAllData(): Promise<void> {
   const confirmed = await showConfirm(getMessage('clearAllData'), getMessage('confirmClearAll'));
   if (!confirmed) return;
 
-  await chrome.storage.local.clear();
+  await browserAPI.storage.local.clear();
   await loadState();
-  renderProfiles();
-  renderHeaders();
-  renderFilters();
-  await updateDebugInfo();
+  clearSelection();
+  await refreshPopupUi();
   showToast(getMessage('dataCleared') || 'All data cleared', 'success');
 }
 
 /**
  * Easter egg - Noob mode
  */
-let clickCount = 0;
-function triggerEasterEgg(): void {
-  clickCount++;
+async function triggerEasterEgg(): Promise<void> {
+  easterEggClickCount += 1;
 
-  if (clickCount >= 5) {
-    document.body.classList.add('noob-mode');
-    setTimeout(() => {
-      document.body.classList.remove('noob-mode');
-      clickCount = 0;
-    }, 3000);
+  if (easterEggResetTimer !== null) {
+    clearTimeout(easterEggResetTimer);
+  }
+
+  easterEggResetTimer = window.setTimeout(() => {
+    easterEggClickCount = 0;
+    easterEggResetTimer = null;
+  }, EASTER_EGG_RESET_DELAY_MS);
+
+  if (easterEggClickCount >= EASTER_EGG_TRIGGER_COUNT) {
+    easterEggClickCount = 0;
+
+    if (easterEggResetTimer !== null) {
+      clearTimeout(easterEggResetTimer);
+      easterEggResetTimer = null;
+    }
+
+    document.body.classList.remove('noob-mode');
+    void document.body.offsetWidth;
+    const until = Date.now() + EASTER_EGG_DURATION_MS;
+    await browserAPI.storage.local.set({ [NOOB_MODE_UNTIL_KEY]: until });
+    startNoobModeCountdown(until);
+    showToast(getMessage('noobModeActivated') || 'Noob mode unlocked', 'success');
   }
 }
 
 // Initialize popup
 document.addEventListener('DOMContentLoaded', async () => {
   await loadState();
+  await initializeNoobMode();
   setupEventListeners();
-  renderProfiles();
-  renderHeaders();
-  renderFilters();
-  await updateDebugInfo();
+  await refreshPopupUi();
 
   // React to external storage changes (e.g., auto-switch from background)
-  chrome.storage.onChanged.addListener(async (changes, area) => {
+  browserAPI.storage.onChanged.addListener(async (changes, area) => {
     // Ignore changes that we caused ourselves to prevent re-render during typing
     if (isUpdatingStorage) {
       return;
@@ -1230,11 +1602,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         changes[STORAGE_KEYS.ACTIVE_PROFILE] ||
         changes[STORAGE_KEYS.GLOBAL_ENABLED])
     ) {
+      if (matchesCurrentState(changes)) {
+        return;
+      }
+
       await loadState();
-      renderProfiles();
-      renderHeaders();
-      renderFilters();
-      await updateDebugInfo();
+      await refreshPopupUi();
+    }
+
+    if (area === 'local' && changes[NOOB_MODE_UNTIL_KEY]) {
+      const until = Number(changes[NOOB_MODE_UNTIL_KEY].newValue || 0);
+      if (until > Date.now()) {
+        startNoobModeCountdown(until);
+      } else {
+        await clearNoobMode(false);
+      }
     }
   });
 });
