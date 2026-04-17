@@ -42,10 +42,18 @@
     <header class="header">
       <div class="header-top">
         <h1 class="logo">
-          <span class="logo-icon">🎓</span>
+          <span class="logo-icon" aria-hidden="true">
+            <svg class="ui-icon ui-icon--lg" focusable="false" aria-hidden="true">
+              <use href="icons/ui-sprite.svg#cap"></use>
+            </svg>
+          </span>
           NoobHeaders
         </h1>
-        <button id="options-btn" class="icon-btn" data-i18n-title="options">⚙️</button>
+        <button id="options-btn" class="icon-btn" data-i18n-title="options" aria-label="Options" type="button">
+          <svg class="ui-icon ui-icon--md" focusable="false" aria-hidden="true">
+            <use href="icons/ui-sprite.svg#settings"></use>
+          </svg>
+        </button>
       </div>
       <p class="subtitle" data-i18n="subtitle">Clean HTTP Header Modifier</p>
     </header>
@@ -64,29 +72,35 @@
       <div class="section-header">
         <h2 data-i18n="activeProfile">Active Profile</h2>
         <div class="profile-actions">
-          <button id="add-profile-btn" class="icon-btn" data-i18n-title="addProfile">➕</button>
-          <button id="delete-profile-btn" class="icon-btn" data-i18n-title="deleteProfile">🗑️</button>
+          <button id="add-profile-btn" class="icon-btn" data-i18n-title="addProfile" aria-label="Add Profile" type="button">
+            <svg class="ui-icon ui-icon--md" focusable="false" aria-hidden="true">
+              <use href="icons/ui-sprite.svg#plus"></use>
+            </svg>
+          </button>
+          <button id="delete-profile-btn" class="icon-btn" data-i18n-title="deleteProfile" aria-label="Delete Profile" type="button">
+            <svg class="ui-icon ui-icon--md" focusable="false" aria-hidden="true">
+              <use href="icons/ui-sprite.svg#trash"></use>
+            </svg>
+          </button>
         </div>
       </div>
 
       <div class="profile-controls">
-        <div id="profiles-radio" class="profiles-radio" role="list" aria-label="Profiles"></div>
+        <div id="active-profile-display" class="profile-summary-card">
+          <div class="profile-summary-text">
+            <span class="profile-summary-label" data-i18n="profileActivePrefix">Active:</span>
+            <strong id="active-profile-name" class="profile-summary-name" aria-live="polite"></strong>
+          </div>
 
-        <div class="button-group">
-          <button id="rename-profile-btn" class="btn-secondary" data-i18n="rename">Rename</button>
-          <button id="duplicate-profile-btn" class="btn-secondary" data-i18n="duplicate">Duplicate</button>
+          <div class="button-group profile-summary-actions">
+            <button id="rename-profile-btn" class="btn-secondary" data-i18n="rename">Rename</button>
+            <button id="duplicate-profile-btn" class="btn-secondary" data-i18n="duplicate">Duplicate</button>
+          </div>
         </div>
+
+        <div id="profiles-radio" class="profiles-radio" role="list" aria-label="Profiles"></div>
       </div>
     </section>
-
-    <div class="section-divider">
-      <hr class="divider-line" />
-      <div id="active-profile-display" class="active-profile-name">
-        <span data-i18n="profileActivePrefix">Active:</span>
-        <strong id="active-profile-name"></strong>
-      </div>
-      <hr class="divider-line" />
-    </div>
 
     <!-- Headers Section -->
     <section class="section">
@@ -116,19 +130,15 @@
         <!-- Filters will be inserted here -->
       </div>
 
-      <div id="filter-editor" class="filter-editor"
-        style="display:none; margin-top:12px; padding:12px; border-radius:6px; background:var(--background); border:1px solid var(--border);">
+      <div id="filter-editor" class="filter-editor">
         <!-- Editor for selected filter -->
-        <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
-          <label data-i18n="filterEditorType" style="min-width:70px; font-weight:600;">Type</label>
-          <select id="editor-filter-type" class="filter-type"></select>
-        </div>
-        <div style="display:flex; gap:8px; align-items:center; margin-bottom:12px;">
-          <label data-i18n="filterEditorValue" style="min-width:70px; font-weight:600;">Value</label>
+        <div class="filter-editor-row filter-editor-row-spaced">
+          <label data-i18n="filterEditorValue" class="filter-editor-label">Value</label>
           <input id="editor-filter-value" type="text" data-i18n-placeholder="filterValuePlaceholder"
-            style="flex:1; padding:6px 8px; border-radius:4px; border:1px solid var(--border);" />
+            class="filter-editor-input" />
         </div>
-        <div style="display:flex; gap:8px;">
+        <p class="filter-editor-help" data-i18n="filterHelpText">example.com matches the domain, while *://*.example.com/* also matches protocol and path with wildcards.</p>
+        <div class="filter-editor-actions">
           <button id="editor-save-btn" class="btn-primary" data-i18n="editorSave">Save</button>
           <button id="editor-delete-btn" class="btn-danger" data-i18n="editorDelete">Delete</button>
           <button id="editor-cancel-btn" class="btn-secondary" data-i18n="editorCancel">Cancel</button>
@@ -145,7 +155,11 @@
     <section class="section debug-section">
       <div class="section-header">
         <h2 data-i18n="debug">Debug</h2>
-        <button id="toggle-debug-btn" class="icon-btn">🔽</button>
+        <button id="toggle-debug-btn" class="icon-btn" data-i18n-title="showDebugInfo" aria-label="Show Debug Info" aria-expanded="false" aria-controls="debug-content" type="button">
+          <svg class="ui-icon ui-icon--sm" focusable="false" aria-hidden="true">
+            <use href="icons/ui-sprite.svg#chevron-down"></use>
+          </svg>
+        </button>
       </div>
 
       <div id="debug-content" class="debug-content" style="display: none;">
@@ -155,26 +169,43 @@
             <span id="debug-rules-count" class="debug-value">0</span>
           </div>
           <div class="debug-row">
+            <span class="debug-label">Global Enabled:</span>
+            <span id="debug-global-enabled" class="debug-value">No</span>
+          </div>
+          <div class="debug-row">
+            <span class="debug-label">Selected Profile:</span>
+            <span id="debug-active-profile" class="debug-value">-</span>
+          </div>
+          <div class="debug-row">
             <span class="debug-label">Storage Used:</span>
             <span id="debug-storage-size" class="debug-value">0 KB</span>
           </div>
+          <div class="debug-row">
+            <span class="debug-label">Rule Sync:</span>
+            <span id="debug-rule-sync" class="debug-value">-</span>
+          </div>
         </div>
+
+        <pre id="debug-rules-preview" class="debug-rules-preview">No dynamic rules yet.</pre>
 
         <button id="clear-all-btn" class="btn-danger" data-i18n="clearAllData">Clear All Data</button>
       </div>
     </section>
 
     <!-- Footer -->
-    <footer class="footer">
-      <p>
-        Made with 💜 by
-        <a href="https://github.com/BioSs54" target="_blank">BioSs54</a>
-        •
-        <a href="https://github.com/BioSs54/noobheaders" target="_blank">GitHub</a>
-        •
-        <span id="easter-egg-trigger" style="cursor: pointer;">v2.0.1</span>
-      </p>
-      <p class="footer-hint">No ads, no tracking, just headers 🎓</p>
+    <footer class="footer footer-compact">
+      <div class="footer-meta">
+        <a
+          href="https://github.com/BioSs54/noobheaders"
+          target="_blank"
+          rel="noreferrer"
+          data-i18n="github"
+        >GitHub</a>
+        <span class="footer-separator" aria-hidden="true">/</span>
+        <button id="easter-egg-trigger" class="footer-version-trigger" type="button">
+          v2.0.1
+        </button>
+      </div>
     </footer>
   </div>
 

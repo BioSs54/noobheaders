@@ -149,6 +149,9 @@
   "github": {
     "message": "GitHub"
   },
+  "noobModeActivated": {
+    "message": "Modo noob activado"
+  },
   "reportIssue": {
     "message": "Reportar problema"
   },
@@ -162,7 +165,10 @@
     "message": "Valor"
   },
   "filterValuePlaceholder": {
-    "message": "Ingrese dominio o patrón de URL"
+    "message": "example.com o *://*.example.com/*"
+  },
+  "filterHelpText": {
+    "message": "example.com coincide con el dominio, mientras que *://*.example.com/* también coincide con el protocolo y la ruta con comodines."
   },
   "invalidDomain": {
     "message": "Dominio o URL inválido"
@@ -183,10 +189,10 @@
     "message": "Cancelar"
   },
   "exportProfiles": {
-    "message": "📥 Exportar perfiles"
+    "message": "Exportar perfiles"
   },
   "importProfiles": {
-    "message": "📤 Importar perfiles"
+    "message": "Importar perfiles"
   },
   "profileActivePrefix": {
     "message": "Seleccionado:"
@@ -276,7 +282,7 @@
     "message": "Revisa la sección de Depuración si algo no funciona"
   },
   "welcomeMadeWith": {
-    "message": "Hecho con 💜 por"
+    "message": "Hecho por"
   },
   "welcomeReportIssue": {
     "message": "Reportar Problema"

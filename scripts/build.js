@@ -70,6 +70,11 @@ const builds = [
     entryPoints: ['src/filter-utils.ts'],
     outfile: 'dist/filter-utils.js',
   },
+  {
+    ...commonOptions,
+    entryPoints: ['src/firefox-webrequest.ts'],
+    outfile: 'dist/firefox-webrequest.js',
+  },
 ];
 
 async function build() {

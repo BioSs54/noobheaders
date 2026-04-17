@@ -45,6 +45,97 @@ export interface Profile {
   filters: Filter[];
 }
 
+const BUILT_IN_DEMO_PROFILE_NAMES = new Set(['httpbin.org Demo', 'Example.com Demo']);
+
+function repairBuiltInDemoProfile(profile: Profile): Profile {
+  if (!BUILT_IN_DEMO_PROFILE_NAMES.has(profile.name)) {
+    return profile;
+  }
+
+  const hasUsableHeader = profile.headers.some(
+    (header) => header.enabled && header.name.trim().length > 0
+  );
+  const hasUsableFilter = profile.filters.some(
+    (filter) => filter.enabled && filter.value.trim().length > 0
+  );
+
+  if (hasUsableHeader && hasUsableFilter) {
+    return profile;
+  }
+
+  const repaired = createDefaultProfile(profile.id);
+  return {
+    ...repaired,
+    enabled: profile.enabled === true,
+  };
+}
+
+export function normalizeHeader(header: Partial<Header>): Header {
+  return {
+    enabled: header.enabled !== false,
+    type: header.type === 'response' ? 'response' : 'request',
+    name: typeof header.name === 'string' ? header.name : '',
+    value: typeof header.value === 'string' ? header.value : '',
+  };
+}
+
+export function normalizeFilter(filter: Partial<Filter>): Filter {
+  return {
+    enabled: filter.enabled !== false,
+    type: filter.type === 'domain' ? 'domain' : 'url',
+    value: typeof filter.value === 'string' ? filter.value : '',
+  };
+}
+
+export function normalizeProfile(profile: Partial<Profile>): Profile {
+  const normalizedProfile = {
+    id: typeof profile.id === 'string' ? profile.id : `${Date.now()}`,
+    name: typeof profile.name === 'string' ? profile.name : 'Unnamed Profile',
+    enabled: profile.enabled === true,
+    headers: Array.isArray(profile.headers) ? profile.headers.map(normalizeHeader) : [],
+    filters: Array.isArray(profile.filters) ? profile.filters.map(normalizeFilter) : [],
+  };
+
+  return repairBuiltInDemoProfile(normalizedProfile);
+}
+
+export function normalizeProfiles(profiles: unknown): Profile[] {
+  if (!Array.isArray(profiles)) {
+    return [];
+  }
+
+  return profiles.map((profile) => normalizeProfile((profile || {}) as Partial<Profile>));
+}
+
+export function createDefaultProfile(id: string): Profile {
+  return {
+    id,
+    name: 'httpbin.org Demo',
+    enabled: false,
+    headers: [
+      {
+        enabled: true,
+        type: 'request',
+        name: 'X-NoobHeaders-Demo',
+        value: 'request-httpbin-demo',
+      },
+      {
+        enabled: true,
+        type: 'response',
+        name: 'X-NoobHeaders-Response',
+        value: 'response-httpbin-demo',
+      },
+    ],
+    filters: [
+      {
+        enabled: true,
+        type: 'url',
+        value: '*://httpbin.org/headers*',
+      },
+    ],
+  };
+}
+
 /**
  * Chrome Storage data structure
  */

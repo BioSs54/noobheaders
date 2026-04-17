@@ -1,4 +1,137 @@
+import type { BrowserContext, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
+
+const STORAGE_KEYS = {
+  profiles: 'noobheaders_profiles',
+  activeProfile: 'noobheaders_active_profile',
+  globalEnabled: 'noobheaders_global_enabled',
+} as const;
+
+async function openPopup(context: BrowserContext, extensionId: string): Promise<Page> {
+  const page = await context.newPage();
+  await page.goto(`chrome-extension://${extensionId}/popup.html`);
+  await page.waitForLoadState('domcontentloaded');
+  await page.waitForTimeout(500);
+  return page;
+}
+
+async function resetToCleanProfile(page: Page, profileName = 'E2E Active Profile'): Promise<void> {
+  await page.evaluate(
+    async ({ profileName, storageKeys }) => {
+      const runtime = globalThis as typeof globalThis & {
+        browser?: any;
+        chrome?: any;
+      };
+      const browserApi = runtime.browser ?? runtime.chrome;
+      const data = await browserApi.storage.local.get([
+        storageKeys.profiles,
+        storageKeys.activeProfile,
+      ]);
+
+      const existingProfiles = Array.isArray(data[storageKeys.profiles])
+        ? data[storageKeys.profiles]
+        : [];
+      const activeId =
+        data[storageKeys.activeProfile] ??
+        existingProfiles[0]?.id ??
+        `e2e-${Math.random().toString(36).slice(2, 10)}`;
+
+      await browserApi.storage.local.set({
+        [storageKeys.profiles]: [
+          {
+            id: activeId,
+            name: profileName,
+            enabled: false,
+            headers: [],
+            filters: [],
+          },
+        ],
+        [storageKeys.activeProfile]: activeId,
+        [storageKeys.globalEnabled]: false,
+      });
+    },
+    { profileName, storageKeys: STORAGE_KEYS }
+  );
+
+  await page.reload();
+  await page.waitForLoadState('domcontentloaded');
+  await page.waitForTimeout(500);
+}
+
+async function syncPopupState(page: Page): Promise<void> {
+  await page.evaluate(async (storageKeys) => {
+    const runtime = globalThis as typeof globalThis & {
+      browser?: any;
+      chrome?: any;
+    };
+    const browserApi = runtime.browser ?? runtime.chrome;
+    const data = await browserApi.storage.local.get([
+      storageKeys.profiles,
+      storageKeys.activeProfile,
+      storageKeys.globalEnabled,
+    ]);
+
+    await browserApi.runtime.sendMessage({
+      action: 'updateRules',
+      state: {
+        profiles: Array.isArray(data[storageKeys.profiles]) ? data[storageKeys.profiles] : [],
+        activeProfileId: data[storageKeys.activeProfile] ?? null,
+        globalEnabled: Boolean(data[storageKeys.globalEnabled]),
+      },
+    });
+    await browserApi.runtime.sendMessage({ action: 'updateBadge' });
+  }, STORAGE_KEYS);
+}
+
+async function waitForHeaderSync(
+  page: Page,
+  headerName: string,
+  headerType: 'request' | 'response' = 'request'
+): Promise<void> {
+  const expectedHeaderName = headerName.toLowerCase();
+
+  await expect
+    .poll(
+      async () =>
+        page.evaluate(
+          async ({ expectedHeaderName, headerType }) => {
+            const runtime = globalThis as typeof globalThis & {
+              browser?: any;
+              chrome?: any;
+            };
+            const browserApi = runtime.browser ?? runtime.chrome;
+            const debugState = await browserApi.runtime.sendMessage({ action: 'getDebugState' });
+            const headers = Array.isArray(debugState?.storageSnapshot?.activeProfileHeaders)
+              ? debugState.storageSnapshot.activeProfileHeaders
+              : [];
+            const dynamicRules = Array.isArray(debugState?.dynamicRules)
+              ? debugState.dynamicRules
+              : [];
+
+            return Boolean(
+              debugState?.success &&
+                !debugState?.lastError &&
+                debugState?.storageSnapshot?.globalEnabled &&
+                headers.some(
+                  (header: any) =>
+                    typeof header?.name === 'string' &&
+                    header.name.toLowerCase() === expectedHeaderName &&
+                    header.enabled === true &&
+                    header.type === headerType
+                ) &&
+                dynamicRules.length > 0 &&
+                Number(debugState?.lastAppliedRuleCount ?? 0) > 0
+            );
+          },
+          { expectedHeaderName, headerType }
+        ),
+      {
+        timeout: 5000,
+        message: `Timed out waiting for ${headerType} header ${headerName} to sync`,
+      }
+    )
+    .toBe(true);
+}
 
 /**
  * E2E tests for NoobHeaders extension
@@ -239,12 +372,8 @@ test.describe('Interactive E2E Tests', () => {
     extensionId,
     testServerUrl,
   }) => {
-    const page = await context.newPage();
-
-    // First, configure the extension
-    await page.goto(`chrome-extension://${extensionId}/popup.html`);
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(500);
+    const page = await openPopup(context, extensionId);
+    await resetToCleanProfile(page);
 
     // Enable global toggle - click on the visible container
     const globalToggleContainer = page.locator('.toggle-container').first();
@@ -268,8 +397,8 @@ test.describe('Interactive E2E Tests', () => {
     await valueInputs.last().click();
     await valueInputs.last().type('e2e-test-value', { delay: 50 });
 
-    // Wait for autosave
-    await page.waitForTimeout(1000);
+    await syncPopupState(page);
+    await waitForHeaderSync(page, 'X-NoobHeaders-Test');
 
     // Navigate to test server to check headers
     await page.goto(`${testServerUrl}/headers`);
@@ -288,10 +417,8 @@ test.describe('Interactive E2E Tests', () => {
     extensionId,
     testServerUrl,
   }) => {
-    const page = await context.newPage();
-    await page.goto(`chrome-extension://${extensionId}/popup.html`);
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(500);
+    const page = await openPopup(context, extensionId);
+    await resetToCleanProfile(page);
 
     // Enable global toggle
     const globalToggleContainer = page.locator('.toggle-container').first();
@@ -347,15 +474,52 @@ test.describe('Interactive E2E Tests', () => {
     await testPage.close();
   });
 
+  test('should persist header changes when popup closes immediately', async ({
+    context,
+    extensionId,
+    testServerUrl,
+  }) => {
+    const page = await openPopup(context, extensionId);
+    await resetToCleanProfile(page);
+
+    await page.locator('.toggle-container').first().click();
+    await page.waitForTimeout(300);
+
+    await page.locator('.profile-row .toggle-container').first().click();
+    await page.waitForTimeout(300);
+
+    await page.click('#add-header-btn');
+    await page.waitForSelector('.header-name', { timeout: 3000 });
+
+    await page.locator('.header-name').last().fill('X-Popup-Close');
+    await page.locator('.header-value').last().fill('saved-on-close');
+
+    await page.close();
+    await new Promise((resolve) => setTimeout(resolve, 600));
+
+    const reopenedPopup = await openPopup(context, extensionId);
+    await expect(reopenedPopup.locator('.header-name').last()).toHaveValue('X-Popup-Close');
+    await expect(reopenedPopup.locator('.header-value').last()).toHaveValue('saved-on-close');
+
+    const testPage = await context.newPage();
+    await testPage.goto(`${testServerUrl}/headers`);
+    await testPage.waitForLoadState('networkidle');
+
+    const content = await testPage.textContent('body');
+    expect(content?.toLowerCase()).toContain('x-popup-close');
+    expect(content).toContain('saved-on-close');
+
+    await testPage.close();
+    await reopenedPopup.close();
+  });
+
   test('should apply filters - headers only on matching domains', async ({
     context,
     extensionId,
     testServerUrl,
   }) => {
-    const page = await context.newPage();
-    await page.goto(`chrome-extension://${extensionId}/popup.html`);
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(500);
+    const page = await openPopup(context, extensionId);
+    await resetToCleanProfile(page);
 
     // Enable global toggle
     await page.locator('.toggle-container').first().click();
@@ -395,10 +559,8 @@ test.describe('Interactive E2E Tests', () => {
     extensionId,
     testServerUrl,
   }) => {
-    const page = await context.newPage();
-    await page.goto(`chrome-extension://${extensionId}/popup.html`);
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(500);
+    const page = await openPopup(context, extensionId);
+    await resetToCleanProfile(page, 'Primary Profile E2E');
 
     // Enable global toggle
     await page.locator('.toggle-container').first().click();
@@ -431,15 +593,67 @@ test.describe('Interactive E2E Tests', () => {
     expect(content).toContain('first-profile');
   });
 
+  test('should refresh the filter list when switching profiles', async ({
+    context,
+    extensionId,
+  }) => {
+    const page = await openPopup(context, extensionId);
+    await resetToCleanProfile(page, 'Primary Profile E2E');
+
+    const filterValues = page.locator('.filter-item .filter-value');
+
+    // Configure the default profile with one filter.
+    await page.click('#add-filter-btn');
+    await page.waitForTimeout(300);
+    await filterValues.last().fill('localhost');
+    await page.waitForTimeout(800);
+
+    await expect(filterValues).toHaveCount(1);
+    await expect(filterValues.first()).toHaveValue('localhost');
+
+    // Add a second profile and verify its filter list starts empty.
+    await page.click('#add-profile-btn');
+    await page.waitForSelector('#prompt-modal[style*="flex"]', { timeout: 3000 });
+    await page.locator('#prompt-input').fill('Second Profile E2E');
+    await page.click('#prompt-ok');
+    await page.waitForTimeout(800);
+
+    await expect(
+      page.locator('.profile-name-btn', { hasText: 'Second Profile E2E' })
+    ).toBeVisible();
+    await expect(filterValues).toHaveCount(0);
+
+    // Add a different filter to the new profile.
+    await page.click('#add-filter-btn');
+    await page.waitForTimeout(300);
+    await filterValues.last().fill('example.com');
+    await page.waitForTimeout(800);
+
+    await expect(filterValues).toHaveCount(1);
+    await expect(filterValues.first()).toHaveValue('example.com');
+
+    // Switch back to the default profile and ensure the old filter list is restored.
+    await page.click('.profile-name-btn:has-text("Primary Profile E2E")');
+    await page.waitForTimeout(500);
+
+    await expect(filterValues).toHaveCount(1);
+    await expect(filterValues.first()).toHaveValue('localhost');
+
+    // Switch again to the second profile and ensure its filter list is still intact.
+    await page.click('.profile-name-btn:has-text("Second Profile E2E")');
+    await page.waitForTimeout(500);
+
+    await expect(filterValues).toHaveCount(1);
+    await expect(filterValues.first()).toHaveValue('example.com');
+  });
+
   test('should apply multiple headers from same profile', async ({
     context,
     extensionId,
     testServerUrl,
   }) => {
-    const page = await context.newPage();
-    await page.goto(`chrome-extension://${extensionId}/popup.html`);
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(500);
+    const page = await openPopup(context, extensionId);
+    await resetToCleanProfile(page);
 
     // Enable global toggle
     await page.locator('.toggle-container').first().click();
@@ -488,10 +702,8 @@ test.describe('Interactive E2E Tests', () => {
     extensionId,
     testServerUrl,
   }) => {
-    const page = await context.newPage();
-    await page.goto(`chrome-extension://${extensionId}/popup.html`);
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(500);
+    const page = await openPopup(context, extensionId);
+    await resetToCleanProfile(page);
 
     // Enable global toggle
     await page.locator('.toggle-container').first().click();
@@ -529,10 +741,8 @@ test.describe('Interactive E2E Tests', () => {
   });
 
   test('should handle wildcard domain filters', async ({ context, extensionId, testServerUrl }) => {
-    const page = await context.newPage();
-    await page.goto(`chrome-extension://${extensionId}/popup.html`);
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(500);
+    const page = await openPopup(context, extensionId);
+    await resetToCleanProfile(page);
 
     // Enable global and profile
     await page.locator('.toggle-container').first().click();
@@ -567,10 +777,7 @@ test.describe('Interactive E2E Tests', () => {
   });
 
   test('should display UI in different languages', async ({ context, extensionId }) => {
-    const page = await context.newPage();
-    await page.goto(`chrome-extension://${extensionId}/popup.html`);
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(500);
+    const page = await openPopup(context, extensionId);
 
     // Check that i18n elements are present and translated
     // The page should have data-i18n attributes that get translated
@@ -581,9 +788,9 @@ test.describe('Interactive E2E Tests', () => {
     await expect(page.locator('#add-header-btn')).toBeVisible();
     await expect(page.locator('#add-filter-btn')).toBeVisible();
 
-    // Check that buttons have text (not empty)
-    const addProfileText = await page.locator('#add-profile-btn').textContent();
-    expect(addProfileText?.trim().length).toBeGreaterThan(0);
+    // Icon-only buttons should still expose translated labels.
+    const addProfileLabel = await page.locator('#add-profile-btn').getAttribute('aria-label');
+    expect(addProfileLabel?.trim().length).toBeGreaterThan(0);
 
     const addHeaderText = await page.locator('#add-header-btn').textContent();
     expect(addHeaderText?.trim().length).toBeGreaterThan(0);
@@ -645,10 +852,8 @@ test.describe('Interactive E2E Tests', () => {
   });
 
   test('should respect global disable toggle', async ({ context, extensionId, testServerUrl }) => {
-    const page = await context.newPage();
-    await page.goto(`chrome-extension://${extensionId}/popup.html`);
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(500);
+    const page = await openPopup(context, extensionId);
+    await resetToCleanProfile(page);
 
     // Enable profile and add header
     await page.locator('.profile-row .toggle-container').first().click();
@@ -682,10 +887,8 @@ test.describe('Interactive E2E Tests', () => {
   });
 
   test('should handle URL pattern filters', async ({ context, extensionId, testServerUrl }) => {
-    const page = await context.newPage();
-    await page.goto(`chrome-extension://${extensionId}/popup.html`);
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(500);
+    const page = await openPopup(context, extensionId);
+    await resetToCleanProfile(page);
 
     // Enable global and profile
     await page.locator('.toggle-container').first().click();
@@ -703,7 +906,7 @@ test.describe('Interactive E2E Tests', () => {
     // Add URL pattern filter
     await page.click('#add-filter-btn');
     await page.waitForTimeout(300);
-    await page.locator('.filter-value').last().fill('*://localhost:3456/headers*');
+    await page.locator('.filter-value').last().fill(`${testServerUrl}/headers*`);
     await page.waitForTimeout(800);
 
     // Test on matching URL
@@ -748,10 +951,8 @@ test.describe('Interactive E2E Tests', () => {
     extensionId,
     testServerUrl,
   }) => {
-    const page = await context.newPage();
-    await page.goto(`chrome-extension://${extensionId}/popup.html`);
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(500);
+    const page = await openPopup(context, extensionId);
+    await resetToCleanProfile(page);
 
     // Enable global toggle
     await page.locator('.toggle-container').first().click();
@@ -766,7 +967,8 @@ test.describe('Interactive E2E Tests', () => {
     await page.waitForTimeout(300);
     await page.locator('.header-name').last().fill('X-Custom-Request');
     await page.locator('.header-value').last().fill('custom-value-e2e');
-    await page.waitForTimeout(1000);
+    await syncPopupState(page);
+    await waitForHeaderSync(page, 'X-Custom-Request');
 
     // Navigate to the response-headers endpoint
     await page.goto(`${testServerUrl}/response-headers`);
@@ -783,6 +985,36 @@ test.describe('Interactive E2E Tests', () => {
     // Verify the server's response headers are also present in the JSON
     expect(content).toContain('X-Original-Response');
     expect(content).toContain('from-server');
+  });
+
+  test('should apply selected response headers to navigation responses', async ({
+    context,
+    extensionId,
+    testServerUrl,
+  }) => {
+    const page = await openPopup(context, extensionId);
+    await resetToCleanProfile(page);
+
+    await page.locator('.toggle-container').first().click();
+    await page.waitForTimeout(500);
+
+    await page.locator('.profile-row .toggle-container').first().click();
+    await page.waitForTimeout(300);
+
+    await page.click('#add-header-btn');
+    await page.waitForTimeout(300);
+    await page.locator('.header-type').last().selectOption('response');
+    await page.locator('.header-name').last().fill('X-E2E-Response');
+    await page.locator('.header-value').last().fill('response-e2e');
+    await syncPopupState(page);
+    await waitForHeaderSync(page, 'X-E2E-Response', 'response');
+
+    const response = await page.goto(`${testServerUrl}/response-headers`);
+    await page.waitForLoadState('networkidle');
+
+    expect(response).toBeTruthy();
+    expect(response?.headers()['x-e2e-response']).toBe('response-e2e');
+    expect(response?.headers()['x-original-response']).toBe('from-server');
   });
 
   test('should export profiles to JSON file from options page', async ({

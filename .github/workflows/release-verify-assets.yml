@@ -16,9 +16,10 @@ permissions:
     contents: write
 
 jobs:
-    verify-and-upload:
-        runs-on: ubuntu-latest
-        steps:
+  verify-and-upload:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
             - name: Checkout
               uses: actions/checkout@v4
 
@@ -30,7 +31,7 @@ jobs:
             - name: Setup pnpm
               uses: pnpm/action-setup@v2
               with:
-                  version: 8
+                  version: 10
 
             - name: Install deps
               run: pnpm install --no-frozen-lockfile
@@ -41,6 +42,7 @@ jobs:
                 GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
                   set -euo pipefail
+                  TAG=""
                   if [ "${{ github.event_name }}" = "release" ]; then
                     TAG=${{ github.event.release.tag_name }}
                     echo "Using release tag from event: $TAG"
@@ -49,15 +51,6 @@ jobs:
                     echo "Using manual input tag: $TAG"
                   else
                     echo "Triggered by workflow_run or no input; attempting to discover latest release tag..."
-
-                    # Try to extract tag from workflow_run payload if available
-                    if [ -f "$GITHUB_EVENT_PATH" ]; then
-                      CAND=$(jq -r '.workflow_run.head_branch // empty' "$GITHUB_EVENT_PATH" 2>/dev/null || echo "")
-                      if [ -n "$CAND" ]; then
-                        TAG=${CAND#refs/tags/}
-                        echo "Found tag from workflow_run payload: $TAG"
-                      fi
-                    fi
 
                     # If still not found, poll gh release view with more retries
                     if [ -z "$TAG" ]; then
@@ -93,8 +86,8 @@ jobs:
                   CHROME_ASSET=noobheaders-chrome.zip
                   FIREFOX_ASSET=noobheaders-firefox.zip
                   echo "Looking for assets: $CHROME_ASSET and $FIREFOX_ASSET"
-                  EXIST_CHROME=$(gh release view v$TAG --json assets --jq '.assets[].name' 2>/dev/null | grep -x "$CHROME_ASSET" || true)
-                  EXIST_FIREFOX=$(gh release view v$TAG --json assets --jq '.assets[].name' 2>/dev/null | grep -x "$FIREFOX_ASSET" || true)
+                  EXIST_CHROME=$(gh release view "$TAG" --repo "${{ github.repository }}" --json assets --jq '.assets[].name' 2>/dev/null | grep -x "$CHROME_ASSET" || true)
+                  EXIST_FIREFOX=$(gh release view "$TAG" --repo "${{ github.repository }}" --json assets --jq '.assets[].name' 2>/dev/null | grep -x "$FIREFOX_ASSET" || true)
                   echo "exists_chrome=$EXIST_CHROME" >> $GITHUB_OUTPUT
                   echo "exists_firefox=$EXIST_FIREFOX" >> $GITHUB_OUTPUT
 
@@ -118,9 +111,9 @@ jobs:
                   CHROME_FILE=packages/noobheaders-chrome.zip
                   FIREFOX_FILE=packages/noobheaders-firefox.zip
                   if [ -f "$CHROME_FILE" ]; then
-                    if ! gh release view v$TAG --json assets --jq '.assets[].name' 2>/dev/null | grep -x "noobheaders-chrome.zip" >/dev/null 2>&1; then
+                    if ! gh release view "$TAG" --repo "${{ github.repository }}" --json assets --jq '.assets[].name' 2>/dev/null | grep -x "noobheaders-chrome.zip" >/dev/null 2>&1; then
                       echo "Uploading $CHROME_FILE"
-                      gh release upload v$TAG "$CHROME_FILE" --repo ${{ github.repository }}
+                      gh release upload "$TAG" "$CHROME_FILE" --repo ${{ github.repository }}
                     else
                       echo "$CHROME_FILE already present - skipping"
                     fi
@@ -129,9 +122,9 @@ jobs:
                   fi
 
                   if [ -f "$FIREFOX_FILE" ]; then
-                    if ! gh release view v$TAG --json assets --jq '.assets[].name' 2>/dev/null | grep -x "noobheaders-firefox.zip" >/dev/null 2>&1; then
+                    if ! gh release view "$TAG" --repo "${{ github.repository }}" --json assets --jq '.assets[].name' 2>/dev/null | grep -x "noobheaders-firefox.zip" >/dev/null 2>&1; then
                       echo "Uploading $FIREFOX_FILE"
-                      gh release upload v$TAG "$FIREFOX_FILE" --repo ${{ github.repository }}
+                      gh release upload "$TAG" "$FIREFOX_FILE" --repo ${{ github.repository }}
                     else
                       echo "$FIREFOX_FILE already present - skipping"
                     fi

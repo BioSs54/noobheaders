@@ -1,7 +1,7 @@
 {
   "name": "noobheaders",
   "version": "2.0.1",
-  "description": "Clean, open-source browser extension to modify HTTP headers. No ads, no tracking. Perfect for developers and noobs 🎓",
+  "description": "Simple, privacy-focused, local-first browser extension to modify HTTP headers. No ads, no tracking. Built for developers and noobs 🚀",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.27.0",
@@ -11,9 +11,11 @@
     "build:watch": "node scripts/build.js --dev --watch",
     "clean": "rimraf dist",
     "test": "node scripts/build.js --dev && node --test tests/*.test.js",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
-    "test:e2e:debug": "playwright test --debug",
+    "test:e2e": "pnpm run package && playwright test --project=chromium",
+    "test:e2e:chromium": "pnpm run package && playwright test --project=chromium",
+    "test:e2e:ui": "pnpm run package && playwright test --project=chromium --ui",
+    "test:e2e:debug": "pnpm run package && playwright test --project=chromium --debug",
+    "test:firefox": "node scripts/test-firefox.js",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "prepare": "husky install",
@@ -60,7 +62,8 @@
     "rimraf": "^6.1.2",
     "semantic-release": "^23.0.0",
     "sharp": "^0.33.5",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "web-ext": "^10.1.0"
   },
   "volta": {
     "node": "18.20.8"

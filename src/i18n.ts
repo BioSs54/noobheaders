@@ -3,11 +3,15 @@
  * Automatic language detection and translation
  */
 
+import { getBrowserApi, getUiLanguage } from './browser-compat.js';
+
+const browserAPI = getBrowserApi();
+
 /**
  * Get translated message
  */
 export function getMessage(key: string, substitutions?: string | string[]): string {
-  return chrome.i18n.getMessage(key, substitutions) || key;
+  return browserAPI.i18n.getMessage(key, substitutions) || key;
 }
 
 /**
@@ -15,7 +19,7 @@ export function getMessage(key: string, substitutions?: string | string[]): stri
  */
 export function translatePage(): void {
   // Set HTML lang attribute
-  document.documentElement.lang = chrome.i18n.getUILanguage().split('-')[0];
+  document.documentElement.lang = getUiLanguage().split('-')[0];
 
   // Translate elements with data-i18n attribute
   document.querySelectorAll('[data-i18n]').forEach((element) => {
@@ -47,7 +51,9 @@ export function translatePage(): void {
   document.querySelectorAll('[data-i18n-title]').forEach((element) => {
     const key = element.getAttribute('data-i18n-title');
     if (!key) return;
-    (element as HTMLElement).title = getMessage(key);
+    const message = getMessage(key);
+    (element as HTMLElement).title = message;
+    (element as HTMLElement).setAttribute('aria-label', message);
   });
 
   // Translate elements with data-i18n-html attribute (for HTML content)

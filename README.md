@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-> Clean, privacy-focused browser extension to modify HTTP headers. No ads, no tracking. Perfect for developers and noobs 🚀
+> Simple, privacy-focused, local-first browser extension to modify HTTP headers. No ads, no tracking. Built for developers and noobs 🚀
 
 ## ✨ Features
 
@@ -15,7 +15,7 @@
 - **🔒 Privacy First**: No ads, no tracking, no analytics. Your data stays on your device
 - **🌍 Open Source**: Built in the open on GitHub
 - **⚡ Lightweight**: Fast and efficient with minimal permissions
-- **🎓 Noob Friendly**: Clean UI designed for developers and beginners
+- **🎓 Noob Friendly**: Straightforward UI designed for developers and beginners
 
 ## 🚀 Installation
 
@@ -37,7 +37,7 @@ Download the packaged extensions from GitHub Releases (the **latest** link point
 Installation
 
 1. Unzip the downloaded archive.
-2. Chrome: open `chrome://extensions/`, enable **Developer mode**, click **Load unpacked**, and select the unzipped folder.
+2. Chrome: do not import the ZIP directly. Open `chrome://extensions/`, enable **Developer mode**, click **Load unpacked**, and select the unzipped folder.
 3. Firefox: open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on**, and select the `manifest.json` file inside the unzipped folder.
 
 > Tip: When available, prefer installing from the Chrome Web Store or Firefox Add-ons to receive automatic updates.
@@ -155,9 +155,20 @@ Run E2E tests:
 pnpm test:e2e
 ```
 
+Run Chromium E2E only:
+```bash
+pnpm test:e2e:chromium
+```
+
+Run Firefox manual validation:
+```bash
+pnpm test:firefox
+```
+
 Tests include:
 - Unit tests for core functionality
-- E2E tests with Playwright
+- Chromium E2E tests with Playwright
+- Firefox manual validation through web-ext
 - Manifest validation
 - i18n completeness
 

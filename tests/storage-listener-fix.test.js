@@ -31,7 +31,7 @@ describe('Storage Change Listener Fix', () => {
 
     // Find storage.onChanged listener
     const listenerMatch = src.match(
-      /chrome\.storage\.onChanged\.addListener\([\s\S]+?\}\);[\s\S]+?\}\);/
+      /(?:chrome|browserAPI)\.storage\.onChanged\.addListener\([\s\S]+?\}\);[\s\S]+?\}\);/
     );
 
     assert.ok(listenerMatch, 'Should have storage.onChanged listener');

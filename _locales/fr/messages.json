@@ -4,7 +4,7 @@
     "description": "Nom de l'extension"
   },
   "extensionDescription": {
-    "message": "Modificateur d'en-têtes HTTP propre et respectueux de la vie privée pour développeurs et noobs. Sans pubs ni tracking.",
+    "message": "Modificateur d'en-têtes HTTP simple, local et respectueux de la vie privée pour développeurs et noobs. Sans pubs ni suivi.",
     "description": "Description de l'extension"
   },
   "subtitle": {
@@ -156,16 +156,19 @@
     "message": "Afficher le nombre d'en-têtes actifs sur l'icône de l'extension"
   },
   "profileActivePrefix": {
-    "message": "Profil sélectionné :"
+    "message": "Profil sélectionné :"
   },
   "aboutTitle": {
     "message": "À propos"
   },
   "aboutDesc": {
-    "message": "Modificateur d'en-têtes HTTP propre et respectueux de la vie privée pour développeurs et noobs."
+    "message": "Modificateur d'en-têtes HTTP simple, local et respectueux de la vie privée pour développeurs et noobs."
   },
   "github": {
     "message": "GitHub"
+  },
+  "noobModeActivated": {
+    "message": "Mode noob activé"
   },
   "reportIssue": {
     "message": "Signaler un problème"
@@ -180,7 +183,10 @@
     "message": "Valeur"
   },
   "filterValuePlaceholder": {
-    "message": "Entrez un domaine ou un motif d'URL"
+    "message": "example.com ou *://*.example.com/*"
+  },
+  "filterHelpText": {
+    "message": "example.com cible le domaine, tandis que *://*.example.com/* cible aussi le protocole et le chemin avec des jokers."
   },
   "invalidDomain": {
     "message": "Domaine ou URL invalide"
@@ -201,22 +207,22 @@
     "message": "Annuler"
   },
   "exportProfiles": {
-    "message": "📥 Exporter les profils"
+    "message": "Exporter les profils"
   },
   "importProfiles": {
-    "message": "📤 Importer les profils"
+    "message": "Importer les profils"
   },
   "welcomeTitle": {
     "message": "Bienvenue sur NoobHeaders !"
   },
   "welcomeSubtitle": {
-    "message": "Modificateur d'en-têtes HTTP propre et respectueux de la vie privée"
+    "message": "Modificateur d'en-têtes HTTP simple, local et respectueux de la vie privée"
   },
   "getStarted": {
     "message": "Commencer"
   },
   "welcomeFeatureSimpleTitle": {
-    "message": "Simple et Propre"
+    "message": "Simple et Clair"
   },
   "welcomeFeatureSimpleDesc": {
     "message": "Interface intuitive conçue pour les développeurs et les débutants. Sans encombrement, juste des en-têtes."
@@ -276,7 +282,7 @@
     "message": "Vérifiez la section Débogage si quelque chose ne fonctionne pas"
   },
   "welcomeMadeWith": {
-    "message": "Fait avec 💜 par"
+    "message": "Fait par"
   },
   "welcomeReportIssue": {
     "message": "Signaler un Problème"

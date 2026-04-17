@@ -20,8 +20,23 @@
     }
 
     .welcome-header h1 {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
       font-size: 48px;
       margin-bottom: 16px;
+    }
+
+    .welcome-title-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 56px;
+      height: 56px;
+      border-radius: 18px;
+      background: rgba(102, 126, 234, 0.12);
+      color: var(--primary-color);
     }
 
     .welcome-header .subtitle {
@@ -41,8 +56,20 @@
     }
 
     .feature-card .icon {
-      font-size: 48px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 72px;
+      height: 72px;
+      border-radius: 20px;
+      background: rgba(102, 126, 234, 0.08);
+      color: var(--primary-color);
       margin-bottom: 16px;
+    }
+
+    .feature-card .icon .ui-icon {
+      width: 32px;
+      height: 32px;
     }
 
     .feature-card h3 {
@@ -88,51 +115,96 @@
     .cta-button:hover {
       transform: translateY(-2px);
     }
+
+    .tips-section {
+      margin-top: 40px;
+      text-align: center;
+    }
+
+    .tip-list {
+      list-style: none;
+      padding: 0;
+      display: grid;
+      gap: 10px;
+    }
+
+    .tip-item {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: var(--text-secondary);
+    }
+
+    .tip-item .ui-icon {
+      width: 18px;
+      height: 18px;
+      color: var(--primary-color);
+    }
   </style>
 </head>
 
 <body>
   <div class="container">
     <div class="welcome-header">
-      <h1>🎓 <span data-i18n="welcomeTitle">Welcome to NoobHeaders!</span></h1>
-      <p class="subtitle" data-i18n="welcomeSubtitle">Clean, privacy-focused HTTP header modifier</p>
+      <h1>
+        <span class="welcome-title-icon" aria-hidden="true">
+          <svg class="ui-icon ui-icon--lg" focusable="false" aria-hidden="true">
+            <use href="icons/ui-sprite.svg#cap"></use>
+          </svg>
+        </span>
+        <span data-i18n="welcomeTitle">Welcome to NoobHeaders!</span>
+      </h1>
+      <p class="subtitle" data-i18n="welcomeSubtitle">Simple, local-first HTTP header modifier</p>
     </div>
 
     <div class="features">
       <div class="feature-card section">
-        <div class="icon">🚀</div>
-        <h3 data-i18n="welcomeFeatureSimpleTitle">Simple & Clean</h3>
+        <div class="icon" aria-hidden="true">
+          <svg class="ui-icon" focusable="false" aria-hidden="true"><use href="icons/ui-sprite.svg#sparkles"></use></svg>
+        </div>
+        <h3 data-i18n="welcomeFeatureSimpleTitle">Simple & Clear</h3>
         <p data-i18n="welcomeFeatureSimpleDesc">Intuitive interface designed for developers and noobs alike. No clutter,
           just headers.</p>
       </div>
 
       <div class="feature-card section">
-        <div class="icon">🔒</div>
+        <div class="icon" aria-hidden="true">
+          <svg class="ui-icon" focusable="false" aria-hidden="true"><use href="icons/ui-sprite.svg#shield"></use></svg>
+        </div>
         <h3 data-i18n="welcomeFeaturePrivacyTitle">Privacy First</h3>
         <p data-i18n="welcomeFeaturePrivacyDesc">No ads, no tracking, no analytics. Your data stays on your device.</p>
       </div>
 
       <div class="feature-card section">
-        <div class="icon">⚡</div>
+        <div class="icon" aria-hidden="true">
+          <svg class="ui-icon" focusable="false" aria-hidden="true"><use href="icons/ui-sprite.svg#layers"></use></svg>
+        </div>
         <h3 data-i18n="welcomeFeatureProfilesTitle">Powerful Profiles</h3>
         <p data-i18n="welcomeFeatureProfilesDesc">Create multiple profiles for different scenarios. Switch instantly.
         </p>
       </div>
 
       <div class="feature-card section">
-        <div class="icon">🎯</div>
+        <div class="icon" aria-hidden="true">
+          <svg class="ui-icon" focusable="false" aria-hidden="true"><use href="icons/ui-sprite.svg#target"></use></svg>
+        </div>
         <h3 data-i18n="welcomeFeatureFiltersTitle">Smart Filters</h3>
         <p data-i18n="welcomeFeatureFiltersDesc">Apply headers to specific domains or URL patterns.</p>
       </div>
 
       <div class="feature-card section">
-        <div class="icon">📦</div>
+        <div class="icon" aria-hidden="true">
+          <svg class="ui-icon" focusable="false" aria-hidden="true"><use href="icons/ui-sprite.svg#download"></use></svg>
+        </div>
         <h3 data-i18n="welcomeFeatureImportExportTitle">Import/Export</h3>
         <p data-i18n="welcomeFeatureImportExportDesc">Share configurations with your team or backup your profiles.</p>
       </div>
 
       <div class="feature-card section">
-        <div class="icon">🌍</div>
+        <div class="icon" aria-hidden="true">
+          <svg class="ui-icon" focusable="false" aria-hidden="true"><use href="icons/ui-sprite.svg#globe"></use></svg>
+        </div>
         <h3 data-i18n="welcomeFeatureOpenSourceTitle">Open Source</h3>
         <p data-i18n="welcomeFeatureOpenSourceDesc">Built in the open. Contribute on GitHub or audit the code.</p>
       </div>
@@ -143,33 +215,41 @@
       <p data-i18n="welcomeReadyDesc">Click the extension icon in your toolbar to create your first profile!</p>
     </div>
 
-    <div class="section" style="margin-top: 40px; text-align: center;">
+    <div class="section tips-section">
       <h3 style="margin-bottom: 12px;" data-i18n="welcomeQuickTipsTitle">Quick Tips</h3>
-      <ul style="list-style: none; padding: 0;">
-        <li style="margin-bottom: 8px;">✨ <span data-i18n="welcomeTip1">Click the extension icon to open the
-            popup</span></li>
-        <li style="margin-bottom: 8px;">🔧 <span data-i18n="welcomeTip2">Create profiles for different development
-            scenarios</span></li>
-        <li style="margin-bottom: 8px;">🎯 <span data-i18n="welcomeTip3">Use filters to target specific URLs or
-            domains</span></li>
-        <li style="margin-bottom: 8px;">💾 <span data-i18n="welcomeTip4">Export your profiles to share with
-            teammates</span></li>
-        <li style="margin-bottom: 8px;">🐛 <span data-i18n="welcomeTip5">Check the Debug section if something isn't
-            working</span></li>
+      <ul class="tip-list">
+        <li class="tip-item"><svg class="ui-icon" focusable="false" aria-hidden="true"><use href="icons/ui-sprite.svg#sparkles"></use></svg><span data-i18n="welcomeTip1">Click the extension icon to open the popup</span></li>
+        <li class="tip-item"><svg class="ui-icon" focusable="false" aria-hidden="true"><use href="icons/ui-sprite.svg#wrench"></use></svg><span data-i18n="welcomeTip2">Create profiles for different development scenarios</span></li>
+        <li class="tip-item"><svg class="ui-icon" focusable="false" aria-hidden="true"><use href="icons/ui-sprite.svg#target"></use></svg><span data-i18n="welcomeTip3">Use filters to target specific URLs or domains</span></li>
+        <li class="tip-item"><svg class="ui-icon" focusable="false" aria-hidden="true"><use href="icons/ui-sprite.svg#download"></use></svg><span data-i18n="welcomeTip4">Export your profiles to share with teammates</span></li>
+        <li class="tip-item"><svg class="ui-icon" focusable="false" aria-hidden="true"><use href="icons/ui-sprite.svg#bug"></use></svg><span data-i18n="welcomeTip5">Check the Debug section if something isn't working</span></li>
       </ul>
     </div>
 
     <footer class="footer" style="margin-top: 60px;">
       <p>
-        <span data-i18n="welcomeMadeWith">Made with 💜 by</span>
+        <span data-i18n="welcomeMadeWith">Made by</span>
         <a href="https://github.com/BioSs54" target="_blank">BioSs54</a>
       </p>
       <p>
-        <a href="https://github.com/BioSs54/noobheaders" target="_blank">GitHub</a> •
+        <a href="https://github.com/BioSs54/noobheaders" target="_blank" data-i18n="github">GitHub</a> •
         <a href="https://github.com/BioSs54/noobheaders/issues" target="_blank" data-i18n="welcomeReportIssue">Report
           Issue</a> •
-        <a href="https://github.com/BioSs54/noobheaders/blob/main/LICENSE" target="_blank">MIT License</a>
+        <a href="https://github.com/BioSs54/noobheaders/blob/main/LICENSE" target="_blank" data-i18n="mitLicense">MIT License</a>
       </p>
+      <div class="footer-donations">
+        <p class="donations-title">Donations</p>
+        <div class="donations-links">
+          <a href="https://github.com/sponsors/BioSs54" target="_blank" rel="noreferrer" class="donation-link donation-link--sponsor">
+            <svg class="ui-icon ui-icon--sm" focusable="false" aria-hidden="true"><use href="icons/ui-sprite.svg#heart"></use></svg>
+            GitHub Sponsors
+          </a>
+          <a href="https://www.paypal.com/paypalme/bioss54" target="_blank" rel="noreferrer" class="donation-link donation-link--paypal">
+            <svg class="ui-icon ui-icon--sm" focusable="false" aria-hidden="true"><use href="icons/ui-sprite.svg#wallet"></use></svg>
+            PayPal
+          </a>
+        </div>
+      </div>
     </footer>
   </div>
 

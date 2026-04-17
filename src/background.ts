@@ -1,10 +1,17 @@
 /**
  * NoobHeaders - Background Service Worker
- * Clean, privacy-focused HTTP header modifier
+ * Simple, local-first HTTP header modifier
  */
 
-import { convertProfileToRules } from './rules';
-import { STORAGE_KEYS } from './types/index.js';
+import {
+  detectBrowser,
+  getActionApi,
+  getBrowserApi,
+  supportsDeclarativeNetRequest,
+} from './browser-compat.js';
+import { applyHeadersWebRequest } from './firefox-webrequest.js';
+import { convertProfileToRules, resolveProfilesToApply } from './rules.js';
+import { STORAGE_KEYS, createDefaultProfile, normalizeProfiles } from './types/index.js';
 import type {
   Filter,
   Header,
@@ -14,7 +21,29 @@ import type {
   StorageData,
 } from './types/index.js';
 
+const IS_FIREFOX = detectBrowser() === 'firefox';
+const USE_DECLARATIVE_NET_REQUEST = supportsDeclarativeNetRequest();
+
+// Get the appropriate browser API
+const browserAPI = getBrowserApi();
+
+// Log browser detection
+console.log('[NoobHeaders] Browser detected:', IS_FIREFOX ? 'Firefox' : 'Chrome/Chromium');
+console.log('[NoobHeaders] Using declarativeNetRequest:', USE_DECLARATIVE_NET_REQUEST);
+
 const RULE_ID_OFFSET = 1;
+
+const debugState = {
+  lastAppliedRuleCount: 0,
+  lastComputedRuleCount: 0,
+  lastError: '',
+};
+
+interface ExtensionStateSnapshot {
+  profiles: Profile[];
+  activeProfileId: string | null;
+  globalEnabled: boolean;
+}
 
 /**
  * Generate unique ID
@@ -41,8 +70,13 @@ async function applyRules(rules: ModifyHeaderRule[]): Promise<boolean> {
       addRules: rules as chrome.declarativeNetRequest.Rule[],
     });
 
+    debugState.lastAppliedRuleCount = rules.length;
+    debugState.lastError = '';
+
     return true;
   } catch (error) {
+    debugState.lastAppliedRuleCount = 0;
+    debugState.lastError = error instanceof Error ? error.message : String(error);
     return false;
   }
 }
@@ -50,42 +84,75 @@ async function applyRules(rules: ModifyHeaderRule[]): Promise<boolean> {
 /**
  * Handle update rules request
  */
-async function handleUpdateRules(): Promise<void> {
+async function handleUpdateRules(snapshot?: ExtensionStateSnapshot): Promise<void> {
   try {
-    const data = await chrome.storage.local.get([
-      STORAGE_KEYS.PROFILES,
-      STORAGE_KEYS.ACTIVE_PROFILE,
-      STORAGE_KEYS.GLOBAL_ENABLED,
-    ]);
+    console.log('[NoobHeaders] handleUpdateRules called');
+    const browserAPI = IS_FIREFOX ? browser : chrome;
+    const data = snapshot
+      ? {
+          [STORAGE_KEYS.PROFILES]: snapshot.profiles,
+          [STORAGE_KEYS.ACTIVE_PROFILE]: snapshot.activeProfileId,
+          [STORAGE_KEYS.GLOBAL_ENABLED]: snapshot.globalEnabled,
+        }
+      : await browserAPI.storage.local.get([
+          STORAGE_KEYS.PROFILES,
+          STORAGE_KEYS.ACTIVE_PROFILE,
+          STORAGE_KEYS.GLOBAL_ENABLED,
+        ]);
 
-    const profiles: Profile[] = data[STORAGE_KEYS.PROFILES] || [];
+    const profiles: Profile[] = normalizeProfiles(data[STORAGE_KEYS.PROFILES]);
     const activeProfileId: string = data[STORAGE_KEYS.ACTIVE_PROFILE];
     const globalEnabled: boolean = data[STORAGE_KEYS.GLOBAL_ENABLED] || false;
 
-    // If global is disabled, clear rules
-    if (!globalEnabled) {
-      await applyRules([]);
-      return;
+    console.log('[NoobHeaders] Storage data:', {
+      profileCount: profiles.length,
+      activeProfileId,
+      globalEnabled,
+      profiles: profiles.map((p) => ({
+        id: p.id,
+        name: p.name,
+        enabled: p.enabled,
+        headerCount: p.headers?.length,
+      })),
+    });
+
+    // Always include the selected profile and let it override any additionally enabled profiles.
+    const profilesToApply = resolveProfilesToApply(profiles, activeProfileId);
+
+    console.log(
+      '[NoobHeaders] Profiles to apply:',
+      profilesToApply.length,
+      profilesToApply.map((p) => p.name)
+    );
+
+    // Use appropriate API based on browser
+    if (IS_FIREFOX || !USE_DECLARATIVE_NET_REQUEST) {
+      console.log('[NoobHeaders] Using Firefox webRequest API');
+      // Firefox: Use webRequest API (Manifest V2)
+      applyHeadersWebRequest(profilesToApply, globalEnabled);
+    } else {
+      console.log('[NoobHeaders] Using Chrome declarativeNetRequest API');
+      // Chrome: Use declarativeNetRequest API (Manifest V3)
+      if (!globalEnabled) {
+        debugState.lastComputedRuleCount = 0;
+        await applyRules([]);
+        return;
+      }
+
+      let rules: any[] = [];
+      let ruleIdOffset = RULE_ID_OFFSET;
+      for (const [index, profile] of profilesToApply.entries()) {
+        const prs = convertProfileToRules(profile, true, ruleIdOffset, index + 1);
+        rules = rules.concat(prs);
+        ruleIdOffset += prs.length;
+      }
+
+      debugState.lastComputedRuleCount = rules.length;
+
+      await applyRules(rules as any);
     }
-
-    // Merge rules from all enabled profiles. If none explicitly enabled, fall back to active profile.
-    // A profile is considered enabled if profile.enabled === true
-    const enabledProfiles = profiles.filter((p) => p.enabled === true);
-    const profilesToApply =
-      enabledProfiles.length > 0
-        ? enabledProfiles
-        : profiles.filter((p) => p.id === activeProfileId);
-
-    let rules: any[] = [];
-    let ruleIdOffset = RULE_ID_OFFSET;
-    for (const p of profilesToApply) {
-      const prs = convertProfileToRules(p, true, ruleIdOffset);
-      rules = rules.concat(prs);
-      ruleIdOffset += prs.length;
-    }
-
-    await applyRules(rules as any);
   } catch (error) {
+    debugState.lastError = error instanceof Error ? error.message : String(error);
     console.error('Error in handleUpdateRules:', error);
   }
 }
@@ -95,34 +162,36 @@ async function handleUpdateRules(): Promise<void> {
  */
 async function updateBadge(): Promise<void> {
   try {
-    const data = await chrome.storage.local.get([
+    const data = await browserAPI.storage.local.get([
       STORAGE_KEYS.PROFILES,
       STORAGE_KEYS.ACTIVE_PROFILE,
       STORAGE_KEYS.GLOBAL_ENABLED,
+      'showBadge',
     ]);
 
-    const profiles: Profile[] = data[STORAGE_KEYS.PROFILES] || [];
+    const profiles: Profile[] = normalizeProfiles(data[STORAGE_KEYS.PROFILES]);
     const activeProfileId: string = data[STORAGE_KEYS.ACTIVE_PROFILE];
     const globalEnabled: boolean = data[STORAGE_KEYS.GLOBAL_ENABLED] || false;
+    const showBadge: boolean = data.showBadge !== false;
+    const actionAPI = getActionApi();
 
-    if (!globalEnabled) {
-      await chrome.action.setBadgeText({ text: '' });
-      await chrome.action.setBadgeBackgroundColor({ color: '#808080' });
+    if (!actionAPI || !showBadge) {
+      await actionAPI?.setBadgeText({ text: '' });
       return;
     }
 
-    // Determine profiles that contribute: enabled profiles if any, otherwise the active profile
-    // A profile is considered enabled if profile.enabled === true
-    const enabledProfiles = profiles.filter((p) => p.enabled === true);
-    const profilesToCheck =
-      enabledProfiles.length > 0
-        ? enabledProfiles
-        : profiles.filter((p) => p.id === activeProfileId);
+    if (!globalEnabled) {
+      await actionAPI.setBadgeText({ text: '' });
+      await actionAPI.setBadgeBackgroundColor({ color: '#808080' });
+      return;
+    }
+
+    const profilesToCheck = resolveProfilesToApply(profiles, activeProfileId);
 
     // Get active tab URL to compute which headers actually apply
     let url: string | undefined;
     try {
-      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+      const tabs = await browserAPI.tabs.query({ active: true, currentWindow: true });
       if (tabs && tabs.length > 0) url = tabs[0].url;
     } catch (e) {
       // ignore
@@ -133,10 +202,10 @@ async function updateBadge(): Promise<void> {
     const applicableCount = countApplicableHeadersForUrl(profilesToCheck, url);
 
     if (applicableCount === 0) {
-      await chrome.action.setBadgeText({ text: '' });
+      await actionAPI.setBadgeText({ text: '' });
     } else {
-      await chrome.action.setBadgeText({ text: applicableCount.toString() });
-      await chrome.action.setBadgeBackgroundColor({ color: '#667eea' });
+      await actionAPI.setBadgeText({ text: applicableCount.toString() });
+      await actionAPI.setBadgeBackgroundColor({ color: '#667eea' });
     }
   } catch (error) {
     console.error('Error in updateBadge:', error);
@@ -144,20 +213,15 @@ async function updateBadge(): Promise<void> {
 }
 
 // Initialize extension
-chrome.runtime.onInstalled.addListener(async (details) => {
+browserAPI.runtime.onInstalled.addListener(async (details) => {
   if (details.reason === 'install') {
     // Open welcome page on first install
-    await chrome.tabs.create({ url: 'welcome.html' });
+    await browserAPI.tabs.create({ url: 'welcome.html' });
 
     // Initialize default profile
-    const defaultProfile: Profile = {
-      id: generateId(),
-      name: 'Default Profile',
-      headers: [],
-      filters: [],
-    };
+    const defaultProfile: Profile = createDefaultProfile(generateId());
 
-    await chrome.storage.local.set({
+    await browserAPI.storage.local.set({
       [STORAGE_KEYS.PROFILES]: [defaultProfile],
       [STORAGE_KEYS.ACTIVE_PROFILE]: defaultProfile.id,
       [STORAGE_KEYS.GLOBAL_ENABLED]: false,
@@ -169,7 +233,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
 });
 
 // Listen to storage changes to update rules
-chrome.storage.onChanged.addListener(async (changes, namespace) => {
+browserAPI.storage.onChanged.addListener(async (changes, namespace) => {
   if (
     namespace === 'local' &&
     (changes[STORAGE_KEYS.PROFILES] ||
@@ -186,10 +250,10 @@ import { selectProfileForUrl } from './auto-switch.js';
 
 async function tryAutoSwitch(tabId: number) {
   try {
-    const tab = await chrome.tabs.get(tabId);
+    const tab = await browserAPI.tabs.get(tabId);
     if (!tab || !tab.url) return;
 
-    const data = await chrome.storage.local.get([
+    const data = await browserAPI.storage.local.get([
       STORAGE_KEYS.PROFILES,
       STORAGE_KEYS.ACTIVE_PROFILE,
     ]);
@@ -198,7 +262,7 @@ async function tryAutoSwitch(tabId: number) {
 
     const matched = selectProfileForUrl(profiles, tab.url);
     if (matched && matched.id !== activeProfileId) {
-      await chrome.storage.local.set({ [STORAGE_KEYS.ACTIVE_PROFILE]: matched.id });
+      await browserAPI.storage.local.set({ [STORAGE_KEYS.ACTIVE_PROFILE]: matched.id });
       // handleUpdateRules will be triggered via storage.onChanged
     }
   } catch (e) {
@@ -206,25 +270,99 @@ async function tryAutoSwitch(tabId: number) {
   }
 }
 
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+browserAPI.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete' || changeInfo.url) {
     tryAutoSwitch(tabId);
   }
 });
 
-chrome.tabs.onActivated.addListener(async (activeInfo) => {
+browserAPI.tabs.onActivated.addListener(async (activeInfo) => {
   tryAutoSwitch(activeInfo.tabId);
 });
 
 // Handle messages from popup/options
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+browserAPI.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.action === 'updateRules') {
-    handleUpdateRules().then(() => sendResponse({ success: true }));
+    handleUpdateRules(message.state).then(() => sendResponse({ success: true }));
     return true; // Keep channel open for async response
   }
 
   if (message.action === 'updateBadge') {
     updateBadge().then(() => sendResponse({ success: true }));
+    return true;
+  }
+
+  if (message.action === 'getDebugState') {
+    (async () => {
+      try {
+        const storageData = await browserAPI.storage.local.get([
+          STORAGE_KEYS.PROFILES,
+          STORAGE_KEYS.ACTIVE_PROFILE,
+          STORAGE_KEYS.GLOBAL_ENABLED,
+        ]);
+        const storageProfiles: Profile[] = normalizeProfiles(storageData[STORAGE_KEYS.PROFILES]);
+        const storageActiveProfileId: string | null =
+          storageData[STORAGE_KEYS.ACTIVE_PROFILE] || null;
+        const storageGlobalEnabled: boolean = Boolean(storageData[STORAGE_KEYS.GLOBAL_ENABLED]);
+        const storageActiveProfile = storageProfiles.find(
+          (profile) => profile.id === storageActiveProfileId
+        );
+        const profilesToApply = resolveProfilesToApply(
+          storageProfiles,
+          storageActiveProfileId || ''
+        );
+        const dynamicRules =
+          IS_FIREFOX || !USE_DECLARATIVE_NET_REQUEST
+            ? []
+            : await chrome.declarativeNetRequest.getDynamicRules();
+
+        sendResponse({
+          success: true,
+          isFirefox: IS_FIREFOX,
+          usesDeclarativeNetRequest: USE_DECLARATIVE_NET_REQUEST,
+          storageSnapshot: {
+            profileCount: storageProfiles.length,
+            activeProfileId: storageActiveProfileId,
+            activeProfileName: storageActiveProfile?.name || null,
+            activeProfileHeaderCount: storageActiveProfile?.headers?.length || 0,
+            activeProfileEnabledHeaderCount:
+              storageActiveProfile?.headers?.filter((header) => header.enabled).length || 0,
+            activeProfileHeaders:
+              storageActiveProfile?.headers?.map((header) => ({
+                enabled: header.enabled,
+                type: header.type,
+                name: header.name,
+                value: header.value,
+              })) || [],
+            activeProfileFilterCount: storageActiveProfile?.filters?.length || 0,
+            activeProfileEnabledFilterCount:
+              storageActiveProfile?.filters?.filter((filter) => filter.enabled).length || 0,
+            activeProfileFilters:
+              storageActiveProfile?.filters?.map((filter) => ({
+                enabled: filter.enabled,
+                type: filter.type,
+                value: filter.value,
+              })) || [],
+            globalEnabled: storageGlobalEnabled,
+            profilesToApplyCount: profilesToApply.length,
+          },
+          dynamicRules,
+          lastAppliedRuleCount: debugState.lastAppliedRuleCount,
+          lastComputedRuleCount: debugState.lastComputedRuleCount,
+          lastError: debugState.lastError,
+        });
+      } catch (error) {
+        sendResponse({
+          success: false,
+          isFirefox: IS_FIREFOX,
+          usesDeclarativeNetRequest: USE_DECLARATIVE_NET_REQUEST,
+          dynamicRules: [],
+          lastAppliedRuleCount: debugState.lastAppliedRuleCount,
+          lastComputedRuleCount: debugState.lastComputedRuleCount,
+          lastError: error instanceof Error ? error.message : String(error),
+        });
+      }
+    })();
     return true;
   }
 });
