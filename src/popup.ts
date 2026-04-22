@@ -546,6 +546,8 @@ function renderProfiles(): void {
     meta.className = 'profile-row-meta';
     meta.textContent = `${profile.headers?.length || 0} ${getMessage('headers')} • ${profile.filters?.length || 0} ${getMessage('filters')}`;
 
+    headline.appendChild(nameBtn);
+
     if (profile.id === activeProfileId) {
       const badge = document.createElement('span');
       badge.className = 'profile-status-badge';
@@ -558,7 +560,6 @@ function renderProfiles(): void {
       row.classList.remove('active');
     }
 
-    headline.appendChild(nameBtn);
     copy.appendChild(headline);
     copy.appendChild(meta);
     main.appendChild(toggleLabel);
