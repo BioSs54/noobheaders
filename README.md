@@ -96,7 +96,7 @@ noobheaders/
 ├── dist/               # Compiled JavaScript (generated)
 ├── packages/           # Packaged extensions (generated)
 ├── icons/              # Extension icons
-├── _locales/           # Translations (en, fr, es)
+├── _locales/           # Translations (en, fr, es, de, it, pt_BR, ru, zh_CN, ja, ko)
 └── scripts/            # Build and package scripts
 ```
 

@@ -1,0 +1,372 @@
+{
+  "extensionName": {
+    "message": "NoobHeaders",
+    "description": "Name of the extension"
+  },
+  "extensionDescription": {
+    "message": "Простой локальный редактор HTTP-заголовков для разработчиков и новичков. Без рекламы и слежки.",
+    "description": "Description of the extension"
+  },
+  "subtitle": {
+    "message": "Легко изменяйте HTTP-заголовки",
+    "description": "Short app subtitle"
+  },
+  "headerModificationEnabled": {
+    "message": "Включить изменение заголовков",
+    "description": "Label for the global toggle that enables header modifications"
+  },
+  "addProfile": {
+    "message": "Добавить профиль"
+  },
+  "deleteProfile": {
+    "message": "Удалить профиль"
+  },
+  "rename": {
+    "message": "Переименовать"
+  },
+  "duplicate": {
+    "message": "Дублировать"
+  },
+  "headers": {
+    "message": "Заголовки"
+  },
+  "addHeader": {
+    "message": "+ Добавить заголовок"
+  },
+  "filters": {
+    "message": "Фильтры"
+  },
+  "addFilter": {
+    "message": "+ Добавить фильтр"
+  },
+  "noHeadersConfigured": {
+    "message": "Заголовки не настроены"
+  },
+  "clickAddHeaderHint": {
+    "message": "Нажмите «Добавить заголовок», чтобы начать"
+  },
+  "noFiltersConfigured": {
+    "message": "Фильтры не настроены"
+  },
+  "headersApplyAllRequests": {
+    "message": "Заголовки будут применяться ко всем запросам"
+  },
+  "importExport": {
+    "message": "Импорт/экспорт"
+  },
+  "importExportDesc": {
+    "message": "Сохраните резервную копию профилей или импортируйте их из JSON-файла"
+  },
+  "enterProfileName": {
+    "message": "Введите имя профиля:",
+    "description": "Prompt text for entering a new profile name"
+  },
+  "enterNewName": {
+    "message": "Введите новое имя:",
+    "description": "Prompt text for renaming a profile"
+  },
+  "cannotDeleteLastProfile": {
+    "message": "Нельзя удалить последний профиль",
+    "description": "Alert when user tries to delete the last profile"
+  },
+  "confirmDeleteProfile": {
+    "message": "Удалить профиль «$1»?",
+    "description": "Confirmation when deleting a profile"
+  },
+  "confirmImport": {
+    "message": "Импортировать профили ($1)? Существующие профили будут заменены.",
+    "description": "Confirmation shown when importing profiles"
+  },
+  "confirmClearAll": {
+    "message": "Удалить все профили и настройки? Это действие необратимо!",
+    "description": "Confirmation shown when clearing all data"
+  },
+  "invalidProfileFormat": {
+    "message": "Неверный формат профиля",
+    "description": "Error shown when imported file is not valid"
+  },
+  "errorImportingProfiles": {
+    "message": "Ошибка импорта профилей: $1",
+    "description": "Error message when import fails"
+  },
+  "delete": {
+    "message": "Удалить",
+    "description": "Short label for delete actions"
+  },
+  "profilesExported": {
+    "message": "Профили успешно экспортированы"
+  },
+  "debug": {
+    "message": "Отладка"
+  },
+  "showDebugInfo": {
+    "message": "Показать отладочную информацию"
+  },
+  "clearAllData": {
+    "message": "Удалить все данные"
+  },
+  "request": {
+    "message": "Запрос"
+  },
+  "response": {
+    "message": "Ответ"
+  },
+  "headerName": {
+    "message": "Имя заголовка"
+  },
+  "headerValue": {
+    "message": "Значение (пусто = удалить заголовок)"
+  },
+  "urlPattern": {
+    "message": "Шаблон URL"
+  },
+  "domain": {
+    "message": "Домен"
+  },
+  "options": {
+    "message": "Настройки"
+  },
+  "optionsSubtitle": {
+    "message": "Настройка NoobHeaders"
+  },
+  "generalSettings": {
+    "message": "Общие настройки"
+  },
+  "autoEnableProfilesTitle": {
+    "message": "Автовключение профилей"
+  },
+  "autoEnableProfilesDesc": {
+    "message": "Автоматически включать новые профили при создании"
+  },
+  "showBadgeTitle": {
+    "message": "Показывать счётчик"
+  },
+  "showBadgeDesc": {
+    "message": "Показывать число активных заголовков на значке расширения"
+  },
+  "welcomeTitle": {
+    "message": "Добро пожаловать в NoobHeaders!"
+  },
+  "welcomeSubtitle": {
+    "message": "Простой локальный редактор HTTP-заголовков"
+  },
+  "welcomeFeatureSimpleTitle": {
+    "message": "Просто и понятно"
+  },
+  "welcomeFeatureSimpleDesc": {
+    "message": "Интуитивный интерфейс для разработчиков и новичков. Ничего лишнего — только заголовки."
+  },
+  "welcomeFeaturePrivacyTitle": {
+    "message": "Конфиденциальность прежде всего"
+  },
+  "welcomeFeaturePrivacyDesc": {
+    "message": "Без рекламы, слежки и аналитики. Ваши данные остаются на вашем устройстве."
+  },
+  "welcomeFeatureProfilesTitle": {
+    "message": "Гибкие профили"
+  },
+  "welcomeFeatureProfilesDesc": {
+    "message": "Создавайте профили для разных сценариев и мгновенно переключайтесь."
+  },
+  "welcomeFeatureFiltersTitle": {
+    "message": "Умные фильтры"
+  },
+  "welcomeFeatureFiltersDesc": {
+    "message": "Применяйте заголовки к определённым доменам или шаблонам URL."
+  },
+  "welcomeFeatureImportExportTitle": {
+    "message": "Импорт/экспорт"
+  },
+  "welcomeFeatureImportExportDesc": {
+    "message": "Делитесь настройками с командой или сохраняйте резервные копии профилей."
+  },
+  "welcomeFeatureOpenSourceTitle": {
+    "message": "Открытый код"
+  },
+  "welcomeFeatureOpenSourceDesc": {
+    "message": "Разрабатывается открыто. Вносите вклад на GitHub или проверяйте код."
+  },
+  "welcomeReadyTitle": {
+    "message": "Готовы начать?"
+  },
+  "welcomeReadyDesc": {
+    "message": "Нажмите на значок расширения на панели инструментов, чтобы создать первый профиль!"
+  },
+  "welcomeQuickTipsTitle": {
+    "message": "Быстрые советы"
+  },
+  "welcomeTip1": {
+    "message": "Нажмите на значок расширения, чтобы открыть окно"
+  },
+  "welcomeTip2": {
+    "message": "Создавайте профили для разных сценариев разработки"
+  },
+  "welcomeTip3": {
+    "message": "Используйте фильтры для выбора URL или доменов"
+  },
+  "welcomeTip4": {
+    "message": "Экспортируйте профили, чтобы делиться ими с коллегами"
+  },
+  "welcomeTip5": {
+    "message": "Если что-то не работает, загляните в раздел «Отладка»"
+  },
+  "welcomeMadeWith": {
+    "message": "Автор"
+  },
+  "profileActivePrefix": {
+    "message": "Выбран:"
+  },
+  "aboutTitle": {
+    "message": "О расширении"
+  },
+  "aboutDesc": {
+    "message": "Простой локальный редактор HTTP-заголовков для разработчиков и новичков."
+  },
+  "github": {
+    "message": "GitHub"
+  },
+  "noobModeActivated": {
+    "message": "Режим новичка разблокирован"
+  },
+  "reportIssue": {
+    "message": "Сообщить о проблеме"
+  },
+  "mitLicense": {
+    "message": "Лицензия MIT"
+  },
+  "filterValuePlaceholder": {
+    "message": "example.com или *://*.example.com/*"
+  },
+  "filterHelpText": {
+    "message": "example.com соответствует домену и его поддоменам. В шаблонах URL * означает любые символы: *://*.example.com/api/*, localhost:3000"
+  },
+  "invalidDomain": {
+    "message": "Неверный домен или URL"
+  },
+  "errorAddingFilter": {
+    "message": "Не удалось добавить фильтр"
+  },
+  "exportProfiles": {
+    "message": "Экспорт профилей"
+  },
+  "importProfiles": {
+    "message": "Импорт профилей"
+  },
+  "welcomeReportIssue": {
+    "message": "Сообщить о проблеме"
+  },
+  "cancel": {
+    "message": "Отмена"
+  },
+  "confirm": {
+    "message": "Подтвердить"
+  },
+  "ok": {
+    "message": "ОК"
+  },
+  "profileAdded": {
+    "message": "Профиль добавлен"
+  },
+  "profileDeleted": {
+    "message": "Профиль удалён"
+  },
+  "profileRenamed": {
+    "message": "Профиль переименован"
+  },
+  "profilesImported": {
+    "message": "Профили успешно импортированы"
+  },
+  "dataCleared": {
+    "message": "Все данные удалены"
+  },
+  "profiles": {
+    "message": "Профили"
+  },
+  "selectProfile": {
+    "message": "Выбрать этот профиль для редактирования"
+  },
+  "enableProfileLabel": {
+    "message": "Применять заголовки профиля «$1»"
+  },
+  "profilesHint": {
+    "message": "Включите профили, которые нужно применять. Нажмите на имя, чтобы изменить профиль."
+  },
+  "profileDisabledHint": {
+    "message": "Профиль выключен: его заголовки не применяются."
+  },
+  "globalDisabledHint": {
+    "message": "Изменение выключено: заголовки не изменяются."
+  },
+  "enableHeader": {
+    "message": "Включить заголовок"
+  },
+  "headerTypeLabel": {
+    "message": "Тип заголовка"
+  },
+  "duplicateHeader": {
+    "message": "Дублировать заголовок"
+  },
+  "duplicateFilter": {
+    "message": "Дублировать фильтр"
+  },
+  "enableFilter": {
+    "message": "Включить фильтр"
+  },
+  "invalidHeaderName": {
+    "message": "Неверное имя: только латинские буквы, цифры и - _ . (без пробелов)"
+  },
+  "invalidHeaderValue": {
+    "message": "Неверное значение: переносы строк запрещены"
+  },
+  "copySuffix": {
+    "message": "копия"
+  },
+  "profileDuplicated": {
+    "message": "Профиль скопирован"
+  },
+  "nameRequired": {
+    "message": "Введите имя"
+  },
+  "profileNameExists": {
+    "message": "Профиль с таким именем уже существует"
+  },
+  "headerDeleted": {
+    "message": "Заголовок удалён"
+  },
+  "filterDeleted": {
+    "message": "Фильтр удалён"
+  },
+  "undo": {
+    "message": "Отменить"
+  },
+  "debugActiveRules": {
+    "message": "Активные правила:"
+  },
+  "debugGlobalEnabled": {
+    "message": "Глобально включено:"
+  },
+  "debugSelectedProfile": {
+    "message": "Выбранный профиль:"
+  },
+  "debugStorageUsed": {
+    "message": "Занято в хранилище:"
+  },
+  "debugRuleSync": {
+    "message": "Синхронизация правил:"
+  },
+  "debugNoRules": {
+    "message": "Нет активных правил."
+  },
+  "yes": {
+    "message": "Да"
+  },
+  "no": {
+    "message": "Нет"
+  },
+  "importEmpty": {
+    "message": "Файл не содержит ни одного профиля"
+  },
+  "donations": {
+    "message": "Пожертвования"
+  }
+}
