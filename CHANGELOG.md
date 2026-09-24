@@ -1,3 +1,10 @@
+# [2.2.0](https://github.com/BioSs54/noobheaders/compare/v2.1.0...v2.2.0) (2026-09-24)
+
+
+### Features
+
+* ✨ bug fixes, header/filter duplication, 7 new languages and cross-browser E2E ([#12](https://github.com/BioSs54/noobheaders/issues/12)) ([2351c95](https://github.com/BioSs54/noobheaders/commit/2351c95c39e46caf9c8b4afcc52140862632ce8b))
+
 # [2.1.0](https://github.com/BioSs54/noobheaders/compare/v2.0.1...v2.1.0) (2026-04-17)
 
 
