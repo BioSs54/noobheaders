@@ -55,12 +55,18 @@ function readStorageValue<T>(background: ExtensionBackground, key: string): Prom
   }, key);
 }
 
-function badgeText(background: ExtensionBackground): Promise<string> {
-  return background.evaluate(async () => {
+async function badgeText(background: ExtensionBackground): Promise<string> {
+  const { text, activeUrl } = await background.evaluate(async () => {
     const runtime = globalThis as any;
     const api = runtime.browser ?? runtime.chrome;
-    return (api.action ?? api.browserAction).getBadgeText({});
+    const [tab] = await api.tabs.query({ active: true, currentWindow: true });
+    return {
+      text: (await (api.action ?? api.browserAction).getBadgeText({})) as string,
+      activeUrl: (tab?.url ?? null) as string | null,
+    };
   });
+  if (process.env.E2E_DEBUG === '1') console.log(`[badge] "${text}" active tab: ${activeUrl}`);
+  return text;
 }
 
 test.describe('Header engine', () => {

@@ -36,7 +36,7 @@ class RdpClient {
   }
 
   private dispatch(packet: any): void {
-    if (process.env.E2E_DEBUG === '1') {
+    if (process.env.E2E_DEBUG === 'rdp') {
       console.log('[rdp] <-', JSON.stringify(packet).slice(0, 300));
     }
     const index = this.waiters.findIndex((waiter) => waiter.match(packet));
