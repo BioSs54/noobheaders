@@ -1,6 +1,5 @@
 import assert from 'node:assert';
-import fs from 'node:fs';
-import { cpSync, mkdirSync } from 'node:fs';
+import fs, { cpSync, mkdirSync } from 'node:fs';
 import os from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
@@ -33,7 +32,7 @@ test('package script produces unversioned zips', async () => {
 
   // Run a minimal packaging: create chrome zip files similarly to script
   const { createWriteStream } = await import('node:fs');
-  const archiver = (await import('archiver')).default;
+  const { ZipArchive } = await import('archiver');
   const chromeDir = join(tmp, 'chrome');
   mkdirSync(chromeDir, { recursive: true });
   cpSync(dist, chromeDir, { recursive: true });
@@ -41,7 +40,7 @@ test('package script produces unversioned zips', async () => {
   const chromeZip = join(packagesDir, 'noobheaders-chrome.zip');
   await new Promise((resolve, reject) => {
     const output = createWriteStream(chromeZip);
-    const archive = archiver('zip', { zlib: { level: 9 } });
+    const archive = new ZipArchive({ zlib: { level: 9 } });
     output.on('close', () => resolve());
     archive.on('error', (err) => reject(err));
     archive.pipe(output);

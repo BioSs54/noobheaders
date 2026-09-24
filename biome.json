@@ -1,22 +1,22 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
-  "organizeImports": {
-    "enabled": true
-  },
+  "$schema": "https://biomejs.dev/schemas/2.5.14/schema.json",
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
+      "preset": "recommended",
       "complexity": {
         "noForEach": "off"
       },
       "style": {
         "useConst": "warn",
-        "useTemplate": "warn"
+        "useTemplate": "warn",
+        "noDescendingSpecificity": "off"
       },
       "suspicious": {
         "noExplicitAny": "off",
-        "noConsoleLog": "off"
+        "noConsole": { "level": "off", "options": { "allow": ["log"] } }
       }
     }
   },
@@ -48,15 +48,19 @@
     }
   },
   "files": {
-    "ignore": [
-      "node_modules",
-      "dist",
-      "packages",
-      ".git",
-      "web-ext-artifacts",
-      "*.min.js",
-      "*.zip"
-    ],
-    "include": ["*.js", "*.ts", "*.json", "*.html", "*.css"]
+    "includes": [
+      "**/*.js",
+      "**/*.ts",
+      "**/*.json",
+      "**/*.html",
+      "**/*.css",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/packages",
+      "!**/.git",
+      "!**/web-ext-artifacts",
+      "!**/*.min.js",
+      "!**/*.zip"
+    ]
   }
 }

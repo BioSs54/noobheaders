@@ -14,13 +14,13 @@ import { applyHeadersWebRequest } from './firefox-webrequest.js';
 import { countApplicableHeadersForUrl } from './header-utils.js';
 import { isUsableHeader } from './matching.js';
 import { convertProfileToRules, resolveProfilesToApply } from './rules.js';
+import type { ModifyHeaderRule, Profile } from './types/index.js';
 import {
-  STORAGE_KEYS,
   createDefaultProfile,
   generateProfileId,
   normalizeProfiles,
+  STORAGE_KEYS,
 } from './types/index.js';
-import type { ModifyHeaderRule, Profile } from './types/index.js';
 
 const IS_FIREFOX = detectBrowser() === 'firefox';
 const USE_DECLARATIVE_NET_REQUEST = supportsDeclarativeNetRequest();
@@ -196,7 +196,7 @@ async function updateBadge(): Promise<void> {
     try {
       const tabs = await browserAPI.tabs.query({ active: true, currentWindow: true });
       if (tabs && tabs.length > 0) url = tabs[0].url;
-    } catch (e) {
+    } catch (_e) {
       // ignore
     }
 
@@ -253,7 +253,7 @@ browserAPI.storage.onChanged.addListener(async (changes, namespace) => {
 async function tryAutoSwitch(tabId: number) {
   try {
     const tab = await browserAPI.tabs.get(tabId);
-    if (!tab || !tab.url || !tab.active) return;
+    if (!tab?.url || !tab.active) return;
 
     const data = await browserAPI.storage.local.get([
       STORAGE_KEYS.PROFILES,
@@ -272,7 +272,7 @@ async function tryAutoSwitch(tabId: number) {
       await browserAPI.storage.local.set({ [STORAGE_KEYS.ACTIVE_PROFILE]: matched.id });
       // handleUpdateRules will be triggered via storage.onChanged
     }
-  } catch (e) {
+  } catch (_e) {
     // ignore
   }
 }

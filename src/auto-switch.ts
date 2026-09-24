@@ -7,7 +7,7 @@ export function domainFromUrl(urlString: string): string | null {
   try {
     const url = new URL(urlString);
     return url.hostname;
-  } catch (e) {
+  } catch (_e) {
     return null;
   }
 }

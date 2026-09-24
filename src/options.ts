@@ -4,7 +4,7 @@
 
 import { getBrowserApi } from './browser-compat.js';
 import { getMessage } from './i18n.js';
-import { STORAGE_KEYS, normalizeProfiles } from './types/index.js';
+import { normalizeProfiles, STORAGE_KEYS } from './types/index.js';
 import { createIcon } from './ui-icons.js';
 
 const browserAPI = getBrowserApi();

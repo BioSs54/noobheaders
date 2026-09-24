@@ -1,5 +1,5 @@
-import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 export function updateVersionInDir(rootDir, newVersion) {
   // Update any manifest*.json files (support manifest.json, manifest.chrome.json, manifest.firefox.json, ...)
@@ -12,7 +12,7 @@ export function updateVersionInDir(rootDir, newVersion) {
         manifest.version = newVersion;
         writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
       }
-    } catch (e) {
+    } catch (_e) {
       // ignore files that are not valid JSON
     }
   }

@@ -3,7 +3,7 @@
  * Uses esbuild for fast, efficient bundling
  */
 
-import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import * as esbuild from 'esbuild';
 
