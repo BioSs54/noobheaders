@@ -72,8 +72,12 @@ export const test = base.extend<ExtensionFixtures, { testServer: Server }>({
 
     if (browserKind === 'firefox') {
       const debuggerPort = await getFreePort();
-      const browser = await firefox.launch({
+      const userDataDir = await mkdtemp(path.join(os.tmpdir(), 'noobheaders-e2e-ff-'));
+      // Extensions are active in the default (persistent) context only: pages opened in the
+      // isolated contexts of browser.newContext() cannot load moz-extension:// URLs.
+      const context = await firefox.launchPersistentContext(userDataDir, {
         headless: process.env.HEADED !== '1',
+        locale: uiLocale,
         args: ['-start-debugger-server', String(debuggerPort)],
         firefoxUserPrefs: {
           'devtools.debugger.remote-enabled': true,
@@ -85,13 +89,12 @@ export const test = base.extend<ExtensionFixtures, { testServer: Server }>({
           'intl.locale.requested': uiLocale,
         },
       });
-      debugLog('firefox launched', browser.version(), 'debugger port', debuggerPort);
+      debugLog('firefox launched, debugger port', debuggerPort);
       const addonId = await installTemporaryAddon(debuggerPort, extensionPath);
       debugLog('temporary add-on installed', addonId);
-      const context = await browser.newContext({ locale: uiLocale });
       await use(context);
       await context.close();
-      await browser.close();
+      await rm(userDataDir, { recursive: true, force: true });
       return;
     }
 
