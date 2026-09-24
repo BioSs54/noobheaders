@@ -65,6 +65,7 @@ export const test = base.extend<
       // Chromium: use chromium.launchPersistentContext
       context = await chromium.launchPersistentContext('', {
         headless: false,
+        executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE || undefined,
         args: [
           `--disable-extensions-except=${pathToExtension}`,
           `--load-extension=${pathToExtension}`,

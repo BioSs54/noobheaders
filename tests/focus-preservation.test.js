@@ -43,35 +43,20 @@ describe('Focus Preservation', () => {
     const path = await import('node:path');
     const src = await fs.readFile(path.join(process.cwd(), 'src/popup.ts'), 'utf-8');
 
-    // Find renderHeaders function
-    const renderHeadersMatch = src.match(
-      /function renderHeaders\(\)[^}]+\{[\s\S]+?(?=\nfunction |\n\/\*\*|\n\/\/|$)/
-    );
-
+    const renderHeadersMatch = src.match(/function renderHeaders\(\)[\s\S]+?\n\}/);
     assert.ok(renderHeadersMatch, 'Should have renderHeaders function');
+    assert.ok(renderHeadersMatch[0].includes('captureFocus(container)'), 'Should capture focus');
+    assert.ok(renderHeadersMatch[0].includes('restoreFocus(container'), 'Should restore focus');
 
-    const functionBody = renderHeadersMatch[0];
+    const captureMatch = src.match(/function captureFocus\([\s\S]+?\n\}/);
+    assert.ok(captureMatch, 'Should have captureFocus helper');
+    assert.ok(captureMatch[0].includes('document.activeElement'), 'Should get active element');
+    assert.ok(captureMatch[0].includes('selectionStart'), 'Should capture selection start');
 
-    // Should capture active element
-    assert.ok(functionBody.includes('document.activeElement'), 'Should get active element');
-
-    // Should capture focus data
-    assert.ok(
-      functionBody.includes('focusedIndex') && functionBody.includes('focusedField'),
-      'Should capture focused index and field'
-    );
-
-    // Should capture selection
-    assert.ok(
-      functionBody.includes('selectionStart') || functionBody.includes('selStart'),
-      'Should capture selection start'
-    );
-
-    // Should restore focus
-    assert.ok(functionBody.includes('.focus()'), 'Should restore focus');
-
-    // Should restore selection
-    assert.ok(functionBody.includes('setSelectionRange'), 'Should restore selection range');
+    const restoreMatch = src.match(/function restoreFocus\([\s\S]+?\n\}/);
+    assert.ok(restoreMatch, 'Should have restoreFocus helper');
+    assert.ok(restoreMatch[0].includes('.focus()'), 'Should restore focus');
+    assert.ok(restoreMatch[0].includes('setSelectionRange'), 'Should restore selection range');
   });
 
   it('should use scheduleSave for debounced updates', async () => {

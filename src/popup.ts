@@ -2,17 +2,22 @@
  * NoobHeaders - Popup UI Logic
  */
 
-import { isValidDomain } from './auto-switch.js';
 import { getBrowserApi } from './browser-compat.js';
-import {
-  clearSelection,
-  getSelectedFilter,
-  selectFilter as selectFilterIndex,
-} from './filter-selection.js';
 import { detectFilterType } from './filter-utils.js';
 import { getMessage } from './i18n.js';
+import {
+  isActiveFilter,
+  isValidFilter,
+  isValidHeaderName,
+  isValidHeaderValue,
+} from './matching.js';
 import type { Filter, Header, Profile } from './types/index.js';
-import { STORAGE_KEYS, createDefaultProfile, normalizeProfiles } from './types/index.js';
+import {
+  STORAGE_KEYS,
+  createDefaultProfile,
+  generateProfileId,
+  normalizeProfiles,
+} from './types/index.js';
 import { createIcon, replaceWithIcon } from './ui-icons.js';
 
 const browserAPI = getBrowserApi();
@@ -21,12 +26,15 @@ const EASTER_EGG_RESET_DELAY_MS = 1200;
 const EASTER_EGG_DURATION_MS = 300000;
 const NOOB_MODE_UNTIL_KEY = 'noobheaders_noob_mode_until';
 const POPUP_DRAFT_STATE_KEY = 'noobheaders_popup_draft_state';
+const SAVE_DEBOUNCE_MS = 400;
+const TOAST_DURATION_MS = 3000;
+const UNDO_TOAST_DURATION_MS = 6000;
 
 let profiles: Profile[] = [];
 let activeProfileId: string | null = null;
 let globalEnabled = false;
 
-// Debounce timer for extension sync after text input updates
+// Debounce timer for storage writes + extension sync after text input updates
 let saveTimer: number | null = null;
 let saveQueued = false;
 let saveInFlightPromise: Promise<void> | null = null;
@@ -72,8 +80,13 @@ function consumeDraftState(): {
 
     window.localStorage.removeItem(POPUP_DRAFT_STATE_KEY);
 
+    const draftProfiles = normalizeProfiles(parsedDraft.profiles);
+    if (draftProfiles.length === 0) {
+      return null;
+    }
+
     return {
-      profiles: normalizeProfiles(parsedDraft.profiles),
+      profiles: draftProfiles,
       activeProfileId:
         typeof parsedDraft.activeProfileId === 'string' ? parsedDraft.activeProfileId : null,
       globalEnabled: Boolean(parsedDraft.globalEnabled),
@@ -92,10 +105,19 @@ function clearDraftState(): void {
   }
 }
 
+interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
 /**
- * Show toast notification
+ * Show toast notification, optionally with an action button (e.g. "Undo")
  */
-function showToast(message: string, type: 'success' | 'error' | 'warning' = 'success'): void {
+function showToast(
+  message: string,
+  type: 'success' | 'error' | 'warning' = 'success',
+  action?: ToastAction
+): void {
   const container = document.getElementById('toast-container');
   if (!container) return;
 
@@ -117,13 +139,120 @@ function showToast(message: string, type: 'success' | 'error' | 'warning' = 'suc
 
   toast.appendChild(icon);
   toast.appendChild(messageEl);
-  container.appendChild(toast);
 
-  // Auto-remove after 3 seconds
-  setTimeout(() => {
+  let dismissed = false;
+  const dismiss = () => {
+    if (dismissed) return;
+    dismissed = true;
     toast.classList.add('fade-out');
     setTimeout(() => toast.remove(), 300);
-  }, 3000);
+  };
+
+  if (action) {
+    const actionBtn = document.createElement('button');
+    actionBtn.type = 'button';
+    actionBtn.className = 'toast-action';
+    actionBtn.textContent = action.label;
+    actionBtn.addEventListener('click', () => {
+      dismiss();
+      action.onClick();
+    });
+    toast.appendChild(actionBtn);
+  }
+
+  container.appendChild(toast);
+
+  setTimeout(dismiss, action ? UNDO_TOAST_DURATION_MS : TOAST_DURATION_MS);
+}
+
+interface ModalOptions {
+  modal: HTMLElement;
+  confirmButton: HTMLElement;
+  cancelButton: HTMLElement;
+  initialFocus: HTMLElement;
+  /** Return false to keep the modal open (e.g. validation error) */
+  onConfirm: () => boolean;
+  onCancel: () => void;
+}
+
+let cancelActiveModal: (() => void) | null = null;
+
+/**
+ * Open a modal dialog: handles Escape/Enter, overlay click, focus trap and focus restore.
+ * All listeners are removed when the modal closes.
+ */
+function openModal(options: ModalOptions): void {
+  const { modal, confirmButton, cancelButton, initialFocus, onConfirm, onCancel } = options;
+
+  // Only one modal at a time
+  cancelActiveModal?.();
+
+  const previousFocus = document.activeElement as HTMLElement | null;
+
+  const getFocusable = () =>
+    Array.from(modal.querySelectorAll<HTMLElement>('button, input')).filter(
+      (el) => !el.hasAttribute('disabled') && el.offsetParent !== null
+    );
+
+  const close = () => {
+    modal.style.display = 'none';
+    confirmButton.removeEventListener('click', handleConfirm);
+    cancelButton.removeEventListener('click', handleCancel);
+    modal.removeEventListener('keydown', handleKeydown);
+    modal.removeEventListener('click', handleOverlayClick);
+    cancelActiveModal = null;
+    if (previousFocus && document.contains(previousFocus)) {
+      previousFocus.focus();
+    }
+  };
+
+  const handleConfirm = () => {
+    if (onConfirm()) {
+      close();
+    }
+  };
+
+  const handleCancel = () => {
+    close();
+    onCancel();
+  };
+
+  const handleOverlayClick = (e: MouseEvent) => {
+    if (e.target === modal) {
+      handleCancel();
+    }
+  };
+
+  const handleKeydown = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      handleCancel();
+    } else if (e.key === 'Enter' && (e.target as HTMLElement).tagName === 'INPUT') {
+      e.preventDefault();
+      handleConfirm();
+    } else if (e.key === 'Tab') {
+      const focusable = getFocusable();
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  };
+
+  confirmButton.addEventListener('click', handleConfirm);
+  cancelButton.addEventListener('click', handleCancel);
+  modal.addEventListener('keydown', handleKeydown);
+  modal.addEventListener('click', handleOverlayClick);
+  cancelActiveModal = handleCancel;
+
+  modal.style.display = 'flex';
+  initialFocus.focus();
 }
 
 /**
@@ -144,45 +273,37 @@ function showConfirm(title: string, message: string): Promise<boolean> {
 
     titleEl.textContent = title;
     messageEl.textContent = message;
-    modal.style.display = 'flex';
 
-    const cleanup = () => {
-      modal.style.display = 'none';
-      okBtn.removeEventListener('click', handleOk);
-      cancelBtn.removeEventListener('click', handleCancel);
-    };
-
-    const handleOk = () => {
-      cleanup();
-      resolve(true);
-    };
-
-    const handleCancel = () => {
-      cleanup();
-      resolve(false);
-    };
-
-    okBtn.addEventListener('click', handleOk);
-    cancelBtn.addEventListener('click', handleCancel);
-
-    // Close on overlay click
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) {
-        handleCancel();
-      }
+    openModal({
+      modal,
+      confirmButton: okBtn,
+      cancelButton: cancelBtn,
+      // Destructive action: focus the safe choice by default
+      initialFocus: cancelBtn,
+      onConfirm: () => {
+        resolve(true);
+        return true;
+      },
+      onCancel: () => resolve(false),
     });
   });
 }
 
 /**
- * Show prompt modal
+ * Show prompt modal. `validate` returns an error message to keep the modal open.
  */
-function showPrompt(title: string, message: string, defaultValue = ''): Promise<string | null> {
+function showPrompt(
+  title: string,
+  message: string,
+  defaultValue = '',
+  validate?: (value: string) => string | null
+): Promise<string | null> {
   return new Promise((resolve) => {
     const modal = document.getElementById('prompt-modal');
     const titleEl = document.getElementById('prompt-title');
     const messageEl = document.getElementById('prompt-message');
-    const input = document.getElementById('prompt-input') as HTMLInputElement;
+    const input = document.getElementById('prompt-input') as HTMLInputElement | null;
+    const errorEl = document.getElementById('prompt-error');
     const okBtn = document.getElementById('prompt-ok');
     const cancelBtn = document.getElementById('prompt-cancel');
 
@@ -191,61 +312,47 @@ function showPrompt(title: string, message: string, defaultValue = ''): Promise<
       return;
     }
 
+    const setError = (error: string | null) => {
+      if (errorEl) {
+        errorEl.textContent = error ?? '';
+        errorEl.hidden = !error;
+      }
+      input.setAttribute('aria-invalid', error ? 'true' : 'false');
+    };
+
+    const handleInput = () => setError(null);
+
     titleEl.textContent = title;
     messageEl.textContent = message;
     input.value = defaultValue;
-    modal.style.display = 'flex';
+    setError(null);
+    input.addEventListener('input', handleInput);
 
-    // Focus input and select text
-    setTimeout(() => {
-      input.focus();
-      input.select();
-    }, 50);
-
-    const cleanup = () => {
-      modal.style.display = 'none';
-      okBtn.removeEventListener('click', handleOk);
-      cancelBtn.removeEventListener('click', handleCancel);
-      input.removeEventListener('keydown', handleKeydown);
-    };
-
-    const handleOk = () => {
-      const value = input.value.trim();
-      cleanup();
-      resolve(value || null);
-    };
-
-    const handleCancel = () => {
-      cleanup();
-      resolve(null);
-    };
-
-    const handleKeydown = (e: KeyboardEvent) => {
-      if (e.key === 'Enter') {
-        handleOk();
-      } else if (e.key === 'Escape') {
-        handleCancel();
-      }
-    };
-
-    okBtn.addEventListener('click', handleOk);
-    cancelBtn.addEventListener('click', handleCancel);
-    input.addEventListener('keydown', handleKeydown);
-
-    // Close on overlay click
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) {
-        handleCancel();
-      }
+    openModal({
+      modal,
+      confirmButton: okBtn,
+      cancelButton: cancelBtn,
+      initialFocus: input,
+      onConfirm: () => {
+        const value = input.value.trim();
+        const error = value ? (validate?.(value) ?? null) : getMessage('nameRequired');
+        if (error) {
+          setError(error);
+          input.focus();
+          return false;
+        }
+        input.removeEventListener('input', handleInput);
+        resolve(value);
+        return true;
+      },
+      onCancel: () => {
+        input.removeEventListener('input', handleInput);
+        resolve(null);
+      },
     });
-  });
-}
 
-/**
- * Generate unique ID
- */
-function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+    input.select();
+  });
 }
 
 /**
@@ -253,6 +360,24 @@ function generateId(): string {
  */
 function getActiveProfile(): Profile | undefined {
   return profiles.find((p) => p.id === activeProfileId);
+}
+
+function validateProfileName(value: string, ignoreId?: string): string | null {
+  const exists = profiles.some(
+    (profile) => profile.id !== ignoreId && profile.name.toLowerCase() === value.toLowerCase()
+  );
+  return exists ? getMessage('profileNameExists') : null;
+}
+
+function uniqueProfileName(baseName: string): string {
+  const copyLabel = getMessage('copySuffix');
+  let candidate = `${baseName} (${copyLabel})`;
+  let counter = 2;
+  while (validateProfileName(candidate)) {
+    candidate = `${baseName} (${copyLabel} ${counter})`;
+    counter += 1;
+  }
+  return candidate;
 }
 
 /**
@@ -271,12 +396,14 @@ async function loadState(): Promise<void> {
   activeProfileId = (data[STORAGE_KEYS.ACTIVE_PROFILE] as string) || null;
   globalEnabled = (data[STORAGE_KEYS.GLOBAL_ENABLED] as boolean) || false;
 
+  let needsSave = false;
+
   // Create default profile if none exist
   if (profiles.length === 0) {
-    const defaultProfile: Profile = createDefaultProfile(generateId());
+    const defaultProfile: Profile = createDefaultProfile(generateProfileId());
     profiles = [defaultProfile];
     activeProfileId = defaultProfile.id;
-    await saveState();
+    needsSave = true;
   }
 
   const draftState = consumeDraftState();
@@ -284,6 +411,16 @@ async function loadState(): Promise<void> {
     profiles = JSON.parse(JSON.stringify(draftState.profiles));
     activeProfileId = draftState.activeProfileId;
     globalEnabled = draftState.globalEnabled;
+    needsSave = true;
+  }
+
+  // The selected profile must always exist
+  if (!getActiveProfile()) {
+    activeProfileId = profiles[0].id;
+    needsSave = true;
+  }
+
+  if (needsSave) {
     await saveState();
     await syncExtensionState();
   }
@@ -381,15 +518,19 @@ function matchesCurrentState(changes: { [key: string]: chrome.storage.StorageCha
 }
 
 async function syncExtensionState(): Promise<void> {
-  await browserAPI.runtime.sendMessage({
-    action: 'updateRules',
-    state: {
-      profiles,
-      activeProfileId,
-      globalEnabled,
-    },
-  });
-  await browserAPI.runtime.sendMessage({ action: 'updateBadge' });
+  try {
+    await browserAPI.runtime.sendMessage({
+      action: 'updateRules',
+      state: {
+        profiles,
+        activeProfileId,
+        globalEnabled,
+      },
+    });
+    await browserAPI.runtime.sendMessage({ action: 'updateBadge' });
+  } catch (error) {
+    console.warn('Failed to sync extension state', error);
+  }
   await updateDebugInfo();
 }
 
@@ -403,48 +544,56 @@ async function getBackgroundDebugState(): Promise<any | null> {
 }
 
 async function persistPopupState(options: PersistOptions = {}): Promise<void> {
-  const { refresh = false, syncExtension = false } = options;
+  const { refresh = false, syncExtension = true } = options;
 
-  await saveState();
-
-  if (syncExtension) {
-    await syncExtensionState();
-  }
-
-  if (refresh) {
-    await refreshPopupUi();
-  }
-}
-
-async function flushPendingSave(syncExtension = true): Promise<void> {
-  await saveStateImmediately();
-
+  // Any pending debounced save is superseded by this one
   if (saveTimer !== null) {
     clearTimeout(saveTimer);
     saveTimer = null;
   }
 
+  await saveStateImmediately();
+
+  if (refresh) {
+    refreshProfileViews();
+  }
+
   if (syncExtension) {
     await syncExtensionState();
+  } else if (refresh) {
+    await updateDebugInfo();
   }
 }
 
+async function flushPendingSave(): Promise<void> {
+  if (saveTimer === null) {
+    return;
+  }
+
+  clearTimeout(saveTimer);
+  saveTimer = null;
+  await saveStateImmediately();
+  await syncExtensionState();
+}
+
 /**
- * Save to storage immediately, but debounce extension rule updates while typing
+ * Debounce storage writes and rule updates while typing.
+ * The draft copy in localStorage protects edits if the popup closes before the timer fires.
  */
-function scheduleSave(delay = 500): void {
+function scheduleSave(delay = SAVE_DEBOUNCE_MS): void {
   persistDraftState();
-  void saveStateImmediately();
 
   if (saveTimer !== null) {
     clearTimeout(saveTimer);
   }
 
   saveTimer = window.setTimeout(async () => {
+    saveTimer = null;
     try {
+      await saveStateImmediately();
       await syncExtensionState();
-    } finally {
-      saveTimer = null;
+    } catch (error) {
+      console.error('Debounced save failed', error);
     }
   }, delay);
 }
@@ -491,8 +640,28 @@ function setupEventListeners(): void {
   });
 }
 
+function renderVersion(): void {
+  const versionEl = document.getElementById('easter-egg-trigger');
+  try {
+    const version = browserAPI.runtime.getManifest().version;
+    if (versionEl && version) {
+      versionEl.textContent = `v${version}`;
+    }
+  } catch {
+    // keep the static fallback
+  }
+}
+
+function renderGlobalState(): void {
+  const hint = document.getElementById('global-disabled-hint');
+  if (hint) {
+    hint.hidden = globalEnabled;
+  }
+  document.body.classList.toggle('is-globally-disabled', !globalEnabled);
+}
+
 /**
- * Render profiles dropdown
+ * Render profiles list
  */
 function renderProfiles(): void {
   const radioGroup = document.getElementById('profiles-radio') as HTMLDivElement;
@@ -501,8 +670,13 @@ function renderProfiles(): void {
   radioGroup.innerHTML = '';
 
   profiles.forEach((profile) => {
+    const isSelected = profile.id === activeProfileId;
     const row = document.createElement('div');
     row.className = 'profile-row';
+    row.setAttribute('role', 'listitem');
+    row.dataset.profileId = profile.id;
+    row.classList.toggle('active', isSelected);
+    row.classList.toggle('is-off', !profile.enabled);
 
     const main = document.createElement('div');
     main.className = 'profile-row-main';
@@ -513,17 +687,20 @@ function renderProfiles(): void {
     const headline = document.createElement('div');
     headline.className = 'profile-row-headline';
 
-    // Clickable name selects the profile (accessible)
+    // Clickable name selects the profile for editing
     const nameBtn = document.createElement('button');
     nameBtn.className = 'btn-link profile-name-btn';
     nameBtn.type = 'button';
     nameBtn.textContent = profile.name;
-    nameBtn.title = browserAPI.i18n.getMessage('activeProfile') || 'Active Profile';
+    nameBtn.title = getMessage('selectProfile');
+    if (isSelected) {
+      nameBtn.setAttribute('aria-current', 'true');
+    }
     nameBtn.addEventListener('click', async () => {
       await activateProfile(profile.id);
     });
 
-    // Small toggle to enable/disable profile
+    // Toggle: whether the profile's headers are applied (does not change the selection)
     const toggleLabel = document.createElement('label');
     toggleLabel.className = 'toggle-container mini';
 
@@ -531,9 +708,9 @@ function renderProfiles(): void {
     toggleInput.type = 'checkbox';
     toggleInput.className = 'toggle-input';
     toggleInput.checked = !!profile.enabled;
+    toggleInput.setAttribute('aria-label', getMessage('enableProfileLabel', profile.name));
     toggleInput.addEventListener('change', async (e) => {
-      profile.enabled = (e.target as HTMLInputElement).checked;
-      await activateProfile(profile.id);
+      await setProfileEnabled(profile.id, (e.target as HTMLInputElement).checked);
     });
 
     const toggleSlider = document.createElement('span');
@@ -546,16 +723,13 @@ function renderProfiles(): void {
     meta.className = 'profile-row-meta';
     meta.textContent = `${profile.headers?.length || 0} ${getMessage('headers')} • ${profile.filters?.length || 0} ${getMessage('filters')}`;
 
-    if (profile.id === activeProfileId) {
+    if (isSelected) {
       const badge = document.createElement('span');
       badge.className = 'profile-status-badge';
-      badge.textContent = (getMessage('profileActivePrefix') || 'Selected')
+      badge.textContent = getMessage('profileActivePrefix')
         .replace(/\s*:\s*$/, '')
         .trim();
       headline.appendChild(badge);
-      row.classList.add('active');
-    } else {
-      row.classList.remove('active');
     }
 
     headline.appendChild(nameBtn);
@@ -579,11 +753,12 @@ function renderProfiles(): void {
 }
 
 /**
- * Update the small divider that shows the active profile name
+ * Update the summary card that shows the selected profile
  */
 function updateActiveProfileDisplay(): void {
   const nameEl = document.getElementById('active-profile-name');
   const container = document.getElementById('active-profile-display');
+  const disabledHint = document.getElementById('profile-disabled-hint');
   const renameBtn = document.getElementById('rename-profile-btn') as HTMLButtonElement | null;
   const duplicateBtn = document.getElementById('duplicate-profile-btn') as HTMLButtonElement | null;
   const active = getActiveProfile();
@@ -592,6 +767,9 @@ function updateActiveProfileDisplay(): void {
   }
   if (nameEl) {
     nameEl.textContent = active ? active.name : '';
+  }
+  if (disabledHint) {
+    disabledHint.hidden = !active || active.enabled === true;
   }
   if (renameBtn) {
     renameBtn.disabled = !active;
@@ -602,10 +780,10 @@ function updateActiveProfileDisplay(): void {
 }
 
 function refreshProfileViews(): void {
+  renderGlobalState();
   renderProfiles();
   renderHeaders();
   renderFilters();
-  renderFilterEditor();
 }
 
 async function refreshPopupUi(): Promise<void> {
@@ -614,74 +792,68 @@ async function refreshPopupUi(): Promise<void> {
 }
 
 async function activateProfile(profileId: string, persist = true): Promise<void> {
+  await flushPendingSave();
   activeProfileId = profileId;
 
   if (persist) {
-    await saveState();
-    await syncExtensionState();
+    await persistPopupState({ refresh: true });
+    return;
   }
 
   await refreshPopupUi();
 }
 
+async function setProfileEnabled(profileId: string, enabled: boolean): Promise<void> {
+  const profile = profiles.find((p) => p.id === profileId);
+  if (!profile) return;
+  profile.enabled = enabled;
+  await persistPopupState({ refresh: true, syncExtension: true });
+}
+
 /**
- * Render selected filter editor
+ * Preserve focus/selection of inputs inside a list across re-renders
  */
-function renderFilterEditor(): void {
-  const editor = document.getElementById('filter-editor') as HTMLElement | null;
-  const activeProfile = getActiveProfile();
-  if (!editor || !activeProfile) return;
+function captureFocus(container: HTMLElement) {
+  const active = document.activeElement as HTMLInputElement | null;
+  if (!active || !container.contains(active)) return null;
+  const focusedIndex = active.getAttribute('data-index');
+  const focusedField = active.getAttribute('data-field');
+  if (!focusedIndex || !focusedField) return null;
+  return {
+    focusedIndex,
+    focusedField,
+    selStart: active.selectionStart ?? null,
+    selEnd: active.selectionEnd ?? null,
+  };
+}
 
-  const sel = getSelectedFilter(activeProfileId);
-  if (sel === null || sel < 0 || sel >= (activeProfile.filters?.length || 0)) {
-    editor.style.display = 'none';
-    return;
+function restoreFocus(container: HTMLElement, state: ReturnType<typeof captureFocus>): void {
+  if (!state) return;
+  const selector = `[data-index="${state.focusedIndex}"][data-field="${state.focusedField}"]`;
+  const el = container.querySelector(selector) as HTMLInputElement | null;
+  if (!el) return;
+  el.focus();
+  if (state.selStart !== null && state.selEnd !== null) {
+    try {
+      el.setSelectionRange(state.selStart, state.selEnd);
+    } catch (e) {
+      // ignore if unavailable (e.g. select elements)
+    }
   }
-
-  const filter = activeProfile.filters[sel];
-  // Populate editor fields
-  const valueEl = document.getElementById('editor-filter-value') as HTMLInputElement;
-  const saveBtn = document.getElementById('editor-save-btn') as HTMLButtonElement;
-  const deleteBtn = document.getElementById('editor-delete-btn') as HTMLButtonElement;
-  const cancelBtn = document.getElementById('editor-cancel-btn') as HTMLButtonElement;
-
-  valueEl.value = filter.value || '';
-
-  // Wire actions
-  saveBtn.onclick = async () => {
-    setFilterType(sel, detectFilterType(valueEl.value));
-    setFilterValue(sel, valueEl.value);
-    await saveState();
-    await refreshPopupUi();
-    editor.style.display = 'none';
-  };
-
-  deleteBtn.onclick = async () => {
-    await deleteFilter(sel);
-    clearSelection(activeProfileId);
-    editor.style.display = 'none';
-  };
-
-  cancelBtn.onclick = () => {
-    clearSelection(activeProfileId);
-    editor.style.display = 'none';
-    renderFilters();
-  };
-
-  editor.style.display = 'block';
 }
 
 /**
  * Render headers list
  */
 function renderHeaders(): void {
-  // ensure active profile display is current
-  updateActiveProfileDisplay();
   const container = document.getElementById('headers-list');
   const emptyState = document.getElementById('empty-headers') as HTMLElement;
   const activeProfile = getActiveProfile();
 
   if (!container || !emptyState) return;
+
+  // Preserve focus/selection in header inputs across re-renders
+  const focusState = captureFocus(container);
 
   container.innerHTML = '';
 
@@ -692,46 +864,63 @@ function renderHeaders(): void {
 
   emptyState.style.display = 'none';
 
-  // Preserve focus/selection in header inputs across re-renders
-  const active = document.activeElement as HTMLElement | null;
-  let focusedIndex: string | null = null;
-  let focusedField: string | null = null;
-  let selStart: number | null = null;
-  let selEnd: number | null = null;
-
-  if (active?.closest?.('#headers-list')) {
-    const idx = (active as HTMLElement).getAttribute('data-index');
-    const field = (active as HTMLElement).getAttribute('data-field');
-    if (idx && field) {
-      focusedIndex = idx;
-      focusedField = field;
-      if ((active as HTMLInputElement).selectionStart !== null) {
-        selStart = (active as HTMLInputElement).selectionStart;
-        selEnd = (active as HTMLInputElement).selectionEnd;
-      }
-    }
-  }
-
   activeProfile.headers.forEach((header, index) => {
     const headerEl = createHeaderElement(header, index);
     container.appendChild(headerEl);
   });
 
-  // Restore focus and selection if possible
-  if (focusedIndex !== null && focusedField !== null) {
-    const selector = `input[data-index="${focusedIndex}"][data-field="${focusedField}"]`;
-    const el = container.querySelector(selector) as HTMLInputElement | null;
-    if (el) {
-      el.focus();
-      if (selStart !== null && selEnd !== null) {
-        try {
-          el.setSelectionRange(selStart, selEnd);
-        } catch (e) {
-          // ignore if unavailable
-        }
-      }
-    }
+  restoreFocus(container, focusState);
+}
+
+function createRowToggle(checked: boolean, label: string, onChange: () => void) {
+  const toggleLabel = document.createElement('label');
+  toggleLabel.className = 'toggle-container mini';
+
+  const toggleInput = document.createElement('input');
+  toggleInput.type = 'checkbox';
+  toggleInput.className = 'toggle-input';
+  toggleInput.checked = checked;
+  toggleInput.setAttribute('aria-label', label);
+  toggleInput.addEventListener('change', onChange);
+
+  const toggleSlider = document.createElement('span');
+  toggleSlider.className = 'toggle-slider';
+
+  toggleLabel.appendChild(toggleInput);
+  toggleLabel.appendChild(toggleSlider);
+  return { toggleLabel, toggleInput };
+}
+
+function createIconButton(
+  icon: 'copy' | 'trash',
+  label: string,
+  className: string,
+  onClick: () => void
+): HTMLButtonElement {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = `icon-btn ${className}`;
+  button.title = label;
+  button.setAttribute('aria-label', label);
+  button.appendChild(createIcon(icon, 'ui-icon ui-icon--sm'));
+  button.addEventListener('click', onClick);
+  return button;
+}
+
+function getHeaderError(header: Header): string | null {
+  if (header.name.trim() !== '' && !isValidHeaderName(header.name)) {
+    return getMessage('invalidHeaderName');
   }
+  if (!isValidHeaderValue(header.value)) {
+    return getMessage('invalidHeaderValue');
+  }
+  return null;
+}
+
+function setRowError(row: HTMLElement, errorEl: HTMLElement, error: string | null): void {
+  row.classList.toggle('invalid', Boolean(error));
+  errorEl.textContent = error ?? '';
+  errorEl.hidden = !error;
 }
 
 /**
@@ -740,58 +929,57 @@ function renderHeaders(): void {
 function createHeaderElement(header: Header, index: number): HTMLDivElement {
   const div = document.createElement('div');
   div.className = 'header-item';
+  div.classList.toggle('is-off', !header.enabled);
 
-  // Toggle
-  const toggleLabel = document.createElement('label');
-  toggleLabel.className = 'toggle-container mini';
-
-  const toggleInput = document.createElement('input');
-  toggleInput.type = 'checkbox';
-  toggleInput.className = 'toggle-input';
-  toggleInput.checked = header.enabled;
-  // prevent clicks on the toggle from bubbling to the row
-  toggleInput.addEventListener('click', (e) => e.stopPropagation());
-  toggleInput.addEventListener('change', () => toggleHeader(index));
-
-  const toggleSlider = document.createElement('span');
-  toggleSlider.className = 'toggle-slider';
-  toggleLabel.addEventListener('click', (e) => e.stopPropagation());
-
-  toggleLabel.appendChild(toggleInput);
-  toggleLabel.appendChild(toggleSlider);
+  const { toggleLabel } = createRowToggle(header.enabled, getMessage('enableHeader'), () =>
+    toggleHeader(index)
+  );
 
   // Type select
   const typeSelect = document.createElement('select');
   typeSelect.className = 'header-type';
+  typeSelect.setAttribute('aria-label', getMessage('headerTypeLabel'));
+  typeSelect.setAttribute('data-index', index.toString());
+  typeSelect.setAttribute('data-field', 'type');
   typeSelect.addEventListener('change', (e) =>
     updateHeaderType(index, (e.target as HTMLSelectElement).value as 'request' | 'response')
   );
 
   const requestOption = document.createElement('option');
   requestOption.value = 'request';
-  requestOption.textContent = browserAPI.i18n.getMessage('request');
+  requestOption.textContent = getMessage('request');
   requestOption.selected = header.type === 'request';
 
   const responseOption = document.createElement('option');
   responseOption.value = 'response';
-  responseOption.textContent = browserAPI.i18n.getMessage('response');
+  responseOption.textContent = getMessage('response');
   responseOption.selected = header.type === 'response';
 
   typeSelect.appendChild(requestOption);
   typeSelect.appendChild(responseOption);
 
+  const errorSpan = document.createElement('span');
+  errorSpan.className = 'field-error';
+  errorSpan.id = `header-error-${index}`;
+  errorSpan.hidden = true;
+
   // Name input
   const nameInput = document.createElement('input');
   nameInput.type = 'text';
   nameInput.className = 'header-name';
-  nameInput.placeholder = browserAPI.i18n.getMessage('headerName');
+  nameInput.placeholder = getMessage('headerName');
+  nameInput.setAttribute('aria-label', getMessage('headerName'));
+  nameInput.setAttribute('aria-describedby', errorSpan.id);
+  nameInput.spellcheck = false;
+  nameInput.autocomplete = 'off';
   nameInput.value = header.name || '';
   // mark for focus preservation
   nameInput.setAttribute('data-index', index.toString());
   nameInput.setAttribute('data-field', 'name');
-  nameInput.addEventListener('input', (e) =>
-    updateHeaderName(index, (e.target as HTMLInputElement).value)
-  );
+  nameInput.addEventListener('input', (e) => {
+    updateHeaderName(index, (e.target as HTMLInputElement).value);
+    setRowError(div, errorSpan, getHeaderError(header));
+  });
   nameInput.addEventListener('blur', () => {
     void flushPendingSave();
   });
@@ -800,31 +988,42 @@ function createHeaderElement(header: Header, index: number): HTMLDivElement {
   const valueInput = document.createElement('input');
   valueInput.type = 'text';
   valueInput.className = 'header-value';
-  valueInput.placeholder = browserAPI.i18n.getMessage('headerValue');
+  valueInput.placeholder = getMessage('headerValue');
+  valueInput.setAttribute('aria-label', getMessage('headerValue'));
+  valueInput.setAttribute('aria-describedby', errorSpan.id);
+  valueInput.spellcheck = false;
+  valueInput.autocomplete = 'off';
   valueInput.value = header.value || '';
   // mark for focus preservation
   valueInput.setAttribute('data-index', index.toString());
   valueInput.setAttribute('data-field', 'value');
-  valueInput.addEventListener('input', (e) =>
-    updateHeaderValue(index, (e.target as HTMLInputElement).value)
-  );
+  valueInput.addEventListener('input', (e) => {
+    updateHeaderValue(index, (e.target as HTMLInputElement).value);
+    setRowError(div, errorSpan, getHeaderError(header));
+  });
   valueInput.addEventListener('blur', () => {
     void flushPendingSave();
   });
 
-  // Delete button
-  const deleteBtn = document.createElement('button');
-  deleteBtn.className = 'icon-btn delete-btn';
-  deleteBtn.title = browserAPI.i18n.getMessage('delete');
-  deleteBtn.setAttribute('aria-label', deleteBtn.title);
-  deleteBtn.appendChild(createIcon('trash', 'ui-icon ui-icon--sm'));
-  deleteBtn.addEventListener('click', () => deleteHeader(index));
+  const duplicateBtn = createIconButton(
+    'copy',
+    getMessage('duplicateHeader'),
+    'duplicate-btn',
+    () => duplicateHeader(index)
+  );
+  const deleteBtn = createIconButton('trash', getMessage('delete'), 'delete-btn', () =>
+    deleteHeader(index)
+  );
 
   div.appendChild(toggleLabel);
   div.appendChild(typeSelect);
   div.appendChild(nameInput);
   div.appendChild(valueInput);
+  div.appendChild(duplicateBtn);
   div.appendChild(deleteBtn);
+  div.appendChild(errorSpan);
+
+  setRowError(div, errorSpan, getHeaderError(header));
 
   return div;
 }
@@ -833,93 +1032,35 @@ function createHeaderElement(header: Header, index: number): HTMLDivElement {
  * Render filters list
  */
 function renderFilters(): void {
-  // ensure active profile display is current
-  updateActiveProfileDisplay();
   const container = document.getElementById('filters-list');
   const emptyState = document.getElementById('empty-filters') as HTMLElement;
+  const help = document.getElementById('filter-help');
   const activeProfile = getActiveProfile();
 
   if (!container || !emptyState) return;
 
+  const focusState = captureFocus(container);
+
   container.innerHTML = '';
 
-  if (!activeProfile || !activeProfile.filters || activeProfile.filters.length === 0) {
-    emptyState.style.display = 'block';
-    // hide editor when there are no filters
-    const editor = document.getElementById('filter-editor') as HTMLElement | null;
-    if (editor) editor.style.display = 'none';
+  const hasFilters = Boolean(activeProfile?.filters && activeProfile.filters.length > 0);
+  emptyState.style.display = hasFilters ? 'none' : 'block';
+  if (help) help.hidden = !hasFilters;
+
+  if (!activeProfile || !hasFilters) {
     return;
   }
 
-  emptyState.style.display = 'none';
-
-  // Preserve focus/selection in filter inputs across re-renders
-  const active = document.activeElement as HTMLElement | null;
-  let focusedIndex: string | null = null;
-  let focusedField: string | null = null;
-  let selStart: number | null = null;
-  let selEnd: number | null = null;
-
-  if (active?.closest?.('#filters-list')) {
-    const idx = (active as HTMLElement).getAttribute('data-index');
-    const field = (active as HTMLElement).getAttribute('data-field');
-    if (idx && field) {
-      focusedIndex = idx;
-      focusedField = field;
-      if ((active as HTMLInputElement).selectionStart !== null) {
-        selStart = (active as HTMLInputElement).selectionStart;
-        selEnd = (active as HTMLInputElement).selectionEnd;
-      }
-    }
-  }
-
   activeProfile.filters.forEach((filter, index) => {
-    const filterEl = createFilterElement(filter, index);
-    // highlight if selected
-    if (getSelectedFilter(activeProfileId) === index) filterEl.classList.add('selected');
-    filterEl.addEventListener('click', (e) => {
-      // if the click originated from an interactive child (input/select/button), do nothing
-      const target = e.target as HTMLElement | null;
-      if (
-        target &&
-        (target.closest('input') || target.closest('select') || target.closest('button'))
-      ) {
-        return;
-      }
-
-      // select this filter and focus inline value input (inline editing)
-      selectFilterIndex(activeProfileId, index);
-      renderFilters();
-      // focus the input after re-render
-      const selector = `input[data-index="${index}"][data-field="value"]`;
-      const el = container.querySelector(selector) as HTMLInputElement | null;
-      if (el) {
-        el.focus();
-        try {
-          el.select();
-        } catch (e) {
-          // ignore
-        }
-      }
-    });
-    container.appendChild(filterEl);
+    container.appendChild(createFilterElement(filter, index));
   });
 
-  // Restore focus and selection if possible
-  if (focusedIndex !== null && focusedField !== null) {
-    const selector = `input[data-index="${focusedIndex}"][data-field="${focusedField}"]`;
-    const el = container.querySelector(selector) as HTMLInputElement | null;
-    if (el) {
-      el.focus();
-      if (selStart !== null && selEnd !== null) {
-        try {
-          el.setSelectionRange(selStart, selEnd);
-        } catch (e) {
-          // ignore if unavailable
-        }
-      }
-    }
-  }
+  restoreFocus(container, focusState);
+}
+
+function getFilterError(filter: Filter): string | null {
+  if (!isActiveFilter({ ...filter, enabled: true })) return null;
+  return isValidFilter(filter) ? null : getMessage('invalidDomain');
 }
 
 /**
@@ -928,59 +1069,38 @@ function renderFilters(): void {
 function createFilterElement(filter: Filter, index: number): HTMLDivElement {
   const div = document.createElement('div');
   div.className = 'filter-item';
+  div.classList.toggle('is-off', !filter.enabled);
 
-  // Toggle
-  const toggleLabel = document.createElement('label');
-  toggleLabel.className = 'toggle-container mini';
-
-  const toggleInput = document.createElement('input');
-  toggleInput.type = 'checkbox';
-  toggleInput.className = 'toggle-input';
-  toggleInput.checked = filter.enabled;
-  // ensure clicking the toggle doesn't bubble up to the row click handler
-  toggleInput.addEventListener('click', (e) => {
-    e.stopPropagation();
-  });
-  toggleInput.addEventListener('change', () => toggleFilter(index));
-
-  const toggleSlider = document.createElement('span');
-  toggleSlider.className = 'toggle-slider';
-  // also prevent label clicks from bubbling
-  toggleLabel.addEventListener('click', (e) => e.stopPropagation());
-
-  toggleLabel.appendChild(toggleInput);
-  toggleLabel.appendChild(toggleSlider);
-
-  // Type is detected automatically by input heuristics; we don't show a type select to simplify the UI
-  const typeSelect = document.createElement('select');
-  typeSelect.className = 'filter-type';
-  typeSelect.style.display = 'none';
-  // mark for focus preservation
-  typeSelect.setAttribute('data-index', index.toString());
-  typeSelect.setAttribute('data-field', 'type');
-  // keep listener for internal updates only
-  typeSelect.addEventListener('change', (e) =>
-    updateFilterType(index, (e.target as HTMLSelectElement).value as 'url' | 'domain')
+  // Invalid filters can still be switched off: they are never applied anyway
+  const { toggleLabel } = createRowToggle(filter.enabled, getMessage('enableFilter'), () =>
+    toggleFilter(index)
   );
 
-  const urlOption = document.createElement('option');
-  urlOption.value = 'url';
-  urlOption.textContent = browserAPI.i18n.getMessage('urlPattern');
-  urlOption.selected = filter.type === 'url';
+  const errorSpan = document.createElement('span');
+  errorSpan.className = 'field-error';
+  errorSpan.id = `filter-error-${index}`;
+  errorSpan.hidden = true;
 
-  const domainOption = document.createElement('option');
-  domainOption.value = 'domain';
-  domainOption.textContent = browserAPI.i18n.getMessage('domain');
-  domainOption.selected = filter.type === 'domain';
+  // Type badge: detected automatically from the value
+  const typeBadge = document.createElement('span');
+  typeBadge.className = 'filter-type-badge';
 
-  typeSelect.appendChild(urlOption);
-  typeSelect.appendChild(domainOption);
+  const renderTypeBadge = () => {
+    const current = getActiveProfile()?.filters[index] ?? filter;
+    typeBadge.textContent =
+      current.type === 'domain' ? getMessage('domain') : getMessage('urlPattern');
+    typeBadge.hidden = !current.value.trim();
+  };
 
   // Value input
   const valueInput = document.createElement('input');
   valueInput.type = 'text';
   valueInput.className = 'filter-value';
-  valueInput.placeholder = browserAPI.i18n.getMessage('filterValuePlaceholder');
+  valueInput.placeholder = getMessage('filterValuePlaceholder');
+  valueInput.setAttribute('aria-label', getMessage('filters'));
+  valueInput.setAttribute('aria-describedby', errorSpan.id);
+  valueInput.spellcheck = false;
+  valueInput.autocomplete = 'off';
   valueInput.value = filter.value || '';
   // mark for focus preservation
   valueInput.setAttribute('data-index', index.toString());
@@ -988,84 +1108,37 @@ function createFilterElement(filter: Filter, index: number): HTMLDivElement {
   valueInput.addEventListener('input', (e) => {
     const v = (e.target as HTMLInputElement).value;
     setFilterValue(index, v);
+    // Detect type automatically and update stored type
+    setFilterType(index, detectFilterType(v));
     scheduleSave();
 
-    // Detect type automatically and update stored type
-    const detected = detectFilterType(v);
-    if (detected !== typeSelect.value) {
-      setFilterType(index, detected);
-      typeSelect.value = detected;
-      scheduleSave();
-    }
-
-    // inline validation for domain filters
-    const effectiveType = typeSelect.value as 'url' | 'domain';
-    const isValid = effectiveType !== 'domain' ? true : isValidDomain(v);
-    // toggle disable if invalid
-    toggleInput.disabled = !isValid;
-    if (!isValid) {
-      div.classList.add('invalid');
-      errorSpan.style.display = 'block';
-    } else {
-      div.classList.remove('invalid');
-      errorSpan.style.display = 'none';
-    }
+    const current = getActiveProfile()?.filters[index];
+    if (current) setRowError(div, errorSpan, getFilterError(current));
+    renderTypeBadge();
   });
-  // prevent clicks on the input from bubbling up to the row (avoids immediate rerender)
-  valueInput.addEventListener('click', (e) => e.stopPropagation());
-  valueInput.addEventListener('focus', (e) => e.stopPropagation());
   valueInput.addEventListener('blur', () => {
     void flushPendingSave();
   });
 
-  // Edit button (opens editor panel)
-  const editBtn = document.createElement('button');
-  editBtn.className = 'icon-btn';
-  editBtn.title = browserAPI.i18n.getMessage('edit') || 'Edit';
-  editBtn.setAttribute('aria-label', editBtn.title);
-  editBtn.appendChild(createIcon('edit', 'ui-icon ui-icon--sm'));
-  editBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    selectFilterIndex(activeProfileId, index);
-    renderFilters();
-    renderFilterEditor();
-  });
-
-  // Error span for invalid domain
-  const errorSpan = document.createElement('span');
-  errorSpan.className = 'field-error';
-  errorSpan.style.display = 'none';
-  errorSpan.textContent = browserAPI.i18n.getMessage('invalidDomain');
-
-  // Delete button
-  const deleteBtn = document.createElement('button');
-  deleteBtn.className = 'icon-btn delete-btn';
-  deleteBtn.title = browserAPI.i18n.getMessage('delete');
-  deleteBtn.setAttribute('aria-label', deleteBtn.title);
-  deleteBtn.appendChild(createIcon('trash', 'ui-icon ui-icon--sm'));
-  deleteBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    deleteFilter(index);
-  });
+  const duplicateBtn = createIconButton(
+    'copy',
+    getMessage('duplicateFilter'),
+    'duplicate-btn',
+    () => duplicateFilter(index)
+  );
+  const deleteBtn = createIconButton('trash', getMessage('delete'), 'delete-btn', () =>
+    deleteFilter(index)
+  );
 
   div.appendChild(toggleLabel);
-  div.appendChild(typeSelect);
   div.appendChild(valueInput);
-  div.appendChild(errorSpan);
-  div.appendChild(editBtn);
+  div.appendChild(typeBadge);
+  div.appendChild(duplicateBtn);
   div.appendChild(deleteBtn);
+  div.appendChild(errorSpan);
 
-  // initial validation and detection
-  const initialDetected = detectFilterType(filter.value || '');
-  const effectiveInitialType = filter.type || initialDetected;
-  typeSelect.value = effectiveInitialType;
-
-  const initialValid = effectiveInitialType !== 'domain' ? true : isValidDomain(filter.value || '');
-  if (!initialValid) {
-    div.classList.add('invalid');
-    toggleInput.disabled = true;
-    errorSpan.style.display = 'block';
-  }
+  renderTypeBadge();
+  setRowError(div, errorSpan, getFilterError(filter));
 
   return div;
 }
@@ -1074,20 +1147,22 @@ function createFilterElement(filter: Filter, index: number): HTMLDivElement {
  * Add new profile
  */
 async function addProfile(): Promise<void> {
-  const name = await showPrompt(getMessage('addProfile'), getMessage('enterProfileName'));
+  const name = await showPrompt(getMessage('addProfile'), getMessage('enterProfileName'), '', (v) =>
+    validateProfileName(v)
+  );
   if (!name) return;
 
+  await flushPendingSave();
+
   const newProfile: Profile = {
-    id: generateId(),
-    name: name.trim(),
+    id: generateProfileId(),
+    name,
+    enabled: false,
     headers: [],
     filters: [],
   };
 
-  profiles.push(newProfile);
-  activeProfileId = newProfile.id;
-
-  // If user opted to auto-enable profiles, mark new profile as enabled
+  // If user opted to auto-enable profiles, switch the new profile on
   const { autoEnable } = (await browserAPI.storage.local.get('autoEnable')) as {
     autoEnable?: boolean;
   };
@@ -1095,12 +1170,15 @@ async function addProfile(): Promise<void> {
     newProfile.enabled = true;
   }
 
+  profiles.push(newProfile);
+  activeProfileId = newProfile.id;
+
   await persistPopupState({ refresh: true });
-  showToast(getMessage('profileAdded') || 'Profile added successfully', 'success');
+  showToast(getMessage('profileAdded'), 'success');
 }
 
 /**
- * Delete profile
+ * Delete the selected profile
  */
 async function deleteProfile(): Promise<void> {
   if (profiles.length <= 1) {
@@ -1117,11 +1195,11 @@ async function deleteProfile(): Promise<void> {
   );
   if (!confirmed) return;
 
-  profiles = profiles.filter((p) => p.id !== activeProfileId);
-  clearSelection(activeProfileId);
+  await flushPendingSave();
+  profiles = profiles.filter((p) => p.id !== activeProfile.id);
   activeProfileId = profiles[0].id;
   await persistPopupState({ refresh: true });
-  showToast(getMessage('profileDeleted') || 'Profile deleted', 'success');
+  showToast(getMessage('profileDeleted'), 'success');
 }
 
 /**
@@ -1134,13 +1212,14 @@ async function renameProfile(): Promise<void> {
   const newName = await showPrompt(
     getMessage('rename'),
     getMessage('enterNewName'),
-    activeProfile.name
+    activeProfile.name,
+    (v) => validateProfileName(v, activeProfile.id)
   );
-  if (!newName) return;
+  if (!newName || newName === activeProfile.name) return;
 
-  activeProfile.name = newName.trim();
-  await persistPopupState({ refresh: true });
-  showToast(getMessage('profileRenamed') || 'Profile renamed', 'success');
+  activeProfile.name = newName;
+  await persistPopupState({ refresh: true, syncExtension: false });
+  showToast(getMessage('profileRenamed'), 'success');
 }
 
 /**
@@ -1150,15 +1229,20 @@ async function duplicateProfile(): Promise<void> {
   const activeProfile = getActiveProfile();
   if (!activeProfile) return;
 
+  await flushPendingSave();
+
   const newProfile: Profile = {
     ...JSON.parse(JSON.stringify(activeProfile)),
-    id: generateId(),
-    name: `${activeProfile.name} (Copy)`,
+    id: generateProfileId(),
+    name: uniqueProfileName(activeProfile.name),
   };
 
-  profiles.push(newProfile);
+  // Insert the copy right after the original
+  const index = profiles.findIndex((p) => p.id === activeProfile.id);
+  profiles.splice(index + 1, 0, newProfile);
   activeProfileId = newProfile.id;
   await persistPopupState({ refresh: true });
+  showToast(getMessage('profileDuplicated'), 'success');
 }
 
 /**
@@ -1166,7 +1250,15 @@ async function duplicateProfile(): Promise<void> {
  */
 async function toggleGlobalEnabled(e: Event): Promise<void> {
   globalEnabled = (e.target as HTMLInputElement).checked;
+  renderGlobalState();
   await persistPopupState({ syncExtension: true });
+}
+
+function focusRowInput(listId: string, index: number, field: string): void {
+  const el = document.querySelector<HTMLInputElement>(
+    `#${listId} [data-index="${index}"][data-field="${field}"]`
+  );
+  el?.focus();
 }
 
 /**
@@ -1176,10 +1268,6 @@ async function addHeader(): Promise<void> {
   const activeProfile = getActiveProfile();
   if (!activeProfile) return;
 
-  if (!activeProfile.headers) {
-    activeProfile.headers = [];
-  }
-
   activeProfile.headers.push({
     enabled: true,
     type: 'request',
@@ -1187,7 +1275,16 @@ async function addHeader(): Promise<void> {
     value: '',
   });
 
+  await persistPopupState({ refresh: true, syncExtension: false });
+  focusRowInput('headers-list', activeProfile.headers.length - 1, 'name');
+}
+
+async function duplicateHeader(index: number): Promise<void> {
+  const activeProfile = getActiveProfile();
+  if (!activeProfile || !activeProfile.headers[index]) return;
+  activeProfile.headers.splice(index + 1, 0, { ...activeProfile.headers[index] });
   await persistPopupState({ refresh: true });
+  focusRowInput('headers-list', index + 1, 'name');
 }
 
 /**
@@ -1213,11 +1310,10 @@ async function updateHeaderType(index: number, type: 'request' | 'response'): Pr
 /**
  * Update header name
  */
-async function updateHeaderName(index: number, name: string): Promise<void> {
+function updateHeaderName(index: number, name: string): void {
   const activeProfile = getActiveProfile();
   if (!activeProfile || !activeProfile.headers[index]) return;
   activeProfile.headers[index].name = name;
-  persistDraftState();
   // Debounce writes to avoid re-rendering on every keystroke
   scheduleSave();
 }
@@ -1225,62 +1321,79 @@ async function updateHeaderName(index: number, name: string): Promise<void> {
 /**
  * Update header value
  */
-async function updateHeaderValue(index: number, value: string): Promise<void> {
+function updateHeaderValue(index: number, value: string): void {
   const activeProfile = getActiveProfile();
   if (!activeProfile || !activeProfile.headers[index]) return;
   activeProfile.headers[index].value = value;
-  persistDraftState();
   scheduleSave();
 }
 
 /**
- * Delete header
+ * Delete an item from the selected profile, with an "Undo" toast
  */
-async function deleteHeader(index: number): Promise<void> {
+async function deleteWithUndo<T>(
+  list: 'headers' | 'filters',
+  index: number,
+  message: string
+): Promise<void> {
   const activeProfile = getActiveProfile();
-  if (!activeProfile) return;
-  activeProfile.headers.splice(index, 1);
+  if (!activeProfile || !activeProfile[list][index]) return;
+
+  const profileId = activeProfile.id;
+  const [removed] = (activeProfile[list] as T[]).splice(index, 1);
   await persistPopupState({ refresh: true, syncExtension: true });
+
+  showToast(message, 'success', {
+    label: getMessage('undo'),
+    onClick: async () => {
+      const profile = profiles.find((p) => p.id === profileId);
+      if (!profile) return;
+      const items = profile[list] as T[];
+      items.splice(Math.min(index, items.length), 0, removed);
+      await persistPopupState({ refresh: true, syncExtension: true });
+    },
+  });
+}
+
+async function deleteHeader(index: number): Promise<void> {
+  await deleteWithUndo<Header>('headers', index, getMessage('headerDeleted'));
 }
 
 /**
  * Add filter
  */
 async function addFilter(): Promise<void> {
-  try {
-    const activeProfile = getActiveProfile();
-    if (!activeProfile) {
-      console.warn('No active profile found when adding filter');
-      return;
-    }
-
-    if (!activeProfile.filters) {
-      activeProfile.filters = [];
-    }
-
-    activeProfile.filters.push({
-      enabled: true,
-      type: 'url',
-      value: '',
-    });
-
-    try {
-      await persistPopupState({ refresh: true });
-    } catch (err) {
-      console.error('addFilter: saveState failed', err);
-      // Inform the user with the underlying error message for easier debugging
-      showToast(
-        `${getMessage('errorAddingFilter') || 'Failed to add filter'}: ${(err as Error).message}`,
-        'error'
-      );
-      // Still render UI to reflect in-memory change
-      refreshProfileViews();
-      return;
-    }
-  } catch (err) {
-    console.error('Failed to add filter', err);
-    showToast(getMessage('errorAddingFilter') || 'Failed to add filter', 'error');
+  const activeProfile = getActiveProfile();
+  if (!activeProfile) {
+    console.warn('No active profile found when adding filter');
+    return;
   }
+
+  activeProfile.filters.push({
+    enabled: true,
+    type: 'url',
+    value: '',
+  });
+
+  try {
+    await persistPopupState({ refresh: true, syncExtension: false });
+  } catch (err) {
+    console.error('addFilter: saveState failed', err);
+    showToast(`${getMessage('errorAddingFilter')}: ${(err as Error).message}`, 'error');
+    // Still render UI to reflect in-memory change
+    refreshProfileViews();
+    return;
+  }
+
+  focusRowInput('filters-list', activeProfile.filters.length - 1, 'value');
+}
+
+async function duplicateFilter(index: number): Promise<void> {
+  const activeProfile = getActiveProfile();
+  if (!activeProfile || !activeProfile.filters[index]) return;
+  activeProfile.filters.splice(index + 1, 0, { ...activeProfile.filters[index] });
+  await persistPopupState({ refresh: true });
+  focusRowInput('filters-list', index + 1, 'value');
 }
 
 /**
@@ -1302,11 +1415,6 @@ function setFilterType(index: number, type: 'url' | 'domain'): void {
   activeProfile.filters[index].type = type;
 }
 
-async function updateFilterType(index: number, type: 'url' | 'domain'): Promise<void> {
-  setFilterType(index, type);
-  await persistPopupState({ refresh: true, syncExtension: true });
-}
-
 /**
  * Update filter value
  */
@@ -1314,30 +1422,13 @@ function setFilterValue(index: number, value: string): void {
   const activeProfile = getActiveProfile();
   if (!activeProfile || !activeProfile.filters[index]) return;
   activeProfile.filters[index].value = value;
-  persistDraftState();
-}
-
-async function updateFilterValue(index: number, value: string): Promise<void> {
-  setFilterValue(index, value);
-  // Debounce saves to avoid re-render during typing
-  scheduleSave();
 }
 
 /**
  * Delete filter
  */
 async function deleteFilter(index: number): Promise<void> {
-  const activeProfile = getActiveProfile();
-  if (!activeProfile) return;
-
-  const selectedFilterIndex = getSelectedFilter(activeProfileId);
-  activeProfile.filters.splice(index, 1);
-  if (selectedFilterIndex === index) {
-    clearSelection(activeProfileId);
-  } else if (selectedFilterIndex !== null && selectedFilterIndex > index) {
-    selectFilterIndex(activeProfileId, selectedFilterIndex - 1);
-  }
-  await persistPopupState({ refresh: true, syncExtension: true });
+  await deleteWithUndo<Filter>('filters', index, getMessage('filterDeleted'));
 }
 
 function formatNoobCountdown(remainingMs: number): string {
@@ -1358,7 +1449,7 @@ function updateNoobModeLabel(): void {
     return;
   }
 
-  const baseLabel = getMessage('noobModeActivated') || 'Noob mode unlocked';
+  const baseLabel = getMessage('noobModeActivated');
   document.body.dataset.noobModeLabel = `${baseLabel} · ${formatNoobCountdown(remainingMs)}`;
 }
 
@@ -1403,10 +1494,15 @@ async function initializeNoobMode(): Promise<void> {
   await clearNoobMode(false);
 }
 
+function isDebugOpen(): boolean {
+  const content = document.getElementById('debug-content');
+  return Boolean(content && content.style.display !== 'none');
+}
+
 /**
  * Toggle debug section
  */
-function toggleDebug(): void {
+async function toggleDebug(): Promise<void> {
   const content = document.getElementById('debug-content') as HTMLElement;
   const btn = document.getElementById('toggle-debug-btn') as HTMLButtonElement | null;
 
@@ -1416,6 +1512,7 @@ function toggleDebug(): void {
     content.style.display = 'block';
     btn.setAttribute('aria-expanded', 'true');
     replaceWithIcon(btn, 'chevron-up', 'ui-icon ui-icon--sm');
+    await updateDebugInfo();
   } else {
     content.style.display = 'none';
     btn.setAttribute('aria-expanded', 'false');
@@ -1424,39 +1521,23 @@ function toggleDebug(): void {
 }
 
 /**
- * Update debug info
+ * Update debug info (read-only: never changes the extension state).
+ * Skipped while the debug panel is collapsed.
  */
 async function updateDebugInfo(): Promise<void> {
+  if (!isDebugOpen()) return;
+
   const activeProfile = getActiveProfile();
-  const activeHeaders = activeProfile?.headers?.filter((h) => h.enabled).length || 0;
-  let activeRuleCount = activeHeaders;
+  let activeRuleCount = 0;
   let dynamicRules: chrome.declarativeNetRequest.Rule[] = [];
   let syncStatus = '-';
   let storageSnapshot: any = null;
 
-  let debugState = await getBackgroundDebugState();
-
-  if (
-    debugState?.success &&
-    globalEnabled &&
-    activeHeaders > 0 &&
-    Array.isArray(debugState.dynamicRules) &&
-    debugState.dynamicRules.length === 0
-  ) {
-    await browserAPI.runtime.sendMessage({
-      action: 'updateRules',
-      state: {
-        profiles,
-        activeProfileId,
-        globalEnabled,
-      },
-    });
-    debugState = await getBackgroundDebugState();
-  }
+  const debugState = await getBackgroundDebugState();
 
   if (debugState?.success) {
     dynamicRules = Array.isArray(debugState.dynamicRules) ? debugState.dynamicRules : [];
-    activeRuleCount = dynamicRules.length;
+    activeRuleCount = Number(debugState.activeRuleCount ?? dynamicRules.length) || 0;
     syncStatus = `${debugState.lastComputedRuleCount}/${debugState.lastAppliedRuleCount}`;
     storageSnapshot = debugState.storageSnapshot || null;
     if (debugState.lastError) {
@@ -1467,6 +1548,9 @@ async function updateDebugInfo(): Promise<void> {
     }
   }
 
+  const yes = getMessage('yes');
+  const no = getMessage('no');
+
   const rulesCountEl = document.getElementById('debug-rules-count');
   if (rulesCountEl) {
     rulesCountEl.textContent = activeRuleCount.toString();
@@ -1474,7 +1558,7 @@ async function updateDebugInfo(): Promise<void> {
 
   const globalEnabledEl = document.getElementById('debug-global-enabled');
   if (globalEnabledEl) {
-    globalEnabledEl.textContent = globalEnabled ? 'Yes' : 'No';
+    globalEnabledEl.textContent = globalEnabled ? yes : no;
   }
 
   const activeProfileEl = document.getElementById('debug-active-profile');
@@ -1482,10 +1566,15 @@ async function updateDebugInfo(): Promise<void> {
     activeProfileEl.textContent = activeProfile?.name || '-';
   }
 
-  const bytesUsed = await browserAPI.storage.local.getBytesInUse();
   const storageSizeEl = document.getElementById('debug-storage-size');
   if (storageSizeEl) {
-    storageSizeEl.textContent = `${(bytesUsed / 1024).toFixed(2)} KB`;
+    try {
+      const bytesUsed = await browserAPI.storage.local.getBytesInUse();
+      storageSizeEl.textContent = `${(bytesUsed / 1024).toFixed(2)} KB`;
+    } catch {
+      // getBytesInUse is not implemented in every Firefox version
+      storageSizeEl.textContent = '-';
+    }
   }
 
   const syncEl = document.getElementById('debug-rule-sync');
@@ -1496,11 +1585,11 @@ async function updateDebugInfo(): Promise<void> {
   const previewEl = document.getElementById('debug-rules-preview');
   if (previewEl) {
     if (dynamicRules.length === 0) {
-      const debugLines = ['No dynamic rules yet.'];
+      const debugLines = [getMessage('debugNoRules')];
       if (storageSnapshot) {
         debugLines.push(`Storage profiles: ${storageSnapshot.profileCount}`);
         debugLines.push(`Storage profiles to apply: ${storageSnapshot.profilesToApplyCount}`);
-        debugLines.push(`Storage global enabled: ${storageSnapshot.globalEnabled ? 'Yes' : 'No'}`);
+        debugLines.push(`Storage global enabled: ${storageSnapshot.globalEnabled ? yes : no}`);
         debugLines.push(`Storage active profile: ${storageSnapshot.activeProfileName || '-'}`);
         debugLines.push(
           `Storage active headers: ${storageSnapshot.activeProfileHeaderCount} (${storageSnapshot.activeProfileEnabledHeaderCount} enabled)`
@@ -1529,7 +1618,11 @@ async function updateDebugInfo(): Promise<void> {
           const header = requestHeader ?? responseHeader;
           const direction = requestHeader ? 'REQ' : 'RES';
           const operation = header?.operation === 'remove' ? 'remove' : header?.value || 'set';
-          return `${rule.id}. ${direction} ${header?.header || 'unknown'} = ${operation} :: ${rule.condition.urlFilter}`;
+          const condition =
+            rule.condition.regexFilter ??
+            rule.condition.requestDomains?.join(', ') ??
+            rule.condition.urlFilter;
+          return `${rule.id}. ${direction} ${header?.header || 'unknown'} = ${operation} :: ${condition}`;
         })
         .join('\n');
     }
@@ -1543,11 +1636,18 @@ async function clearAllData(): Promise<void> {
   const confirmed = await showConfirm(getMessage('clearAllData'), getMessage('confirmClearAll'));
   if (!confirmed) return;
 
+  if (saveTimer !== null) {
+    clearTimeout(saveTimer);
+    saveTimer = null;
+  }
+  clearDraftState();
+  // Our own reload below handles the change: ignore the storage events it triggers
+  isUpdatingStorage = true;
   await browserAPI.storage.local.clear();
   await loadState();
-  clearSelection();
+  await clearNoobMode(false);
   await refreshPopupUi();
-  showToast(getMessage('dataCleared') || 'All data cleared', 'success');
+  showToast(getMessage('dataCleared'), 'success');
 }
 
 /**
@@ -1578,45 +1678,53 @@ async function triggerEasterEgg(): Promise<void> {
     const until = Date.now() + EASTER_EGG_DURATION_MS;
     await browserAPI.storage.local.set({ [NOOB_MODE_UNTIL_KEY]: until });
     startNoobModeCountdown(until);
-    showToast(getMessage('noobModeActivated') || 'Noob mode unlocked', 'success');
+    showToast(getMessage('noobModeActivated'), 'success');
   }
 }
 
 // Initialize popup
 document.addEventListener('DOMContentLoaded', async () => {
+  renderVersion();
   await loadState();
   await initializeNoobMode();
   setupEventListeners();
   await refreshPopupUi();
+  document.body.dataset.ready = 'true';
 
-  // React to external storage changes (e.g., auto-switch from background)
+  // React to external storage changes (e.g., auto-switch from background, options import)
   browserAPI.storage.onChanged.addListener(async (changes, area) => {
-    // Ignore changes that we caused ourselves to prevent re-render during typing
-    if (isUpdatingStorage) {
-      return;
-    }
+    if (area !== 'local') return;
 
-    if (
-      area === 'local' &&
-      (changes[STORAGE_KEYS.PROFILES] ||
-        changes[STORAGE_KEYS.ACTIVE_PROFILE] ||
-        changes[STORAGE_KEYS.GLOBAL_ENABLED])
-    ) {
-      if (matchesCurrentState(changes)) {
-        return;
-      }
-
-      await loadState();
-      await refreshPopupUi();
-    }
-
-    if (area === 'local' && changes[NOOB_MODE_UNTIL_KEY]) {
+    if (changes[NOOB_MODE_UNTIL_KEY]) {
       const until = Number(changes[NOOB_MODE_UNTIL_KEY].newValue || 0);
       if (until > Date.now()) {
         startNoobModeCountdown(until);
       } else {
         await clearNoobMode(false);
       }
+    }
+
+    // Ignore changes that we caused ourselves to prevent re-render during typing
+    if (isUpdatingStorage) {
+      return;
+    }
+
+    if (
+      changes[STORAGE_KEYS.PROFILES] ||
+      changes[STORAGE_KEYS.ACTIVE_PROFILE] ||
+      changes[STORAGE_KEYS.GLOBAL_ENABLED]
+    ) {
+      if (matchesCurrentState(changes)) {
+        return;
+      }
+
+      // Don't clobber an edit that is still being typed
+      if (saveTimer !== null) {
+        return;
+      }
+
+      await loadState();
+      await refreshPopupUi();
     }
   });
 });

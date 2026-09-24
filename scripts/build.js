@@ -62,13 +62,18 @@ const builds = [
   },
   {
     ...commonOptions,
-    entryPoints: ['src/filter-selection.ts'],
-    outfile: 'dist/filter-selection.js',
+    entryPoints: ['src/filter-utils.ts'],
+    outfile: 'dist/filter-utils.js',
   },
   {
     ...commonOptions,
-    entryPoints: ['src/filter-utils.ts'],
-    outfile: 'dist/filter-utils.js',
+    entryPoints: ['src/types/index.ts'],
+    outfile: 'dist/types.js',
+  },
+  {
+    ...commonOptions,
+    entryPoints: ['src/matching.ts'],
+    outfile: 'dist/matching.js',
   },
   {
     ...commonOptions,

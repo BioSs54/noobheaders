@@ -19,73 +19,33 @@ describe('Popup Profile Switching', () => {
     );
   });
 
-  it('should use profile-scoped filter selection when rendering filters', async () => {
-    const src = await readPopupSource();
-
-    assert.ok(
-      src.includes('getSelectedFilter(activeProfileId)'),
-      'popup.ts should read selected filters with the active profile scope'
-    );
-    assert.ok(
-      src.includes('selectFilterIndex(activeProfileId, index);'),
-      'popup.ts should write selected filters with the active profile scope'
-    );
-  });
-
-  it('should refresh filters and filter editor together after profile changes', async () => {
+  it('should refresh every profile-dependent view after profile changes', async () => {
     const src = await readPopupSource();
     const refreshMatch = src.match(/function refreshProfileViews\(\): void \{[\s\S]+?\n\}/);
 
     assert.ok(refreshMatch, 'refreshProfileViews helper should exist');
+    assert.ok(refreshMatch[0].includes('renderProfiles();'), 'Should refresh profiles');
+    assert.ok(refreshMatch[0].includes('renderHeaders();'), 'Should refresh headers');
     assert.ok(refreshMatch[0].includes('renderFilters();'), 'Should refresh filters');
-    assert.ok(refreshMatch[0].includes('renderFilterEditor();'), 'Should refresh filter editor');
   });
 
-  it('should activate a profile when its toggle is changed', async () => {
+  it('should not select a profile when its toggle is changed', async () => {
     const src = await readPopupSource();
-    const lines = src.split('\n');
-    let foundProfileToggle = false;
-    let foundActivateProfile = false;
+    const helperMatch = src.match(/async function setProfileEnabled\([\s\S]+?\n\}/);
 
-    for (let i = 0; i < lines.length; i++) {
-      if (lines[i].includes('profile.enabled =')) {
-        foundProfileToggle = true;
-        for (let j = i; j < Math.min(i + 6, lines.length); j++) {
-          if (lines[j].includes('await activateProfile(profile.id);')) {
-            foundActivateProfile = true;
-            break;
-          }
-        }
-      }
-    }
-
-    assert.ok(foundProfileToggle, 'Should toggle profile.enabled');
-    assert.ok(foundActivateProfile, 'Should activate the toggled profile');
-  });
-
-  it('should preserve filter selection state per profile instead of clearing on switch', async () => {
-    const src = await readPopupSource();
-    const helperMatch = src.match(
-      /async function activateProfile\(profileId: string, persist = true\): Promise<void> \{[\s\S]+?\n\}/
-    );
-
-    assert.ok(helperMatch, 'activateProfile helper should exist');
-    assert.ok(
-      !helperMatch[0].includes('clearSelection('),
-      'activateProfile should no longer clear filter selection globally on profile change'
-    );
+    assert.ok(helperMatch, 'setProfileEnabled helper should exist');
+    assert.ok(helperMatch[0].includes('profile.enabled = enabled;'));
+    assert.ok(!helperMatch[0].includes('activeProfileId ='), 'Toggling must not change selection');
+    assert.ok(helperMatch[0].includes('syncExtension: true'), 'Toggling must sync the rules');
   });
 
   it('should avoid immediate filter rerender while typing', async () => {
     const src = await readPopupSource();
 
     assert.ok(
-      src.includes('setFilterType(index, detected);'),
+      src.includes('setFilterType(index, detectFilterType(v));'),
       'Typing should update filter type locally'
     );
-    assert.ok(
-      !src.includes('updateFilterType(index, detected);'),
-      'Typing should not call the rerendering updateFilterType path'
-    );
+    assert.ok(!src.includes('updateFilterType('), 'Typing should not rerender the list');
   });
 });

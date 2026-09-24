@@ -57,6 +57,8 @@
 </head>
 
 <body>
+  <div id="toast-container" class="toast-container" role="status" aria-live="polite"></div>
+
   <div class="container">
     <div class="options-header">
       <h1>
@@ -90,7 +92,7 @@
           <p data-i18n="showBadgeDesc">Display number of active headers on extension icon</p>
         </div>
         <label class="toggle-container" data-i18n-title="showBadgeTitle">
-          <input type="checkbox" id="show-badge" class="toggle-input" checked disabled>
+          <input type="checkbox" id="show-badge" class="toggle-input" checked>
           <span class="toggle-slider"></span>
         </label>
       </div>
@@ -129,22 +131,22 @@
       </div>
 
       <div style="padding: 16px; background: var(--background); border: 1px solid var(--border); border-radius: 8px;">
-        <p style="margin-bottom: 8px;"><strong>NoobHeaders</strong> v2.1.0</p>
+        <p style="margin-bottom: 8px;"><strong>NoobHeaders</strong> <span id="extension-version">v2.1.0</span></p>
         <p style="margin-bottom: 8px; font-size: 13px; color: var(--text-secondary);" data-i18n="aboutDesc">
           A simple, local-first HTTP header modifier for developers and noobs.
         </p>
         <p style="font-size: 15px; color: var(--text-secondary); line-height: 1.5;">
-          <span data-i18n="welcomeMadeWith">Made by</span> <a href="https://github.com/BioSs54" target="_blank">BioSs54</a>
+          <span data-i18n="welcomeMadeWith">Made by</span> <a href="https://github.com/BioSs54" target="_blank" rel="noreferrer">BioSs54</a>
         </p>
         <p style="margin-top: 12px; font-size: 15px; line-height: 1.5;">
-          <a href="https://github.com/BioSs54/noobheaders" target="_blank" data-i18n="github">GitHub</a> •
-          <a href="https://github.com/BioSs54/noobheaders/issues" target="_blank" data-i18n="reportIssue">Report
+          <a href="https://github.com/BioSs54/noobheaders" target="_blank" rel="noreferrer" data-i18n="github">GitHub</a> •
+          <a href="https://github.com/BioSs54/noobheaders/issues" target="_blank" rel="noreferrer" data-i18n="reportIssue">Report
             Issue</a> •
-          <a href="https://github.com/BioSs54/noobheaders/blob/main/LICENSE" target="_blank" data-i18n="mitLicense">MIT
+          <a href="https://github.com/BioSs54/noobheaders/blob/main/LICENSE" target="_blank" rel="noreferrer" data-i18n="mitLicense">MIT
             License</a>
         </p>
         <div class="footer-donations">
-          <p class="donations-title">Donations</p>
+          <p class="donations-title" data-i18n="donations">Donations</p>
           <div class="donations-links">
             <a href="https://github.com/sponsors/BioSs54" target="_blank" rel="noreferrer" class="donation-link donation-link--sponsor">
               <svg class="ui-icon ui-icon--sm" focusable="false" aria-hidden="true">
