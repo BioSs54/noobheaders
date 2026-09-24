@@ -72,12 +72,17 @@ class RdpClient {
     });
   }
 
-  async request(to: string, type: string, extra: Record<string, unknown> = {}): Promise<any> {
+  async request(
+    to: string,
+    type: string,
+    extra: Record<string, unknown> = {},
+    timeoutMs = 15000
+  ): Promise<any> {
     const body = Buffer.from(JSON.stringify({ to, type, ...extra }), 'utf8');
     this.socket.write(`${body.length}:`);
     this.socket.write(body);
     // Replies carry no `type` (events from the same actor do)
-    const reply = await this.waitFor((packet) => packet.from === to && !packet.type);
+    const reply = await this.waitFor((packet) => packet.from === to && !packet.type, timeoutMs);
     if (reply.error) {
       throw new Error(`RDP ${type} failed: ${reply.error} ${reply.message ?? ''}`);
     }
@@ -93,12 +98,15 @@ class RdpClient {
  * Resolve the console actor of the add-on background page. Recent Firefox versions expose
  * targets through a watcher (getWatcher + watchTargets); older ones through getTarget.
  */
+/** A request hanging while the add-on starts must not use up the whole connection budget. */
+const ATTEMPT_TIMEOUT = 5000;
+
 async function findBackgroundConsoleActor(
   client: RdpClient,
   descriptorActor: string
 ): Promise<string | null> {
   try {
-    const watcher = await client.request(descriptorActor, 'getWatcher', {});
+    const watcher = await client.request(descriptorActor, 'getWatcher', {}, ATTEMPT_TIMEOUT);
     const watcherActor: string = watcher.actor ?? watcher.watcher?.actor;
     // The background page is a sub-frame of a hidden host document: pick it by URL
     const targetEvent = client.waitFor(
@@ -109,12 +117,12 @@ async function findBackgroundConsoleActor(
         /^moz-extension:\/\/[^/]+\/_generated_background_page\.html/.test(packet.target.url ?? ''),
       5000
     );
-    await client.request(watcherActor, 'watchTargets', { targetType: 'frame' });
+    await client.request(watcherActor, 'watchTargets', { targetType: 'frame' }, ATTEMPT_TIMEOUT);
     const event = await targetEvent;
     return event.target.consoleActor;
   } catch (watcherError) {
     if (process.env.E2E_DEBUG === '1') console.log('[rdp] watcher failed', watcherError);
-    const reply = await client.request(descriptorActor, 'getTarget');
+    const reply = await client.request(descriptorActor, 'getTarget', {}, ATTEMPT_TIMEOUT);
     const form = reply.form ?? reply;
     return typeof form.consoleActor === 'string' ? form.consoleActor : null;
   }
@@ -133,15 +141,17 @@ export class FirefoxAddonBackground {
   ) {}
 
   static async connect(port: number, addonId: string): Promise<FirefoxAddonBackground> {
-    const client = new RdpClient(await connect(port));
-    await client.waitFor((packet) => packet.from === 'root');
-
-    // The background page may still be loading right after the install: retry
+    // The background page may still be loading right after the install (slower on a cold
+    // first start): retry, on a fresh connection so that late replies of a timed out
+    // attempt cannot be mistaken for the replies of the next one
     const deadline = Date.now() + 30000;
     let lastReply: unknown = null;
     while (Date.now() < deadline) {
+      let client: RdpClient | null = null;
       try {
-        const { addons = [] } = await client.request('root', 'listAddons');
+        client = new RdpClient(await connect(port));
+        await client.waitFor((packet) => packet.from === 'root', ATTEMPT_TIMEOUT);
+        const { addons = [] } = await client.request('root', 'listAddons', {}, ATTEMPT_TIMEOUT);
         const descriptor = addons.find((addon: any) => addon.id === addonId);
         if (descriptor) {
           const consoleActor = await findBackgroundConsoleActor(client, descriptor.actor);
@@ -153,9 +163,9 @@ export class FirefoxAddonBackground {
       } catch (error) {
         lastReply = String(error);
       }
+      client?.close();
       await new Promise((resolve) => setTimeout(resolve, 250));
     }
-    client.close();
     throw new Error(`Could not reach the add-on background page: ${JSON.stringify(lastReply)}`);
   }
 
