@@ -53,19 +53,28 @@ Installation
    - **Type**: Request or Response
    - **Name**: Header name (e.g., `User-Agent`, `Access-Control-Allow-Origin`)
    - **Value**: Header value (or leave empty to remove the header)
-5. Toggle the profile switch to enable it
+5. Switch the profile on (its toggle in the profile list) and turn on **Enable header modifications**
+
+A profile's headers are applied only when the profile is switched on. Several profiles can be on at
+the same time; when they set the same header, the selected profile (the one being edited) wins.
+Clicking a profile name only selects it for editing.
 
 ### Using Filters
 
 Filters allow you to apply headers only to specific requests:
 
-- **URL Pattern**: Match URLs with wildcards (e.g., `*://example.com/*`)
-- **Domain**: Match specific domains (e.g., `example.com`)
+- **Domain**: `example.com` matches the domain and all its subdomains
+- **URL Pattern**: `*` is a wildcard and the whole URL must match (e.g., `*://example.com/api/*`).
+  Without a scheme any scheme matches, `*.example.com` also matches `example.com`, and a pattern without
+  a path matches every path (e.g., `localhost:3000`)
+
+The type is detected automatically. When a profile has several filters, headers apply if **any**
+filter matches. Invalid filters are highlighted and never widen the scope.
 
 ### Managing Profiles
 
-- **Create**: Click the ➕ button next to the profile dropdown
-- **Switch**: Select a profile from the dropdown
+- **Create**: Click the ➕ button next to the profile list
+- **Select**: Click a profile name to edit it
 - **Rename**: Click "Rename" button
 - **Duplicate**: Click "Duplicate" to copy the current profile
 - **Delete**: Click the 🗑️ button (requires at least 2 profiles)
@@ -79,7 +88,7 @@ Filters allow you to apply headers only to specific requests:
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) 18+
+- [Node.js](https://nodejs.org/) 22+
 - [pnpm](https://pnpm.io/) 9+
 
 ### Project Structure
@@ -150,15 +159,19 @@ Run all tests:
 pnpm test
 ```
 
-Run E2E tests:
+Run E2E tests (Chromium and Firefox, every user flow):
 ```bash
+pnpm exec playwright install chromium firefox   # first time only
 pnpm test:e2e
 ```
 
-Run Chromium E2E only:
+Run a single browser:
 ```bash
 pnpm test:e2e:chromium
+pnpm test:e2e:firefox
 ```
+
+On Linux without a display, prefix the command with `xvfb-run -a` (Chromium loads extensions in headed mode).
 
 Run Firefox manual validation:
 ```bash
@@ -167,7 +180,9 @@ pnpm test:firefox
 
 Tests include:
 - Unit tests for core functionality
-- Chromium E2E tests with Playwright
+- E2E tests with Playwright in Chromium (declarativeNetRequest) and Firefox (webRequest),
+  covering profiles, headers, filters, real requests, badge, auto-switch, options, persistence and
+  every UI language
 - Firefox manual validation through web-ext
 - Manifest validation
 - i18n completeness
