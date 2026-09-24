@@ -288,7 +288,7 @@
     "message": "Aplicar los encabezados del perfil «$1»"
   },
   "profilesHint": {
-    "message": "Activa los perfiles que quieres aplicar. Haz clic en un nombre para editarlo."
+    "message": "Activa los perfiles que quieres aplicar. Haz clic en un perfil para editarlo."
   },
   "profileDisabledHint": {
     "message": "Este perfil está desactivado: sus encabezados no se aplican."
@@ -367,5 +367,8 @@
   },
   "donations": {
     "message": "Donaciones"
+  },
+  "profileCounts": {
+    "message": "Encabezados: $1 · Filtros: $2"
   }
 }

@@ -289,7 +289,7 @@
     "message": "Apply the headers of profile \"$1\""
   },
   "profilesHint": {
-    "message": "Switch on the profiles to apply. Click a name to edit it."
+    "message": "Switch on the profiles to apply. Click a profile to edit it."
   },
   "profileDisabledHint": {
     "message": "This profile is off: its headers are not applied."
@@ -368,5 +368,9 @@
   },
   "donations": {
     "message": "Donations"
+  },
+  "profileCounts": {
+    "message": "Headers: $1 · Filters: $2",
+    "description": "Number of headers ($1) and filters ($2) of a profile"
   }
 }

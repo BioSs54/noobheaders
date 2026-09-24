@@ -369,8 +369,17 @@ function validateProfileName(value: string, ignoreId?: string): string | null {
   return exists ? getMessage('profileNameExists') : null;
 }
 
-function uniqueProfileName(baseName: string): string {
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function uniqueProfileName(sourceName: string): string {
   const copyLabel = getMessage('copySuffix');
+  // Duplicating "Work (copy)" gives "Work (copy 2)", not "Work (copy) (copy)"
+  const baseName = sourceName.replace(
+    new RegExp(`\\s\\(${escapeRegExp(copyLabel)}(?: \\d+)?\\)$`),
+    ''
+  );
   let candidate = `${baseName} (${copyLabel})`;
   let counter = 2;
   while (validateProfileName(candidate)) {
@@ -720,7 +729,10 @@ function renderProfiles(): void {
 
     const meta = document.createElement('div');
     meta.className = 'profile-row-meta';
-    meta.textContent = `${profile.headers?.length || 0} ${getMessage('headers')} • ${profile.filters?.length || 0} ${getMessage('filters')}`;
+    meta.textContent = getMessage('profileCounts', [
+      String(profile.headers?.length || 0),
+      String(profile.filters?.length || 0),
+    ]);
 
     if (isSelected) {
       const badge = document.createElement('span');
@@ -737,6 +749,13 @@ function renderProfiles(): void {
     main.appendChild(toggleLabel);
     main.appendChild(copy);
     row.appendChild(main);
+
+    // The whole card selects the profile (the switch only turns it on/off)
+    row.addEventListener('click', async (event) => {
+      const target = event.target as HTMLElement;
+      if (isSelected || target.closest('label, button, input')) return;
+      await activateProfile(profile.id);
+    });
 
     radioGroup.appendChild(row);
   });

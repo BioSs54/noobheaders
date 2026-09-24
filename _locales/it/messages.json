@@ -289,7 +289,7 @@
     "message": "Applica gli header del profilo \"$1\""
   },
   "profilesHint": {
-    "message": "Attiva i profili da applicare. Fai clic su un nome per modificarlo."
+    "message": "Attiva i profili da applicare. Fai clic su un profilo per modificarlo."
   },
   "profileDisabledHint": {
     "message": "Questo profilo è disattivato: i suoi header non vengono applicati."
@@ -368,5 +368,8 @@
   },
   "donations": {
     "message": "Donazioni"
+  },
+  "profileCounts": {
+    "message": "Header: $1 · Filtri: $2"
   }
 }

@@ -102,19 +102,20 @@ test.describe('Profiles', () => {
 
     await page.click('#duplicate-profile-btn');
     await expect(page.locator('#active-profile-name')).toHaveText('Work (copy)');
+    // Duplicating a copy does not stack suffixes
     await page.click('#duplicate-profile-btn');
-    await expect(page.locator('#active-profile-name')).toHaveText('Work (copy) (copy)');
+    await expect(page.locator('#active-profile-name')).toHaveText('Work (copy 2)');
 
     await profileRow(page, 'Work').getByRole('button', { name: 'Work', exact: true }).click();
     await page.click('#duplicate-profile-btn');
-    await expect(page.locator('#active-profile-name')).toHaveText('Work (copy 2)');
+    await expect(page.locator('#active-profile-name')).toHaveText('Work (copy 3)');
 
     const profiles = await readProfiles(page);
     expect(profiles.map((p) => p.name)).toEqual([
       'Work',
-      'Work (copy 2)',
+      'Work (copy 3)',
       'Work (copy)',
-      'Work (copy) (copy)',
+      'Work (copy 2)',
       'Other',
     ]);
     expect(new Set(profiles.map((p) => p.id)).size).toBe(5);
@@ -181,6 +182,29 @@ test.describe('Profiles', () => {
     await setProfileEnabled(page, 'Work', false);
     await expect(page.locator('#profile-disabled-hint')).toBeVisible();
     await expect(page.locator('#active-profile-name')).toHaveText('Work');
+  });
+
+  test('clicking anywhere on a profile card selects it, except its switch', async ({
+    context,
+    extensionOrigin,
+  }) => {
+    const page = await openPopup(context, extensionOrigin);
+    await seedState(page, {
+      profiles: [
+        profile('Work', { headers: [header('X-Work', '1')] }),
+        profile('Staging', { enabled: false, headers: [header('X-A', '1'), header('X-B', '2')] }),
+      ],
+    });
+
+    const staging = profileRow(page, 'Staging');
+    await expect(staging.locator('.profile-row-meta')).toHaveText('Headers: 2 · Filters: 0');
+    await staging.locator('.profile-row-meta').click();
+    await expect(page.locator('#active-profile-name')).toHaveText('Staging');
+    await expect.poll(() => readActiveProfileId(page)).toBe('Staging');
+
+    // The switch turns the profile on without selecting it
+    await profileRow(page, 'Work').locator('.toggle-slider').click();
+    await expect(page.locator('#active-profile-name')).toHaveText('Staging');
   });
 
   test('clicking a profile name selects it and shows its headers', async ({
