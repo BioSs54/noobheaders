@@ -10,6 +10,7 @@ import {
   profile,
   readProfiles,
   readStorage,
+  reloadExtensionPage,
   STORAGE_KEYS,
   seedState,
   setToggle,
@@ -45,7 +46,7 @@ test.describe('Options page', () => {
     await setToggle(options.locator('label:has(#auto-enable)'), true);
     await expect.poll(async () => (await readStorage(options)).autoEnable).toBe(true);
 
-    await options.reload();
+    await reloadExtensionPage(options);
     await expect(options.locator('#show-badge')).not.toBeChecked();
     await expect(options.locator('#auto-enable')).toBeChecked();
   });

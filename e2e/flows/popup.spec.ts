@@ -6,6 +6,7 @@ import {
   profile,
   readProfiles,
   readStorage,
+  reloadExtensionPage,
   STORAGE_KEYS,
   seedState,
   setGlobalEnabled,
@@ -18,8 +19,7 @@ test.describe('Popup: layout and global switch', () => {
   test('renders every section without JavaScript errors', async ({ context, extensionOrigin }) => {
     const page = await openPopup(context, extensionOrigin);
     const errors = trackPageErrors(page);
-    await page.reload();
-    await page.locator('body[data-ready="true"]').waitFor();
+    await reloadExtensionPage(page);
 
     await expect(page.locator('.logo')).toContainText('NoobHeaders');
     await expect(page.locator('#global-enabled')).toBeAttached();
@@ -54,7 +54,7 @@ test.describe('Popup: layout and global switch', () => {
     await setGlobalEnabled(page, true);
     await expect(page.locator('#global-disabled-hint')).toBeHidden();
 
-    await page.reload();
+    await reloadExtensionPage(page);
     await expect(page.locator('#global-enabled')).toBeChecked();
 
     await setGlobalEnabled(page, false);
@@ -139,7 +139,7 @@ test.describe('Popup: layout and global switch', () => {
     await expect(page.locator('body')).toHaveClass(/noob-mode/);
 
     // Survives a reload (stored with an expiry date)
-    await page.reload();
+    await reloadExtensionPage(page);
     await expect(page.locator('body')).toHaveClass(/noob-mode/);
   });
 });

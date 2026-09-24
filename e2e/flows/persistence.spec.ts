@@ -6,6 +6,7 @@ import {
   profile,
   readActiveProfileId,
   readProfiles,
+  reloadExtensionPage,
   seedState,
 } from '../helpers';
 
@@ -44,7 +45,7 @@ test.describe('Persistence', () => {
     await popup.getByRole('button', { name: 'Staging', exact: true }).click();
     await expect.poll(() => readActiveProfileId(popup)).toBe('Staging');
 
-    await popup.reload();
+    await reloadExtensionPage(popup);
     await expect(popup.locator('#active-profile-name')).toHaveText('Staging');
     await expect(popup.locator('.profile-row input[type="checkbox"]')).toHaveCount(2);
     await expect(popup.locator('.profile-row input[type="checkbox"]').first()).toBeChecked();
