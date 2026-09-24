@@ -159,16 +159,23 @@ Run all tests:
 pnpm test
 ```
 
-Run E2E tests (Chromium and Firefox, every user flow):
+Run E2E tests:
 ```bash
-pnpm exec playwright install chromium firefox   # first time only
+pnpm exec playwright install chromium   # first time only
 pnpm test:e2e
 ```
+
+- `e2e/flows`: every UI flow (popup, profiles, headers, filters, options, import/export,
+  persistence, all UI languages) plus real requests, in Chromium.
+- `e2e/engine`: header engine flows (real request/response headers, filters, priorities,
+  badge, auto-switch) driven from the extension background, in **Chromium and Firefox**.
+  Firefox does not let automation drive `moz-extension://` pages, so its UI is covered by the
+  Chromium run (same HTML/JS).
 
 Run a single browser:
 ```bash
 pnpm test:e2e:chromium
-pnpm test:e2e:firefox
+FIREFOX_BIN=/path/to/firefox pnpm test:e2e:firefox   # stock Firefox, driven through WebDriver BiDi
 ```
 
 On Linux without a display, prefix the command with `xvfb-run -a` (Chromium loads extensions in headed mode).
@@ -180,9 +187,8 @@ pnpm test:firefox
 
 Tests include:
 - Unit tests for core functionality
-- E2E tests with Playwright in Chromium (declarativeNetRequest) and Firefox (webRequest),
-  covering profiles, headers, filters, real requests, badge, auto-switch, options, persistence and
-  every UI language
+- E2E tests with Playwright: UI flows in Chromium, header engine flows in Chromium
+  (declarativeNetRequest) and Firefox (webRequest)
 - Firefox manual validation through web-ext
 - Manifest validation
 - i18n completeness

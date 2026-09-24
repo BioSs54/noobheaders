@@ -83,7 +83,7 @@ We actively welcome your pull requests:
 # Run tests
 pnpm test
 
-# Run E2E tests in Chromium and Firefox (run `pnpm exec playwright install chromium firefox` once)
+# Run E2E tests (run `pnpm exec playwright install chromium` once; Firefox needs FIREFOX_BIN)
 pnpm test:e2e
 
 # Run Firefox manual validation
