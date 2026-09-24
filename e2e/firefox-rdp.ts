@@ -107,7 +107,7 @@ async function findBackgroundConsoleActor(
         packet.type === 'target-available-form' &&
         typeof packet.target?.consoleActor === 'string' &&
         /^moz-extension:\/\/[^/]+\/_generated_background_page\.html/.test(packet.target.url ?? ''),
-      10000
+      5000
     );
     await client.request(watcherActor, 'watchTargets', { targetType: 'frame' });
     const event = await targetEvent;
@@ -136,17 +136,22 @@ export class FirefoxAddonBackground {
     const client = new RdpClient(await connect(port));
     await client.waitFor((packet) => packet.from === 'root');
 
-    const deadline = Date.now() + 15000;
+    // The background page may still be loading right after the install: retry
+    const deadline = Date.now() + 30000;
     let lastReply: unknown = null;
     while (Date.now() < deadline) {
-      const { addons = [] } = await client.request('root', 'listAddons');
-      const descriptor = addons.find((addon: any) => addon.id === addonId);
-      if (descriptor) {
-        const consoleActor = await findBackgroundConsoleActor(client, descriptor.actor);
-        lastReply = consoleActor;
-        if (consoleActor) {
-          return new FirefoxAddonBackground(client, consoleActor);
+      try {
+        const { addons = [] } = await client.request('root', 'listAddons');
+        const descriptor = addons.find((addon: any) => addon.id === addonId);
+        if (descriptor) {
+          const consoleActor = await findBackgroundConsoleActor(client, descriptor.actor);
+          lastReply = consoleActor;
+          if (consoleActor) {
+            return new FirefoxAddonBackground(client, consoleActor);
+          }
         }
+      } catch (error) {
+        lastReply = String(error);
       }
       await new Promise((resolve) => setTimeout(resolve, 250));
     }
