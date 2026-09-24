@@ -14,9 +14,6 @@
     "message": "Activer la modification des en-têtes",
     "description": "Libellé pour le bouton global qui active la modification des en-têtes"
   },
-  "activeProfile": {
-    "message": "Profil sélectionné"
-  },
   "addProfile": {
     "message": "Ajouter un Profil"
   },
@@ -59,18 +56,6 @@
   "importExportDesc": {
     "message": "Sauvegardez vos profils ou importez des profils depuis un fichier JSON"
   },
-  "importExportNote": {
-    "message": "Ouvre la page Options pour éviter de fermer le popup"
-  },
-  "export": {
-    "message": "Exporter"
-  },
-  "import": {
-    "message": "Importer"
-  },
-  "profilesExported": {
-    "message": "Profils exportés avec succès"
-  },
   "enterProfileName": {
     "message": "Entrez le nom du profil:",
     "description": "Invite pour entrer le nom d'un nouveau profil"
@@ -107,6 +92,9 @@
     "message": "Supprimer",
     "description": "Étiquette courte pour les actions de suppression"
   },
+  "profilesExported": {
+    "message": "Profils exportés avec succès"
+  },
   "debug": {
     "message": "Débogage"
   },
@@ -126,7 +114,7 @@
     "message": "Nom de l'en-tête"
   },
   "headerValue": {
-    "message": "Valeur de l'en-tête"
+    "message": "Valeur (vide = supprimer l'en-tête)"
   },
   "urlPattern": {
     "message": "Schéma d'URL"
@@ -147,7 +135,7 @@
     "message": "Activation automatique des profils"
   },
   "autoEnableProfilesDesc": {
-    "message": "Activer automatiquement l'extension lors de la création d'un nouveau profil"
+    "message": "Activer automatiquement les nouveaux profils lors de leur création"
   },
   "showBadgeTitle": {
     "message": "Afficher le compteur"
@@ -155,71 +143,11 @@
   "showBadgeDesc": {
     "message": "Afficher le nombre d'en-têtes actifs sur l'icône de l'extension"
   },
-  "profileActivePrefix": {
-    "message": "Profil sélectionné :"
-  },
-  "aboutTitle": {
-    "message": "À propos"
-  },
-  "aboutDesc": {
-    "message": "Modificateur d'en-têtes HTTP simple, local et respectueux de la vie privée pour développeurs et noobs."
-  },
-  "github": {
-    "message": "GitHub"
-  },
-  "noobModeActivated": {
-    "message": "Mode noob activé"
-  },
-  "reportIssue": {
-    "message": "Signaler un problème"
-  },
-  "mitLicense": {
-    "message": "Licence MIT"
-  },
-  "filterEditorType": {
-    "message": "Type"
-  },
-  "filterEditorValue": {
-    "message": "Valeur"
-  },
-  "filterValuePlaceholder": {
-    "message": "example.com ou *://*.example.com/*"
-  },
-  "filterHelpText": {
-    "message": "example.com cible le domaine, tandis que *://*.example.com/* cible aussi le protocole et le chemin avec des jokers."
-  },
-  "invalidDomain": {
-    "message": "Domaine ou URL invalide"
-  },
-  "errorAddingFilter": {
-    "message": "Échec lors de l'ajout du filtre"
-  },
-  "editorSave": {
-    "message": "Enregistrer"
-  },
-  "editorDelete": {
-    "message": "Supprimer"
-  },
-  "edit": {
-    "message": "Éditer"
-  },
-  "editorCancel": {
-    "message": "Annuler"
-  },
-  "exportProfiles": {
-    "message": "Exporter les profils"
-  },
-  "importProfiles": {
-    "message": "Importer les profils"
-  },
   "welcomeTitle": {
     "message": "Bienvenue sur NoobHeaders !"
   },
   "welcomeSubtitle": {
     "message": "Modificateur d'en-têtes HTTP simple, local et respectueux de la vie privée"
-  },
-  "getStarted": {
-    "message": "Commencer"
   },
   "welcomeFeatureSimpleTitle": {
     "message": "Simple et Clair"
@@ -284,6 +212,45 @@
   "welcomeMadeWith": {
     "message": "Fait par"
   },
+  "profileActivePrefix": {
+    "message": "Sélectionné :"
+  },
+  "aboutTitle": {
+    "message": "À propos"
+  },
+  "aboutDesc": {
+    "message": "Modificateur d'en-têtes HTTP simple, local et respectueux de la vie privée pour développeurs et noobs."
+  },
+  "github": {
+    "message": "GitHub"
+  },
+  "noobModeActivated": {
+    "message": "Mode noob activé"
+  },
+  "reportIssue": {
+    "message": "Signaler un problème"
+  },
+  "mitLicense": {
+    "message": "Licence MIT"
+  },
+  "filterValuePlaceholder": {
+    "message": "example.com ou *://*.example.com/*"
+  },
+  "filterHelpText": {
+    "message": "example.com cible le domaine et ses sous-domaines. Les motifs d'URL utilisent * comme joker : *://*.example.com/api/*, localhost:3000"
+  },
+  "invalidDomain": {
+    "message": "Domaine ou URL invalide"
+  },
+  "errorAddingFilter": {
+    "message": "Échec lors de l'ajout du filtre"
+  },
+  "exportProfiles": {
+    "message": "Exporter les profils"
+  },
+  "importProfiles": {
+    "message": "Importer les profils"
+  },
   "welcomeReportIssue": {
     "message": "Signaler un Problème"
   },
@@ -310,5 +277,95 @@
   },
   "dataCleared": {
     "message": "Toutes les données effacées"
+  },
+  "profiles": {
+    "message": "Profils"
+  },
+  "selectProfile": {
+    "message": "Sélectionner ce profil pour le modifier"
+  },
+  "enableProfileLabel": {
+    "message": "Appliquer les en-têtes du profil « $1 »"
+  },
+  "profilesHint": {
+    "message": "Activez les profils à appliquer. Cliquez sur un nom pour le modifier."
+  },
+  "profileDisabledHint": {
+    "message": "Ce profil est désactivé : ses en-têtes ne sont pas appliqués."
+  },
+  "globalDisabledHint": {
+    "message": "La modification est désactivée : aucun en-tête n'est modifié."
+  },
+  "enableHeader": {
+    "message": "Activer l'en-tête"
+  },
+  "headerTypeLabel": {
+    "message": "Type d'en-tête"
+  },
+  "duplicateHeader": {
+    "message": "Dupliquer l'en-tête"
+  },
+  "duplicateFilter": {
+    "message": "Dupliquer le filtre"
+  },
+  "enableFilter": {
+    "message": "Activer le filtre"
+  },
+  "invalidHeaderName": {
+    "message": "Nom invalide : lettres, chiffres et - _ . uniquement (sans espace)"
+  },
+  "invalidHeaderValue": {
+    "message": "Valeur invalide : les retours à la ligne sont interdits"
+  },
+  "copySuffix": {
+    "message": "copie"
+  },
+  "profileDuplicated": {
+    "message": "Profil dupliqué"
+  },
+  "nameRequired": {
+    "message": "Veuillez saisir un nom"
+  },
+  "profileNameExists": {
+    "message": "Un profil porte déjà ce nom"
+  },
+  "headerDeleted": {
+    "message": "En-tête supprimé"
+  },
+  "filterDeleted": {
+    "message": "Filtre supprimé"
+  },
+  "undo": {
+    "message": "Annuler"
+  },
+  "debugActiveRules": {
+    "message": "Règles actives :"
+  },
+  "debugGlobalEnabled": {
+    "message": "Activation globale :"
+  },
+  "debugSelectedProfile": {
+    "message": "Profil sélectionné :"
+  },
+  "debugStorageUsed": {
+    "message": "Stockage utilisé :"
+  },
+  "debugRuleSync": {
+    "message": "Synchro des règles :"
+  },
+  "debugNoRules": {
+    "message": "Aucune règle active."
+  },
+  "yes": {
+    "message": "Oui"
+  },
+  "no": {
+    "message": "Non"
+  },
+  "importEmpty": {
+    "message": "Le fichier ne contient aucun profil"
+  },
+  "donations": {
+    "message": "Dons"
   }
 }

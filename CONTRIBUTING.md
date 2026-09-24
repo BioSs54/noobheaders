@@ -52,8 +52,8 @@ We actively welcome your pull requests:
 
 ### Prerequisites
 
-- Node.js 18+
-- pnpm 9+
+- Node.js 22+
+- pnpm 10+ (the version is pinned by `packageManager` in `package.json`)
 
 ### Setup Steps
 
@@ -83,7 +83,7 @@ We actively welcome your pull requests:
 # Run tests
 pnpm test
 
-# Run Chromium E2E tests
+# Run E2E tests (run `pnpm exec playwright install chromium` once; Firefox needs FIREFOX_BIN)
 pnpm test:e2e
 
 # Run Firefox manual validation
@@ -249,21 +249,22 @@ Pre-commit and pre-push hooks
 
 To keep the repository clean and avoid manual lint/fix cycles, we run auto-fixes and formatting automatically when committing and run the test-suite before pushing:
 
-- `pre-commit`: runs `pnpm lint:fix` + `pnpm format` and stages any resulting changes automatically
+- `pre-commit`: runs Biome (lint + format) on the staged files through `lint-staged`
 - `pre-push`: runs `pnpm test` and blocks the push if tests fail
 
-These hooks are set up using `husky` and `lint-staged`. After running `pnpm install`, run `pnpm prepare` (or `husky install`) to enable the hooks locally.
+These hooks are set up using `husky` and `lint-staged`. They are enabled automatically by `pnpm install` (through the `prepare` script).
 
 Automated Dependabot merges
 ---------------------------
 
-Dependabot PRs that update dependencies are automatically tested and merged when all checks pass. The workflow:
+Dependabot PRs for patch and minor updates get GitHub auto-merge enabled
+(`.github/workflows/dependabot-automerge.yml`). They are merged only once the required CI checks
+(lint, unit tests, Chromium and Firefox E2E, packaging) pass on the PR. Major updates are left for a
+manual review.
 
-- Runs the project's test suite (`pnpm test`) on the PR branch
-- Builds the extension (`pnpm build`) and attempts to package it (`pnpm package`) to verify packaging for Chrome and Firefox
-- If tests and packaging succeed, the PR is auto-merged
-
-If you prefer to opt-out for a specific dependency, add a `dependabot.yml` ignore rule or remove the `dependencies` label from the PR.
+This requires "Allow auto-merge" in the repository settings and a branch protection rule on `main`
+that requires the CI checks. To opt out for a specific dependency, add an `ignore` rule to
+`.github/dependabot.yml`.
 
 ### Writing Tests
 

@@ -21,7 +21,7 @@ test('generateId format is correct', () => {
   const parts = id.split('-');
   assert.strictEqual(parts.length, 2, 'ID should have two parts');
 
-  const timestamp = Number.parseInt(parts[0]);
+  const timestamp = Number.parseInt(parts[0], 10);
   assert.ok(!Number.isNaN(timestamp), 'First part should be a valid timestamp');
   assert.ok(timestamp > 0, 'Timestamp should be positive');
 });

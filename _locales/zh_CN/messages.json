@@ -1,0 +1,372 @@
+{
+  "extensionName": {
+    "message": "NoobHeaders",
+    "description": "Name of the extension"
+  },
+  "extensionDescription": {
+    "message": "面向开发者和新手的简单、本地优先的 HTTP 请求头修改工具。无广告，无追踪。",
+    "description": "Description of the extension"
+  },
+  "subtitle": {
+    "message": "轻松修改 HTTP 请求头",
+    "description": "Short app subtitle"
+  },
+  "headerModificationEnabled": {
+    "message": "启用请求头修改",
+    "description": "Label for the global toggle that enables header modifications"
+  },
+  "addProfile": {
+    "message": "添加配置"
+  },
+  "deleteProfile": {
+    "message": "删除配置"
+  },
+  "rename": {
+    "message": "重命名"
+  },
+  "duplicate": {
+    "message": "复制"
+  },
+  "headers": {
+    "message": "请求头"
+  },
+  "addHeader": {
+    "message": "+ 添加请求头"
+  },
+  "filters": {
+    "message": "过滤器"
+  },
+  "addFilter": {
+    "message": "+ 添加过滤器"
+  },
+  "noHeadersConfigured": {
+    "message": "尚未配置请求头"
+  },
+  "clickAddHeaderHint": {
+    "message": "点击“添加请求头”开始"
+  },
+  "noFiltersConfigured": {
+    "message": "尚未配置过滤器"
+  },
+  "headersApplyAllRequests": {
+    "message": "请求头将应用于所有请求"
+  },
+  "importExport": {
+    "message": "导入/导出"
+  },
+  "importExportDesc": {
+    "message": "备份你的配置，或从 JSON 文件导入配置"
+  },
+  "enterProfileName": {
+    "message": "输入配置名称：",
+    "description": "Prompt text for entering a new profile name"
+  },
+  "enterNewName": {
+    "message": "输入新名称：",
+    "description": "Prompt text for renaming a profile"
+  },
+  "cannotDeleteLastProfile": {
+    "message": "无法删除最后一个配置",
+    "description": "Alert when user tries to delete the last profile"
+  },
+  "confirmDeleteProfile": {
+    "message": "删除配置“$1”？",
+    "description": "Confirmation when deleting a profile"
+  },
+  "confirmImport": {
+    "message": "导入 $1 个配置？现有配置将被替换。",
+    "description": "Confirmation shown when importing profiles"
+  },
+  "confirmClearAll": {
+    "message": "清除所有配置和设置？此操作无法撤销！",
+    "description": "Confirmation shown when clearing all data"
+  },
+  "invalidProfileFormat": {
+    "message": "配置格式无效",
+    "description": "Error shown when imported file is not valid"
+  },
+  "errorImportingProfiles": {
+    "message": "导入配置出错：$1",
+    "description": "Error message when import fails"
+  },
+  "delete": {
+    "message": "删除",
+    "description": "Short label for delete actions"
+  },
+  "profilesExported": {
+    "message": "配置导出成功"
+  },
+  "debug": {
+    "message": "调试"
+  },
+  "showDebugInfo": {
+    "message": "显示调试信息"
+  },
+  "clearAllData": {
+    "message": "清除所有数据"
+  },
+  "request": {
+    "message": "请求"
+  },
+  "response": {
+    "message": "响应"
+  },
+  "headerName": {
+    "message": "名称"
+  },
+  "headerValue": {
+    "message": "值（留空 = 删除该头）"
+  },
+  "urlPattern": {
+    "message": "URL 模式"
+  },
+  "domain": {
+    "message": "域名"
+  },
+  "options": {
+    "message": "选项"
+  },
+  "optionsSubtitle": {
+    "message": "配置 NoobHeaders"
+  },
+  "generalSettings": {
+    "message": "常规设置"
+  },
+  "autoEnableProfilesTitle": {
+    "message": "自动启用配置"
+  },
+  "autoEnableProfilesDesc": {
+    "message": "创建新配置时自动将其启用"
+  },
+  "showBadgeTitle": {
+    "message": "显示徽章计数"
+  },
+  "showBadgeDesc": {
+    "message": "在扩展图标上显示生效的请求头数量"
+  },
+  "welcomeTitle": {
+    "message": "欢迎使用 NoobHeaders！"
+  },
+  "welcomeSubtitle": {
+    "message": "简单、本地优先的 HTTP 请求头修改工具"
+  },
+  "welcomeFeatureSimpleTitle": {
+    "message": "简单清晰"
+  },
+  "welcomeFeatureSimpleDesc": {
+    "message": "为开发者和新手设计的直观界面。没有多余内容，只有请求头。"
+  },
+  "welcomeFeaturePrivacyTitle": {
+    "message": "隐私优先"
+  },
+  "welcomeFeaturePrivacyDesc": {
+    "message": "无广告、无追踪、无分析。你的数据只保存在你的设备上。"
+  },
+  "welcomeFeatureProfilesTitle": {
+    "message": "强大的配置"
+  },
+  "welcomeFeatureProfilesDesc": {
+    "message": "为不同场景创建多个配置，随时切换。"
+  },
+  "welcomeFeatureFiltersTitle": {
+    "message": "智能过滤器"
+  },
+  "welcomeFeatureFiltersDesc": {
+    "message": "将请求头应用于特定域名或 URL 模式。"
+  },
+  "welcomeFeatureImportExportTitle": {
+    "message": "导入/导出"
+  },
+  "welcomeFeatureImportExportDesc": {
+    "message": "与团队共享配置，或备份你的配置。"
+  },
+  "welcomeFeatureOpenSourceTitle": {
+    "message": "开源"
+  },
+  "welcomeFeatureOpenSourceDesc": {
+    "message": "公开开发。欢迎在 GitHub 上贡献或审查代码。"
+  },
+  "welcomeReadyTitle": {
+    "message": "准备好开始了吗？"
+  },
+  "welcomeReadyDesc": {
+    "message": "点击工具栏中的扩展图标，创建你的第一个配置！"
+  },
+  "welcomeQuickTipsTitle": {
+    "message": "快速提示"
+  },
+  "welcomeTip1": {
+    "message": "点击扩展图标打开弹出窗口"
+  },
+  "welcomeTip2": {
+    "message": "为不同的开发场景创建配置"
+  },
+  "welcomeTip3": {
+    "message": "使用过滤器定位特定的 URL 或域名"
+  },
+  "welcomeTip4": {
+    "message": "导出配置以便与同事共享"
+  },
+  "welcomeTip5": {
+    "message": "遇到问题时请查看“调试”部分"
+  },
+  "welcomeMadeWith": {
+    "message": "作者"
+  },
+  "profileActivePrefix": {
+    "message": "已选："
+  },
+  "aboutTitle": {
+    "message": "关于"
+  },
+  "aboutDesc": {
+    "message": "面向开发者和新手的简单、本地优先的 HTTP 请求头修改工具。"
+  },
+  "github": {
+    "message": "GitHub"
+  },
+  "noobModeActivated": {
+    "message": "新手模式已解锁"
+  },
+  "reportIssue": {
+    "message": "报告问题"
+  },
+  "mitLicense": {
+    "message": "MIT 许可证"
+  },
+  "filterValuePlaceholder": {
+    "message": "example.com 或 *://*.example.com/*"
+  },
+  "filterHelpText": {
+    "message": "example.com 匹配该域名及其子域名。URL 模式使用 * 作为通配符：*://*.example.com/api/*、localhost:3000"
+  },
+  "invalidDomain": {
+    "message": "无效的域名或 URL"
+  },
+  "errorAddingFilter": {
+    "message": "添加过滤器失败"
+  },
+  "exportProfiles": {
+    "message": "导出配置"
+  },
+  "importProfiles": {
+    "message": "导入配置"
+  },
+  "welcomeReportIssue": {
+    "message": "报告问题"
+  },
+  "cancel": {
+    "message": "取消"
+  },
+  "confirm": {
+    "message": "确认"
+  },
+  "ok": {
+    "message": "确定"
+  },
+  "profileAdded": {
+    "message": "配置已添加"
+  },
+  "profileDeleted": {
+    "message": "配置已删除"
+  },
+  "profileRenamed": {
+    "message": "配置已重命名"
+  },
+  "profilesImported": {
+    "message": "配置导入成功"
+  },
+  "dataCleared": {
+    "message": "所有数据已清除"
+  },
+  "profiles": {
+    "message": "配置"
+  },
+  "selectProfile": {
+    "message": "选择此配置进行编辑"
+  },
+  "enableProfileLabel": {
+    "message": "应用配置“$1”的请求头"
+  },
+  "profilesHint": {
+    "message": "打开需要应用的配置。点击名称即可编辑。"
+  },
+  "profileDisabledHint": {
+    "message": "此配置已关闭：其请求头不会被应用。"
+  },
+  "globalDisabledHint": {
+    "message": "修改已关闭：不会修改任何请求头。"
+  },
+  "enableHeader": {
+    "message": "启用请求头"
+  },
+  "headerTypeLabel": {
+    "message": "请求头类型"
+  },
+  "duplicateHeader": {
+    "message": "复制请求头"
+  },
+  "duplicateFilter": {
+    "message": "复制过滤器"
+  },
+  "enableFilter": {
+    "message": "启用过滤器"
+  },
+  "invalidHeaderName": {
+    "message": "名称无效：只能使用字母、数字和 - _ .（不能有空格）"
+  },
+  "invalidHeaderValue": {
+    "message": "值无效：不允许换行"
+  },
+  "copySuffix": {
+    "message": "副本"
+  },
+  "profileDuplicated": {
+    "message": "配置已复制"
+  },
+  "nameRequired": {
+    "message": "请输入名称"
+  },
+  "profileNameExists": {
+    "message": "已存在同名配置"
+  },
+  "headerDeleted": {
+    "message": "请求头已删除"
+  },
+  "filterDeleted": {
+    "message": "过滤器已删除"
+  },
+  "undo": {
+    "message": "撤销"
+  },
+  "debugActiveRules": {
+    "message": "生效规则："
+  },
+  "debugGlobalEnabled": {
+    "message": "全局启用："
+  },
+  "debugSelectedProfile": {
+    "message": "当前配置："
+  },
+  "debugStorageUsed": {
+    "message": "已用存储："
+  },
+  "debugRuleSync": {
+    "message": "规则同步："
+  },
+  "debugNoRules": {
+    "message": "没有生效的规则。"
+  },
+  "yes": {
+    "message": "是"
+  },
+  "no": {
+    "message": "否"
+  },
+  "importEmpty": {
+    "message": "文件中不包含任何配置"
+  },
+  "donations": {
+    "message": "捐赠"
+  }
+}

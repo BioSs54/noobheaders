@@ -15,9 +15,6 @@
     "message": "Enable header modifications",
     "description": "Label for the global toggle that enables header modifications"
   },
-  "activeProfile": {
-    "message": "Selected Profile"
-  },
   "addProfile": {
     "message": "Add Profile"
   },
@@ -60,12 +57,6 @@
   "importExportDesc": {
     "message": "Backup your profiles or import profiles from a JSON file"
   },
-  "importExportNote": {
-    "message": "Opens the Options page to avoid closing the popup"
-  },
-  "export": {
-    "message": "Export"
-  },
   "enterProfileName": {
     "message": "Enter profile name:",
     "description": "Prompt text for entering a new profile name"
@@ -102,9 +93,6 @@
     "message": "Delete",
     "description": "Short label for delete actions"
   },
-  "import": {
-    "message": "Import"
-  },
   "profilesExported": {
     "message": "Profiles exported successfully"
   },
@@ -127,7 +115,7 @@
     "message": "Header name"
   },
   "headerValue": {
-    "message": "Header value"
+    "message": "Value (empty = remove header)"
   },
   "urlPattern": {
     "message": "URL Pattern"
@@ -148,7 +136,7 @@
     "message": "Auto-enable profiles"
   },
   "autoEnableProfilesDesc": {
-    "message": "Automatically enable the extension when creating a new profile"
+    "message": "Switch new profiles on automatically when they are created"
   },
   "showBadgeTitle": {
     "message": "Show badge count"
@@ -161,9 +149,6 @@
   },
   "welcomeSubtitle": {
     "message": "Simple, local-first HTTP header modifier"
-  },
-  "getStarted": {
-    "message": "Get Started"
   },
   "welcomeFeatureSimpleTitle": {
     "message": "Simple & Clear"
@@ -249,35 +234,17 @@
   "mitLicense": {
     "message": "MIT License"
   },
-  "filterEditorType": {
-    "message": "Type"
-  },
-  "filterEditorValue": {
-    "message": "Value"
-  },
   "filterValuePlaceholder": {
     "message": "example.com or *://*.example.com/*"
   },
   "filterHelpText": {
-    "message": "example.com matches the domain, while *://*.example.com/* also matches protocol and path with wildcards."
+    "message": "example.com matches the domain and its subdomains. URL patterns use * as a wildcard: *://*.example.com/api/*, localhost:3000"
   },
   "invalidDomain": {
     "message": "Invalid domain or URL"
   },
   "errorAddingFilter": {
     "message": "Failed to add filter"
-  },
-  "editorSave": {
-    "message": "Save"
-  },
-  "editorDelete": {
-    "message": "Delete"
-  },
-  "edit": {
-    "message": "Edit"
-  },
-  "editorCancel": {
-    "message": "Cancel"
   },
   "exportProfiles": {
     "message": "Export Profiles"
@@ -311,5 +278,95 @@
   },
   "dataCleared": {
     "message": "All data cleared"
+  },
+  "profiles": {
+    "message": "Profiles"
+  },
+  "selectProfile": {
+    "message": "Select this profile to edit it"
+  },
+  "enableProfileLabel": {
+    "message": "Apply the headers of profile \"$1\""
+  },
+  "profilesHint": {
+    "message": "Switch on the profiles to apply. Click a name to edit it."
+  },
+  "profileDisabledHint": {
+    "message": "This profile is off: its headers are not applied."
+  },
+  "globalDisabledHint": {
+    "message": "Header modification is off: no header is modified."
+  },
+  "enableHeader": {
+    "message": "Enable header"
+  },
+  "headerTypeLabel": {
+    "message": "Header type"
+  },
+  "duplicateHeader": {
+    "message": "Duplicate header"
+  },
+  "duplicateFilter": {
+    "message": "Duplicate filter"
+  },
+  "enableFilter": {
+    "message": "Enable filter"
+  },
+  "invalidHeaderName": {
+    "message": "Invalid name: use letters, digits and - _ . only (no spaces)"
+  },
+  "invalidHeaderValue": {
+    "message": "Invalid value: line breaks are not allowed"
+  },
+  "copySuffix": {
+    "message": "copy"
+  },
+  "profileDuplicated": {
+    "message": "Profile duplicated"
+  },
+  "nameRequired": {
+    "message": "Please enter a name"
+  },
+  "profileNameExists": {
+    "message": "A profile with this name already exists"
+  },
+  "headerDeleted": {
+    "message": "Header deleted"
+  },
+  "filterDeleted": {
+    "message": "Filter deleted"
+  },
+  "undo": {
+    "message": "Undo"
+  },
+  "debugActiveRules": {
+    "message": "Active rules:"
+  },
+  "debugGlobalEnabled": {
+    "message": "Global enabled:"
+  },
+  "debugSelectedProfile": {
+    "message": "Selected profile:"
+  },
+  "debugStorageUsed": {
+    "message": "Storage used:"
+  },
+  "debugRuleSync": {
+    "message": "Rule sync:"
+  },
+  "debugNoRules": {
+    "message": "No active rules."
+  },
+  "yes": {
+    "message": "Yes"
+  },
+  "no": {
+    "message": "No"
+  },
+  "importEmpty": {
+    "message": "The file does not contain any profile"
+  },
+  "donations": {
+    "message": "Donations"
   }
 }

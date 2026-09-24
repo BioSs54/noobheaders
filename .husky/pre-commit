@@ -1,9 +1,2 @@
-#!/usr/bin/env sh
-. "$(dirname "$0")/_/husky.sh"
-
-# Run auto-fixes and formatting before commit
-pnpm -s lint:fix
-pnpm -s format
-
-# Add any changes made by linters/formatters
-git add -A
+# Lint and format staged files only
+pnpm exec lint-staged

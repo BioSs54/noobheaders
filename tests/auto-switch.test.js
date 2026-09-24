@@ -58,3 +58,12 @@ test('selectProfileForUrl picks the first matching profile', () => {
   const p = selectProfileForUrl(profiles, 'https://github.com/BioSs54/noobheaders');
   assert.strictEqual(p?.id, 'p2');
 });
+
+test('selectProfileForUrl ignores disabled profiles and profiles without filters', () => {
+  const candidates = [
+    { id: 'off', name: 'Off', enabled: false, headers: [], filters: profiles[1].filters },
+    { id: 'all', name: 'All', enabled: true, headers: [], filters: [] },
+    { id: 'on', name: 'On', enabled: true, headers: [], filters: profiles[1].filters },
+  ];
+  assert.strictEqual(selectProfileForUrl(candidates, 'https://github.com/x')?.id, 'on');
+});

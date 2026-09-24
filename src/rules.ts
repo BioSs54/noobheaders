@@ -1,17 +1,86 @@
+import {
+  isActiveFilter,
+  isUsableHeader,
+  normalizeDomainValue,
+  urlPatternToRegexSource,
+} from './matching.js';
 import type { Filter, Header, ModifyHeaderRule, Profile } from './types/index.js';
 
 const DEFAULT_URL_FILTER = '*://*/*';
 
+const RESOURCE_TYPES: chrome.declarativeNetRequest.ResourceType[] = [
+  'main_frame',
+  'sub_frame',
+  'stylesheet',
+  'script',
+  'image',
+  'font',
+  'object',
+  'xmlhttprequest',
+  'ping',
+  'csp_report',
+  'media',
+  'websocket',
+  'other',
+] as chrome.declarativeNetRequest.ResourceType[];
+
+/**
+ * Profiles contributing headers: every enabled profile. The selected profile is placed
+ * last so that it gets the highest priority when several profiles set the same header.
+ */
 export function resolveProfilesToApply(
   profiles: Profile[],
   activeProfileId?: string | null
 ): Profile[] {
-  const activeProfile = profiles.find((profile) => profile.id === activeProfileId);
-  const enabledProfiles = profiles.filter(
-    (profile) => profile.enabled === true && profile.id !== activeProfileId
-  );
+  const enabledProfiles = profiles.filter((profile) => profile.enabled === true);
+  const others = enabledProfiles.filter((profile) => profile.id !== activeProfileId);
+  const active = enabledProfiles.find((profile) => profile.id === activeProfileId);
 
-  return activeProfile ? [...enabledProfiles, activeProfile] : enabledProfiles;
+  return active ? [...others, active] : others;
+}
+
+type RuleCondition = ModifyHeaderRule['condition'];
+
+/**
+ * Build the list of DNR conditions for a set of filters.
+ * Filters are OR-ed: one condition per URL pattern plus one condition for all domains.
+ * Returns an empty list when filters are active but none of them is valid, so that an
+ * invalid filter never widens the scope to every URL.
+ */
+export function buildConditions(filters: Filter[] | undefined): RuleCondition[] {
+  const activeFilters = (filters ?? []).filter(isActiveFilter);
+
+  if (activeFilters.length === 0) {
+    return [{ urlFilter: DEFAULT_URL_FILTER, resourceTypes: RESOURCE_TYPES }];
+  }
+
+  const conditions: RuleCondition[] = [];
+  const domains = new Set<string>();
+  const regexes = new Set<string>();
+
+  for (const filter of activeFilters) {
+    if (filter.type === 'domain') {
+      const domain = normalizeDomainValue(filter.value);
+      if (domain) domains.add(domain);
+    } else {
+      const regex = urlPatternToRegexSource(filter.value);
+      if (regex) regexes.add(regex);
+    }
+  }
+
+  for (const regexFilter of regexes) {
+    conditions.push({
+      regexFilter,
+      isUrlFilterCaseSensitive: false,
+      resourceTypes: RESOURCE_TYPES,
+    });
+  }
+
+  if (domains.size > 0) {
+    conditions.push({ requestDomains: [...domains], resourceTypes: RESOURCE_TYPES });
+  }
+
+  return conditions;
 }
 
 export function convertProfileToRules(
@@ -26,79 +95,30 @@ export function convertProfileToRules(
     return rules;
   }
 
+  const conditions = buildConditions(profile.filters);
   let ruleId = ruleIdOffset;
 
-  profile.headers.forEach((header) => {
-    if (!header.enabled || !header.name) return;
+  for (const header of profile.headers) {
+    if (!isUsableHeader(header)) continue;
 
-    const headerObj = {
-      header: header.name,
-      operation: header.value ? 'set' : 'remove',
-      ...(header.value ? { value: header.value } : {}),
-    } as const;
+    const name = header.name.trim();
+    const headerObj = header.value
+      ? { header: name, operation: 'set' as const, value: header.value }
+      : { header: name, operation: 'remove' as const };
 
-    const action: ModifyHeaderRule['action'] = { type: 'modifyHeaders' } as any;
+    const action: ModifyHeaderRule['action'] = { type: 'modifyHeaders' };
     if (header.type === 'request') action.requestHeaders = [headerObj];
     else action.responseHeaders = [headerObj];
 
-    const activeFilters = profile.filters?.filter((f) => f.enabled && f.value) ?? [];
-
-    const urlFilters = activeFilters.filter((f) => f.type === 'url');
-    const domainFilters = activeFilters.filter((f) => f.type === 'domain');
-
-    // Use requestDomains to filter by destination domain, not initiatorDomains
-    const requestDomains = domainFilters.length > 0 ? domainFilters.map((f) => f.value) : undefined;
-
-    if (urlFilters.length > 0) {
-      urlFilters.forEach((uf) => {
-        const condition: ModifyHeaderRule['condition'] = {
-          urlFilter: uf.value,
-          resourceTypes: [
-            'main_frame',
-            'sub_frame',
-            'stylesheet',
-            'script',
-            'image',
-            'font',
-            'object',
-            'xmlhttprequest',
-            'ping',
-            'csp_report',
-            'media',
-            'websocket',
-            'other',
-          ],
-        } as any;
-
-        if (requestDomains) condition.requestDomains = requestDomains;
-
-        rules.push({ id: ruleId++, priority, action, condition });
+    for (const condition of conditions) {
+      rules.push({
+        id: ruleId++,
+        priority,
+        action,
+        condition,
       });
-    } else {
-      const condition: ModifyHeaderRule['condition'] = {
-        urlFilter: DEFAULT_URL_FILTER,
-        resourceTypes: [
-          'main_frame',
-          'sub_frame',
-          'stylesheet',
-          'script',
-          'image',
-          'font',
-          'object',
-          'xmlhttprequest',
-          'ping',
-          'csp_report',
-          'media',
-          'websocket',
-          'other',
-        ],
-      } as any;
-
-      if (requestDomains) condition.requestDomains = requestDomains;
-
-      rules.push({ id: ruleId++, priority, action, condition });
     }
-  });
+  }
 
   return rules;
 }

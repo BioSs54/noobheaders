@@ -9,6 +9,7 @@ export type UiIconName =
   | 'check'
   | 'chevron-down'
   | 'chevron-up'
+  | 'copy'
   | 'download'
   | 'edit'
   | 'globe'

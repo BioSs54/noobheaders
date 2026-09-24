@@ -1,0 +1,372 @@
+{
+  "extensionName": {
+    "message": "NoobHeaders",
+    "description": "Name of the extension"
+  },
+  "extensionDescription": {
+    "message": "開発者と初心者のための、シンプルでローカル完結の HTTP ヘッダー編集ツール。広告なし、トラッキングなし。",
+    "description": "Description of the extension"
+  },
+  "subtitle": {
+    "message": "HTTP ヘッダーをかんたんに変更",
+    "description": "Short app subtitle"
+  },
+  "headerModificationEnabled": {
+    "message": "ヘッダーの変更を有効にする",
+    "description": "Label for the global toggle that enables header modifications"
+  },
+  "addProfile": {
+    "message": "プロファイルを追加"
+  },
+  "deleteProfile": {
+    "message": "プロファイルを削除"
+  },
+  "rename": {
+    "message": "名前を変更"
+  },
+  "duplicate": {
+    "message": "複製"
+  },
+  "headers": {
+    "message": "ヘッダー"
+  },
+  "addHeader": {
+    "message": "+ ヘッダーを追加"
+  },
+  "filters": {
+    "message": "フィルター"
+  },
+  "addFilter": {
+    "message": "+ フィルターを追加"
+  },
+  "noHeadersConfigured": {
+    "message": "ヘッダーが設定されていません"
+  },
+  "clickAddHeaderHint": {
+    "message": "「ヘッダーを追加」をクリックして始めましょう"
+  },
+  "noFiltersConfigured": {
+    "message": "フィルターが設定されていません"
+  },
+  "headersApplyAllRequests": {
+    "message": "ヘッダーはすべてのリクエストに適用されます"
+  },
+  "importExport": {
+    "message": "インポート/エクスポート"
+  },
+  "importExportDesc": {
+    "message": "プロファイルをバックアップするか、JSON ファイルからインポートします"
+  },
+  "enterProfileName": {
+    "message": "プロファイル名を入力：",
+    "description": "Prompt text for entering a new profile name"
+  },
+  "enterNewName": {
+    "message": "新しい名前を入力：",
+    "description": "Prompt text for renaming a profile"
+  },
+  "cannotDeleteLastProfile": {
+    "message": "最後のプロファイルは削除できません",
+    "description": "Alert when user tries to delete the last profile"
+  },
+  "confirmDeleteProfile": {
+    "message": "プロファイル「$1」を削除しますか？",
+    "description": "Confirmation when deleting a profile"
+  },
+  "confirmImport": {
+    "message": "$1 件のプロファイルをインポートしますか？既存のプロファイルは置き換えられます。",
+    "description": "Confirmation shown when importing profiles"
+  },
+  "confirmClearAll": {
+    "message": "すべてのプロファイルと設定を削除しますか？元に戻せません！",
+    "description": "Confirmation shown when clearing all data"
+  },
+  "invalidProfileFormat": {
+    "message": "プロファイルの形式が正しくありません",
+    "description": "Error shown when imported file is not valid"
+  },
+  "errorImportingProfiles": {
+    "message": "プロファイルのインポート中にエラーが発生しました：$1",
+    "description": "Error message when import fails"
+  },
+  "delete": {
+    "message": "削除",
+    "description": "Short label for delete actions"
+  },
+  "profilesExported": {
+    "message": "プロファイルをエクスポートしました"
+  },
+  "debug": {
+    "message": "デバッグ"
+  },
+  "showDebugInfo": {
+    "message": "デバッグ情報を表示"
+  },
+  "clearAllData": {
+    "message": "すべてのデータを削除"
+  },
+  "request": {
+    "message": "リクエスト"
+  },
+  "response": {
+    "message": "レスポンス"
+  },
+  "headerName": {
+    "message": "ヘッダー名"
+  },
+  "headerValue": {
+    "message": "値（空 = ヘッダーを削除）"
+  },
+  "urlPattern": {
+    "message": "URL パターン"
+  },
+  "domain": {
+    "message": "ドメイン"
+  },
+  "options": {
+    "message": "オプション"
+  },
+  "optionsSubtitle": {
+    "message": "NoobHeaders の設定"
+  },
+  "generalSettings": {
+    "message": "一般設定"
+  },
+  "autoEnableProfilesTitle": {
+    "message": "プロファイルを自動で有効化"
+  },
+  "autoEnableProfilesDesc": {
+    "message": "新しいプロファイルを作成時に自動でオンにする"
+  },
+  "showBadgeTitle": {
+    "message": "バッジに件数を表示"
+  },
+  "showBadgeDesc": {
+    "message": "拡張機能アイコンに有効なヘッダー数を表示します"
+  },
+  "welcomeTitle": {
+    "message": "NoobHeaders へようこそ！"
+  },
+  "welcomeSubtitle": {
+    "message": "シンプルでローカル完結の HTTP ヘッダー編集ツール"
+  },
+  "welcomeFeatureSimpleTitle": {
+    "message": "シンプルで明快"
+  },
+  "welcomeFeatureSimpleDesc": {
+    "message": "開発者にも初心者にも使いやすい直感的な UI。余計なものはなく、ヘッダーだけ。"
+  },
+  "welcomeFeaturePrivacyTitle": {
+    "message": "プライバシー重視"
+  },
+  "welcomeFeaturePrivacyDesc": {
+    "message": "広告・トラッキング・分析は一切なし。データはお使いの端末にのみ保存されます。"
+  },
+  "welcomeFeatureProfilesTitle": {
+    "message": "強力なプロファイル"
+  },
+  "welcomeFeatureProfilesDesc": {
+    "message": "用途ごとに複数のプロファイルを作成し、すぐに切り替えられます。"
+  },
+  "welcomeFeatureFiltersTitle": {
+    "message": "スマートなフィルター"
+  },
+  "welcomeFeatureFiltersDesc": {
+    "message": "特定のドメインや URL パターンにだけヘッダーを適用できます。"
+  },
+  "welcomeFeatureImportExportTitle": {
+    "message": "インポート/エクスポート"
+  },
+  "welcomeFeatureImportExportDesc": {
+    "message": "チームと設定を共有したり、プロファイルをバックアップしたりできます。"
+  },
+  "welcomeFeatureOpenSourceTitle": {
+    "message": "オープンソース"
+  },
+  "welcomeFeatureOpenSourceDesc": {
+    "message": "オープンに開発しています。GitHub で貢献したりコードを確認したりできます。"
+  },
+  "welcomeReadyTitle": {
+    "message": "始める準備はできましたか？"
+  },
+  "welcomeReadyDesc": {
+    "message": "ツールバーの拡張機能アイコンをクリックして、最初のプロファイルを作成しましょう！"
+  },
+  "welcomeQuickTipsTitle": {
+    "message": "ヒント"
+  },
+  "welcomeTip1": {
+    "message": "拡張機能アイコンをクリックしてポップアップを開きます"
+  },
+  "welcomeTip2": {
+    "message": "開発シナリオごとにプロファイルを作成しましょう"
+  },
+  "welcomeTip3": {
+    "message": "フィルターで特定の URL やドメインを指定できます"
+  },
+  "welcomeTip4": {
+    "message": "プロファイルをエクスポートしてチームと共有しましょう"
+  },
+  "welcomeTip5": {
+    "message": "うまく動かないときはデバッグ欄を確認してください"
+  },
+  "welcomeMadeWith": {
+    "message": "作者"
+  },
+  "profileActivePrefix": {
+    "message": "選択中："
+  },
+  "aboutTitle": {
+    "message": "このアプリについて"
+  },
+  "aboutDesc": {
+    "message": "開発者と初心者のための、シンプルでローカル完結の HTTP ヘッダー編集ツール。"
+  },
+  "github": {
+    "message": "GitHub"
+  },
+  "noobModeActivated": {
+    "message": "初心者モードが解放されました"
+  },
+  "reportIssue": {
+    "message": "問題を報告"
+  },
+  "mitLicense": {
+    "message": "MIT ライセンス"
+  },
+  "filterValuePlaceholder": {
+    "message": "example.com または *://*.example.com/*"
+  },
+  "filterHelpText": {
+    "message": "example.com はそのドメインとサブドメインに一致します。URL パターンでは * がワイルドカードです：*://*.example.com/api/*、localhost:3000"
+  },
+  "invalidDomain": {
+    "message": "ドメインまたは URL が正しくありません"
+  },
+  "errorAddingFilter": {
+    "message": "フィルターを追加できませんでした"
+  },
+  "exportProfiles": {
+    "message": "プロファイルをエクスポート"
+  },
+  "importProfiles": {
+    "message": "プロファイルをインポート"
+  },
+  "welcomeReportIssue": {
+    "message": "問題を報告"
+  },
+  "cancel": {
+    "message": "キャンセル"
+  },
+  "confirm": {
+    "message": "確認"
+  },
+  "ok": {
+    "message": "OK"
+  },
+  "profileAdded": {
+    "message": "プロファイルを追加しました"
+  },
+  "profileDeleted": {
+    "message": "プロファイルを削除しました"
+  },
+  "profileRenamed": {
+    "message": "プロファイル名を変更しました"
+  },
+  "profilesImported": {
+    "message": "プロファイルをインポートしました"
+  },
+  "dataCleared": {
+    "message": "すべてのデータを削除しました"
+  },
+  "profiles": {
+    "message": "プロファイル"
+  },
+  "selectProfile": {
+    "message": "このプロファイルを選択して編集"
+  },
+  "enableProfileLabel": {
+    "message": "プロファイル「$1」のヘッダーを適用"
+  },
+  "profilesHint": {
+    "message": "適用するプロファイルをオンにします。名前をクリックすると編集できます。"
+  },
+  "profileDisabledHint": {
+    "message": "このプロファイルはオフです。ヘッダーは適用されません。"
+  },
+  "globalDisabledHint": {
+    "message": "変更はオフです。ヘッダーは変更されません。"
+  },
+  "enableHeader": {
+    "message": "ヘッダーを有効化"
+  },
+  "headerTypeLabel": {
+    "message": "ヘッダーの種類"
+  },
+  "duplicateHeader": {
+    "message": "ヘッダーを複製"
+  },
+  "duplicateFilter": {
+    "message": "フィルターを複製"
+  },
+  "enableFilter": {
+    "message": "フィルターを有効化"
+  },
+  "invalidHeaderName": {
+    "message": "名前が正しくありません：英数字と - _ . のみ使用できます（空白不可）"
+  },
+  "invalidHeaderValue": {
+    "message": "値が正しくありません：改行は使用できません"
+  },
+  "copySuffix": {
+    "message": "コピー"
+  },
+  "profileDuplicated": {
+    "message": "プロファイルを複製しました"
+  },
+  "nameRequired": {
+    "message": "名前を入力してください"
+  },
+  "profileNameExists": {
+    "message": "同じ名前のプロファイルがすでにあります"
+  },
+  "headerDeleted": {
+    "message": "ヘッダーを削除しました"
+  },
+  "filterDeleted": {
+    "message": "フィルターを削除しました"
+  },
+  "undo": {
+    "message": "元に戻す"
+  },
+  "debugActiveRules": {
+    "message": "有効なルール："
+  },
+  "debugGlobalEnabled": {
+    "message": "全体の有効化："
+  },
+  "debugSelectedProfile": {
+    "message": "選択中のプロファイル："
+  },
+  "debugStorageUsed": {
+    "message": "使用ストレージ："
+  },
+  "debugRuleSync": {
+    "message": "ルール同期："
+  },
+  "debugNoRules": {
+    "message": "有効なルールはありません。"
+  },
+  "yes": {
+    "message": "はい"
+  },
+  "no": {
+    "message": "いいえ"
+  },
+  "importEmpty": {
+    "message": "ファイルにプロファイルが含まれていません"
+  },
+  "donations": {
+    "message": "寄付"
+  }
+}

@@ -1,0 +1,372 @@
+{
+  "extensionName": {
+    "message": "NoobHeaders",
+    "description": "Name of the extension"
+  },
+  "extensionDescription": {
+    "message": "Einfacher, lokaler HTTP-Header-Editor für Entwickler und Noobs. Keine Werbung, kein Tracking.",
+    "description": "Description of the extension"
+  },
+  "subtitle": {
+    "message": "HTTP-Header einfach ändern",
+    "description": "Short app subtitle"
+  },
+  "headerModificationEnabled": {
+    "message": "Header-Änderungen aktivieren",
+    "description": "Label for the global toggle that enables header modifications"
+  },
+  "addProfile": {
+    "message": "Profil hinzufügen"
+  },
+  "deleteProfile": {
+    "message": "Profil löschen"
+  },
+  "rename": {
+    "message": "Umbenennen"
+  },
+  "duplicate": {
+    "message": "Duplizieren"
+  },
+  "headers": {
+    "message": "Header"
+  },
+  "addHeader": {
+    "message": "+ Header hinzufügen"
+  },
+  "filters": {
+    "message": "Filter"
+  },
+  "addFilter": {
+    "message": "+ Filter hinzufügen"
+  },
+  "noHeadersConfigured": {
+    "message": "Keine Header konfiguriert"
+  },
+  "clickAddHeaderHint": {
+    "message": "Klicke auf „Header hinzufügen“, um zu beginnen"
+  },
+  "noFiltersConfigured": {
+    "message": "Keine Filter konfiguriert"
+  },
+  "headersApplyAllRequests": {
+    "message": "Header gelten für alle Anfragen"
+  },
+  "importExport": {
+    "message": "Import/Export"
+  },
+  "importExportDesc": {
+    "message": "Sichere deine Profile oder importiere Profile aus einer JSON-Datei"
+  },
+  "enterProfileName": {
+    "message": "Profilname eingeben:",
+    "description": "Prompt text for entering a new profile name"
+  },
+  "enterNewName": {
+    "message": "Neuen Namen eingeben:",
+    "description": "Prompt text for renaming a profile"
+  },
+  "cannotDeleteLastProfile": {
+    "message": "Das letzte Profil kann nicht gelöscht werden",
+    "description": "Alert when user tries to delete the last profile"
+  },
+  "confirmDeleteProfile": {
+    "message": "Profil „$1“ löschen?",
+    "description": "Confirmation when deleting a profile"
+  },
+  "confirmImport": {
+    "message": "$1 Profil(e) importieren? Vorhandene Profile werden ersetzt.",
+    "description": "Confirmation shown when importing profiles"
+  },
+  "confirmClearAll": {
+    "message": "Alle Profile und Einstellungen löschen? Dies kann nicht rückgängig gemacht werden!",
+    "description": "Confirmation shown when clearing all data"
+  },
+  "invalidProfileFormat": {
+    "message": "Ungültiges Profilformat",
+    "description": "Error shown when imported file is not valid"
+  },
+  "errorImportingProfiles": {
+    "message": "Fehler beim Importieren der Profile: $1",
+    "description": "Error message when import fails"
+  },
+  "delete": {
+    "message": "Löschen",
+    "description": "Short label for delete actions"
+  },
+  "profilesExported": {
+    "message": "Profile erfolgreich exportiert"
+  },
+  "debug": {
+    "message": "Debug"
+  },
+  "showDebugInfo": {
+    "message": "Debug-Infos anzeigen"
+  },
+  "clearAllData": {
+    "message": "Alle Daten löschen"
+  },
+  "request": {
+    "message": "Anfrage"
+  },
+  "response": {
+    "message": "Antwort"
+  },
+  "headerName": {
+    "message": "Header-Name"
+  },
+  "headerValue": {
+    "message": "Wert (leer = Header entfernen)"
+  },
+  "urlPattern": {
+    "message": "URL-Muster"
+  },
+  "domain": {
+    "message": "Domain"
+  },
+  "options": {
+    "message": "Optionen"
+  },
+  "optionsSubtitle": {
+    "message": "NoobHeaders-Einstellungen konfigurieren"
+  },
+  "generalSettings": {
+    "message": "Allgemeine Einstellungen"
+  },
+  "autoEnableProfilesTitle": {
+    "message": "Profile automatisch aktivieren"
+  },
+  "autoEnableProfilesDesc": {
+    "message": "Neue Profile beim Erstellen automatisch einschalten"
+  },
+  "showBadgeTitle": {
+    "message": "Zähler anzeigen"
+  },
+  "showBadgeDesc": {
+    "message": "Anzahl aktiver Header auf dem Erweiterungssymbol anzeigen"
+  },
+  "welcomeTitle": {
+    "message": "Willkommen bei NoobHeaders!"
+  },
+  "welcomeSubtitle": {
+    "message": "Einfacher, lokaler HTTP-Header-Editor"
+  },
+  "welcomeFeatureSimpleTitle": {
+    "message": "Einfach & klar"
+  },
+  "welcomeFeatureSimpleDesc": {
+    "message": "Intuitive Oberfläche für Entwickler und Noobs. Kein Ballast, nur Header."
+  },
+  "welcomeFeaturePrivacyTitle": {
+    "message": "Datenschutz zuerst"
+  },
+  "welcomeFeaturePrivacyDesc": {
+    "message": "Keine Werbung, kein Tracking, keine Analysen. Deine Daten bleiben auf deinem Gerät."
+  },
+  "welcomeFeatureProfilesTitle": {
+    "message": "Leistungsstarke Profile"
+  },
+  "welcomeFeatureProfilesDesc": {
+    "message": "Erstelle mehrere Profile für verschiedene Szenarien. Sofort wechseln."
+  },
+  "welcomeFeatureFiltersTitle": {
+    "message": "Intelligente Filter"
+  },
+  "welcomeFeatureFiltersDesc": {
+    "message": "Wende Header auf bestimmte Domains oder URL-Muster an."
+  },
+  "welcomeFeatureImportExportTitle": {
+    "message": "Import/Export"
+  },
+  "welcomeFeatureImportExportDesc": {
+    "message": "Teile Konfigurationen mit deinem Team oder sichere deine Profile."
+  },
+  "welcomeFeatureOpenSourceTitle": {
+    "message": "Open Source"
+  },
+  "welcomeFeatureOpenSourceDesc": {
+    "message": "Offen entwickelt. Trage auf GitHub bei oder prüfe den Code."
+  },
+  "welcomeReadyTitle": {
+    "message": "Bereit loszulegen?"
+  },
+  "welcomeReadyDesc": {
+    "message": "Klicke auf das Erweiterungssymbol in der Symbolleiste, um dein erstes Profil zu erstellen!"
+  },
+  "welcomeQuickTipsTitle": {
+    "message": "Schnelle Tipps"
+  },
+  "welcomeTip1": {
+    "message": "Klicke auf das Erweiterungssymbol, um das Popup zu öffnen"
+  },
+  "welcomeTip2": {
+    "message": "Erstelle Profile für verschiedene Entwicklungsszenarien"
+  },
+  "welcomeTip3": {
+    "message": "Nutze Filter, um bestimmte URLs oder Domains anzusprechen"
+  },
+  "welcomeTip4": {
+    "message": "Exportiere deine Profile, um sie mit Kollegen zu teilen"
+  },
+  "welcomeTip5": {
+    "message": "Sieh im Debug-Bereich nach, wenn etwas nicht funktioniert"
+  },
+  "welcomeMadeWith": {
+    "message": "Erstellt von"
+  },
+  "profileActivePrefix": {
+    "message": "Ausgewählt:"
+  },
+  "aboutTitle": {
+    "message": "Über"
+  },
+  "aboutDesc": {
+    "message": "Ein einfacher, lokaler HTTP-Header-Editor für Entwickler und Noobs."
+  },
+  "github": {
+    "message": "GitHub"
+  },
+  "noobModeActivated": {
+    "message": "Noob-Modus freigeschaltet"
+  },
+  "reportIssue": {
+    "message": "Problem melden"
+  },
+  "mitLicense": {
+    "message": "MIT-Lizenz"
+  },
+  "filterValuePlaceholder": {
+    "message": "example.com oder *://*.example.com/*"
+  },
+  "filterHelpText": {
+    "message": "example.com passt auf die Domain und ihre Subdomains. URL-Muster nutzen * als Platzhalter: *://*.example.com/api/*, localhost:3000"
+  },
+  "invalidDomain": {
+    "message": "Ungültige Domain oder URL"
+  },
+  "errorAddingFilter": {
+    "message": "Filter konnte nicht hinzugefügt werden"
+  },
+  "exportProfiles": {
+    "message": "Profile exportieren"
+  },
+  "importProfiles": {
+    "message": "Profile importieren"
+  },
+  "welcomeReportIssue": {
+    "message": "Problem melden"
+  },
+  "cancel": {
+    "message": "Abbrechen"
+  },
+  "confirm": {
+    "message": "Bestätigen"
+  },
+  "ok": {
+    "message": "OK"
+  },
+  "profileAdded": {
+    "message": "Profil erfolgreich hinzugefügt"
+  },
+  "profileDeleted": {
+    "message": "Profil gelöscht"
+  },
+  "profileRenamed": {
+    "message": "Profil umbenannt"
+  },
+  "profilesImported": {
+    "message": "Profile erfolgreich importiert"
+  },
+  "dataCleared": {
+    "message": "Alle Daten gelöscht"
+  },
+  "profiles": {
+    "message": "Profile"
+  },
+  "selectProfile": {
+    "message": "Dieses Profil zum Bearbeiten auswählen"
+  },
+  "enableProfileLabel": {
+    "message": "Header des Profils „$1“ anwenden"
+  },
+  "profilesHint": {
+    "message": "Schalte die Profile ein, die angewendet werden sollen. Klicke auf einen Namen, um ihn zu bearbeiten."
+  },
+  "profileDisabledHint": {
+    "message": "Dieses Profil ist aus: Seine Header werden nicht angewendet."
+  },
+  "globalDisabledHint": {
+    "message": "Header-Änderung ist aus: Es wird kein Header geändert."
+  },
+  "enableHeader": {
+    "message": "Header aktivieren"
+  },
+  "headerTypeLabel": {
+    "message": "Header-Typ"
+  },
+  "duplicateHeader": {
+    "message": "Header duplizieren"
+  },
+  "duplicateFilter": {
+    "message": "Filter duplizieren"
+  },
+  "enableFilter": {
+    "message": "Filter aktivieren"
+  },
+  "invalidHeaderName": {
+    "message": "Ungültiger Name: nur Buchstaben, Ziffern und - _ . (keine Leerzeichen)"
+  },
+  "invalidHeaderValue": {
+    "message": "Ungültiger Wert: Zeilenumbrüche sind nicht erlaubt"
+  },
+  "copySuffix": {
+    "message": "Kopie"
+  },
+  "profileDuplicated": {
+    "message": "Profil dupliziert"
+  },
+  "nameRequired": {
+    "message": "Bitte gib einen Namen ein"
+  },
+  "profileNameExists": {
+    "message": "Ein Profil mit diesem Namen existiert bereits"
+  },
+  "headerDeleted": {
+    "message": "Header gelöscht"
+  },
+  "filterDeleted": {
+    "message": "Filter gelöscht"
+  },
+  "undo": {
+    "message": "Rückgängig"
+  },
+  "debugActiveRules": {
+    "message": "Aktive Regeln:"
+  },
+  "debugGlobalEnabled": {
+    "message": "Global aktiviert:"
+  },
+  "debugSelectedProfile": {
+    "message": "Ausgewähltes Profil:"
+  },
+  "debugStorageUsed": {
+    "message": "Belegter Speicher:"
+  },
+  "debugRuleSync": {
+    "message": "Regel-Sync:"
+  },
+  "debugNoRules": {
+    "message": "Keine aktiven Regeln."
+  },
+  "yes": {
+    "message": "Ja"
+  },
+  "no": {
+    "message": "Nein"
+  },
+  "importEmpty": {
+    "message": "Die Datei enthält kein Profil"
+  },
+  "donations": {
+    "message": "Spenden"
+  }
+}

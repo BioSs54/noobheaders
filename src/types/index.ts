@@ -45,31 +45,6 @@ export interface Profile {
   filters: Filter[];
 }
 
-const BUILT_IN_DEMO_PROFILE_NAMES = new Set(['httpbin.org Demo', 'Example.com Demo']);
-
-function repairBuiltInDemoProfile(profile: Profile): Profile {
-  if (!BUILT_IN_DEMO_PROFILE_NAMES.has(profile.name)) {
-    return profile;
-  }
-
-  const hasUsableHeader = profile.headers.some(
-    (header) => header.enabled && header.name.trim().length > 0
-  );
-  const hasUsableFilter = profile.filters.some(
-    (filter) => filter.enabled && filter.value.trim().length > 0
-  );
-
-  if (hasUsableHeader && hasUsableFilter) {
-    return profile;
-  }
-
-  const repaired = createDefaultProfile(profile.id);
-  return {
-    ...repaired,
-    enabled: profile.enabled === true,
-  };
-}
-
 export function normalizeHeader(header: Partial<Header>): Header {
   return {
     enabled: header.enabled !== false,
@@ -88,15 +63,17 @@ export function normalizeFilter(filter: Partial<Filter>): Filter {
 }
 
 export function normalizeProfile(profile: Partial<Profile>): Profile {
-  const normalizedProfile = {
-    id: typeof profile.id === 'string' ? profile.id : `${Date.now()}`,
+  return {
+    id: typeof profile.id === 'string' && profile.id ? profile.id : generateProfileId(),
     name: typeof profile.name === 'string' ? profile.name : 'Unnamed Profile',
     enabled: profile.enabled === true,
     headers: Array.isArray(profile.headers) ? profile.headers.map(normalizeHeader) : [],
     filters: Array.isArray(profile.filters) ? profile.filters.map(normalizeFilter) : [],
   };
+}
 
-  return repairBuiltInDemoProfile(normalizedProfile);
+export function generateProfileId(): string {
+  return `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 }
 
 export function normalizeProfiles(profiles: unknown): Profile[] {
@@ -104,7 +81,16 @@ export function normalizeProfiles(profiles: unknown): Profile[] {
     return [];
   }
 
-  return profiles.map((profile) => normalizeProfile((profile || {}) as Partial<Profile>));
+  const seenIds = new Set<string>();
+  return profiles.map((rawProfile) => {
+    const profile = normalizeProfile((rawProfile || {}) as Partial<Profile>);
+    // Duplicate ids (e.g. from a hand-edited import) would make two profiles indistinguishable
+    if (seenIds.has(profile.id)) {
+      profile.id = generateProfileId();
+    }
+    seenIds.add(profile.id);
+    return profile;
+  });
 }
 
 export function createDefaultProfile(id: string): Profile {
@@ -178,7 +164,10 @@ export interface ModifyHeaderRule {
     responseHeaders?: HeaderAction[];
   };
   condition: {
-    urlFilter: string;
+    urlFilter?: string;
+    regexFilter?: string;
+    isUrlFilterCaseSensitive?: boolean;
+    requestDomains?: string[];
     initiatorDomains?: string[];
     resourceTypes: chrome.declarativeNetRequest.ResourceType[];
   };

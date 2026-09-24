@@ -10,29 +10,34 @@
 
 <body>
   <!-- Toast notification system -->
-  <div id="toast-container" class="toast-container"></div>
+  <div id="toast-container" class="toast-container" role="status" aria-live="polite"></div>
 
   <!-- Confirmation modal -->
   <div id="confirm-modal" class="modal-overlay" style="display: none;">
-    <div class="modal-content">
+    <div class="modal-content" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title"
+      aria-describedby="confirm-message">
+      <!-- biome-ignore lint/a11y/useHeadingContent: filled at runtime -->
       <h3 id="confirm-title" class="modal-title"></h3>
       <p id="confirm-message" class="modal-message"></p>
       <div class="modal-actions">
-        <button id="confirm-cancel" class="btn-secondary" data-i18n="cancel">Cancel</button>
-        <button id="confirm-ok" class="btn-danger" data-i18n="confirm">Confirm</button>
+        <button id="confirm-cancel" class="btn-secondary" data-i18n="cancel" type="button">Cancel</button>
+        <button id="confirm-ok" class="btn-danger" data-i18n="confirm" type="button">Confirm</button>
       </div>
     </div>
   </div>
 
   <!-- Prompt modal -->
   <div id="prompt-modal" class="modal-overlay" style="display: none;">
-    <div class="modal-content">
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="prompt-title">
+      <!-- biome-ignore lint/a11y/useHeadingContent: filled at runtime -->
       <h3 id="prompt-title" class="modal-title"></h3>
-      <p id="prompt-message" class="modal-message"></p>
-      <input type="text" id="prompt-input" class="modal-input" />
+      <!-- biome-ignore lint/a11y/noLabelWithoutControl: text filled at runtime -->
+      <label id="prompt-message" class="modal-message" for="prompt-input"></label>
+      <input type="text" id="prompt-input" class="modal-input" maxlength="80" aria-describedby="prompt-error" />
+      <p id="prompt-error" class="field-error modal-error" role="alert" hidden></p>
       <div class="modal-actions">
-        <button id="prompt-cancel" class="btn-secondary" data-i18n="cancel">Cancel</button>
-        <button id="prompt-ok" class="btn-primary" data-i18n="ok">OK</button>
+        <button id="prompt-cancel" class="btn-secondary" data-i18n="cancel" type="button">Cancel</button>
+        <button id="prompt-ok" class="btn-primary" data-i18n="ok" type="button">OK</button>
       </div>
     </div>
   </div>
@@ -65,12 +70,14 @@
         <span class="toggle-slider"></span>
         <span class="toggle-label" data-i18n="headerModificationEnabled">Header Modification Enabled</span>
       </label>
+      <p id="global-disabled-hint" class="section-hint warning-hint" data-i18n="globalDisabledHint" hidden>
+        Header modification is off: no header is modified.</p>
     </section>
 
     <!-- Profile Section -->
     <section class="section">
       <div class="section-header">
-        <h2 data-i18n="activeProfile">Active Profile</h2>
+        <h2 data-i18n="profiles">Profiles</h2>
         <div class="profile-actions">
           <button id="add-profile-btn" class="icon-btn" data-i18n-title="addProfile" aria-label="Add Profile" type="button">
             <svg class="ui-icon ui-icon--md" focusable="false" aria-hidden="true">
@@ -90,15 +97,18 @@
           <div class="profile-summary-text">
             <span class="profile-summary-label" data-i18n="profileActivePrefix">Active:</span>
             <strong id="active-profile-name" class="profile-summary-name" aria-live="polite"></strong>
+            <span id="profile-disabled-hint" class="profile-summary-hint" data-i18n="profileDisabledHint" hidden>
+              This profile is off: its headers are not applied.</span>
           </div>
 
           <div class="button-group profile-summary-actions">
-            <button id="rename-profile-btn" class="btn-secondary" data-i18n="rename">Rename</button>
-            <button id="duplicate-profile-btn" class="btn-secondary" data-i18n="duplicate">Duplicate</button>
+            <button id="rename-profile-btn" class="btn-secondary" data-i18n="rename" type="button">Rename</button>
+            <button id="duplicate-profile-btn" class="btn-secondary" data-i18n="duplicate" type="button">Duplicate</button>
           </div>
         </div>
 
-        <div id="profiles-radio" class="profiles-radio" role="list" aria-label="Profiles"></div>
+        <ul id="profiles-radio" class="profiles-radio" data-i18n-title="profiles"></ul>
+        <p class="section-hint" data-i18n="profilesHint">Switch on the profiles to apply. Click a name to edit it.</p>
       </div>
     </section>
 
@@ -106,7 +116,7 @@
     <section class="section">
       <div class="section-header">
         <h2 data-i18n="headers">Headers</h2>
-        <button id="add-header-btn" class="btn-primary" data-i18n="addHeader">+ Add Header</button>
+        <button id="add-header-btn" class="btn-primary" data-i18n="addHeader" type="button">+ Add Header</button>
       </div>
 
       <div id="headers-list" class="headers-list">
@@ -123,27 +133,15 @@
     <section class="section">
       <div class="section-header">
         <h2 data-i18n="filters">Filters</h2>
-        <button id="add-filter-btn" class="btn-primary" data-i18n="addFilter">+ Add Filter</button>
+        <button id="add-filter-btn" class="btn-primary" data-i18n="addFilter" type="button">+ Add Filter</button>
       </div>
 
       <div id="filters-list" class="filters-list">
         <!-- Filters will be inserted here -->
       </div>
 
-      <div id="filter-editor" class="filter-editor">
-        <!-- Editor for selected filter -->
-        <div class="filter-editor-row filter-editor-row-spaced">
-          <label data-i18n="filterEditorValue" class="filter-editor-label">Value</label>
-          <input id="editor-filter-value" type="text" data-i18n-placeholder="filterValuePlaceholder"
-            class="filter-editor-input" />
-        </div>
-        <p class="filter-editor-help" data-i18n="filterHelpText">example.com matches the domain, while *://*.example.com/* also matches protocol and path with wildcards.</p>
-        <div class="filter-editor-actions">
-          <button id="editor-save-btn" class="btn-primary" data-i18n="editorSave">Save</button>
-          <button id="editor-delete-btn" class="btn-danger" data-i18n="editorDelete">Delete</button>
-          <button id="editor-cancel-btn" class="btn-secondary" data-i18n="editorCancel">Cancel</button>
-        </div>
-      </div>
+      <p id="filter-help" class="section-hint" data-i18n="filterHelpText">example.com matches the domain and its
+        subdomains, while *://*.example.com/* is a URL pattern.</p>
 
       <div class="empty-state" id="empty-filters" style="display: none;">
         <p data-i18n="noFiltersConfigured">No filters configured</p>
@@ -165,30 +163,30 @@
       <div id="debug-content" class="debug-content" style="display: none;">
         <div class="debug-info">
           <div class="debug-row">
-            <span class="debug-label">Active Rules:</span>
+            <span class="debug-label" data-i18n="debugActiveRules">Active rules:</span>
             <span id="debug-rules-count" class="debug-value">0</span>
           </div>
           <div class="debug-row">
-            <span class="debug-label">Global Enabled:</span>
-            <span id="debug-global-enabled" class="debug-value">No</span>
+            <span class="debug-label" data-i18n="debugGlobalEnabled">Global enabled:</span>
+            <span id="debug-global-enabled" class="debug-value">-</span>
           </div>
           <div class="debug-row">
-            <span class="debug-label">Selected Profile:</span>
+            <span class="debug-label" data-i18n="debugSelectedProfile">Selected profile:</span>
             <span id="debug-active-profile" class="debug-value">-</span>
           </div>
           <div class="debug-row">
-            <span class="debug-label">Storage Used:</span>
+            <span class="debug-label" data-i18n="debugStorageUsed">Storage used:</span>
             <span id="debug-storage-size" class="debug-value">0 KB</span>
           </div>
           <div class="debug-row">
-            <span class="debug-label">Rule Sync:</span>
+            <span class="debug-label" data-i18n="debugRuleSync">Rule sync:</span>
             <span id="debug-rule-sync" class="debug-value">-</span>
           </div>
         </div>
 
-        <pre id="debug-rules-preview" class="debug-rules-preview">No dynamic rules yet.</pre>
+        <pre id="debug-rules-preview" class="debug-rules-preview"></pre>
 
-        <button id="clear-all-btn" class="btn-danger" data-i18n="clearAllData">Clear All Data</button>
+        <button id="clear-all-btn" class="btn-danger" data-i18n="clearAllData" type="button">Clear All Data</button>
       </div>
     </section>
 
@@ -202,9 +200,7 @@
           data-i18n="github"
         >GitHub</a>
         <span class="footer-separator" aria-hidden="true">/</span>
-        <button id="easter-egg-trigger" class="footer-version-trigger" type="button">
-          v2.1.0
-        </button>
+        <button id="easter-egg-trigger" class="footer-version-trigger" type="button">v2.1.0</button>
       </div>
     </footer>
   </div>

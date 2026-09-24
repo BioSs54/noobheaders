@@ -1,8 +1,7 @@
-import { cpSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { createWriteStream } from 'node:fs';
+import { cpSync, createWriteStream, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import archiver from 'archiver';
+import { ZipArchive } from 'archiver';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -11,22 +10,6 @@ const rootDir = join(__dirname, '..');
 // Read manifest version
 const manifest = JSON.parse(readFileSync(join(rootDir, 'manifest.json'), 'utf-8'));
 const version = manifest.version;
-
-// Files to include (from dist directory after build)
-const files = [
-  'manifest.json',
-  'background.js',
-  'popup.html',
-  'popup.js',
-  'i18n.js',
-  'styles.css',
-  'options.html',
-  'options.js',
-  'welcome.html',
-  'LICENSE',
-  '_locales/**/*',
-  'icons/*.png',
-];
 
 async function packageExtension() {
   console.log(`📦 Packaging NoobHeaders v${version}...`);
@@ -100,7 +83,7 @@ function copyFiles(src, dest) {
 function createZip(sourceDir, outputPath) {
   return new Promise((resolve, reject) => {
     const output = createWriteStream(outputPath);
-    const archive = archiver('zip', { zlib: { level: 9 } });
+    const archive = new ZipArchive({ zlib: { level: 9 } });
 
     output.on('close', () => resolve());
     archive.on('error', (err) => reject(err));

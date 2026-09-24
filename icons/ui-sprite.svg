@@ -19,6 +19,10 @@
     <path d="m4.75 19.25 3.6-.7 8.58-8.58a1.75 1.75 0 0 0 0-2.47l-.43-.43a1.75 1.75 0 0 0-2.47 0l-8.58 8.58-.7 3.6Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/>
     <path d="m12.75 8.75 2.5 2.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"/>
   </symbol>
+  <symbol id="copy" viewBox="0 0 24 24">
+    <rect x="8.75" y="8.75" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.8"/>
+    <path d="M15.25 8.75V6.25a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/>
+  </symbol>
   <symbol id="chevron-down" viewBox="0 0 24 24">
     <path d="m6.75 9.75 5.25 5.25 5.25-5.25" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/>
   </symbol>

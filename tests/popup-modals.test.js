@@ -3,7 +3,7 @@
  */
 
 import { strict as assert } from 'node:assert';
-import { before, describe, it } from 'node:test';
+import { describe, it } from 'node:test';
 
 describe('Popup Modal System', () => {
   it('should have modal HTML structure in popup.html', async () => {

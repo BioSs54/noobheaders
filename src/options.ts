@@ -4,8 +4,7 @@
 
 import { getBrowserApi } from './browser-compat.js';
 import { getMessage } from './i18n.js';
-import type { Profile } from './types/index.js';
-import { STORAGE_KEYS } from './types/index.js';
+import { normalizeProfiles, STORAGE_KEYS } from './types/index.js';
 import { createIcon } from './ui-icons.js';
 
 const browserAPI = getBrowserApi();
@@ -32,6 +31,16 @@ async function loadOptions(): Promise<void> {
 
   if (showBadgeEl) {
     showBadgeEl.checked = data.showBadge !== false;
+    showBadgeEl.disabled = false;
+  }
+
+  const versionEl = document.getElementById('extension-version');
+  if (versionEl) {
+    try {
+      versionEl.textContent = `v${browserAPI.runtime.getManifest().version}`;
+    } catch {
+      // keep the static fallback
+    }
   }
 
   // Handle pending action from popup
@@ -56,8 +65,8 @@ function setupListeners(): void {
   });
 
   document.getElementById('show-badge')?.addEventListener('change', async (e) => {
+    // The background refreshes the badge when this setting changes
     await browserAPI.storage.local.set({ showBadge: (e.target as HTMLInputElement).checked });
-    await browserAPI.runtime.sendMessage({ action: 'updateBadge' });
   });
 
   // Import/Export
@@ -73,17 +82,33 @@ function setupListeners(): void {
  */
 async function exportProfiles(): Promise<void> {
   const data = await browserAPI.storage.local.get([STORAGE_KEYS.PROFILES]);
-  const profiles = data[STORAGE_KEYS.PROFILES] || [];
+  const profiles = normalizeProfiles(data[STORAGE_KEYS.PROFILES]);
   const dataStr = JSON.stringify(profiles, null, 2);
   const dataBlob = new Blob([dataStr], { type: 'application/json' });
   const url = URL.createObjectURL(dataBlob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `noobheaders-profiles-${Date.now()}.json`;
+  link.download = `noobheaders-profiles-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(link);
   link.click();
-  URL.revokeObjectURL(url);
+  link.remove();
+  // Revoking synchronously can cancel the download in some browsers (Firefox)
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 
-  showToast(getMessage('profilesExported') || 'Profiles exported successfully', 'success');
+  showToast(getMessage('profilesExported'), 'success');
+}
+
+function isImportableProfile(profile: unknown): boolean {
+  if (!profile || typeof profile !== 'object') return false;
+  const candidate = profile as Record<string, unknown>;
+  return (
+    (typeof candidate.id === 'string' || typeof candidate.id === 'undefined') &&
+    typeof candidate.name === 'string' &&
+    candidate.name.trim() !== '' &&
+    (typeof candidate.enabled === 'boolean' || typeof candidate.enabled === 'undefined') &&
+    Array.isArray(candidate.headers) &&
+    Array.isArray(candidate.filters)
+  );
 }
 
 /**
@@ -96,28 +121,15 @@ async function importProfiles(e: Event): Promise<void> {
 
   try {
     const text = await file.text();
-    const importedProfiles = JSON.parse(text) as Profile[];
+    const importedProfiles = JSON.parse(text) as unknown;
 
-    if (!Array.isArray(importedProfiles)) {
+    if (!Array.isArray(importedProfiles) || !importedProfiles.every(isImportableProfile)) {
       showToast(getMessage('invalidProfileFormat'), 'error');
       return;
     }
 
-    // Validate profile structure
-    const isValid = importedProfiles.every((profile) => {
-      return (
-        profile &&
-        typeof profile === 'object' &&
-        typeof profile.id === 'string' &&
-        typeof profile.name === 'string' &&
-        (typeof profile.enabled === 'boolean' || typeof profile.enabled === 'undefined') &&
-        Array.isArray(profile.headers) &&
-        Array.isArray(profile.filters)
-      );
-    });
-
-    if (!isValid) {
-      showToast(getMessage('invalidProfileFormat'), 'error');
+    if (importedProfiles.length === 0) {
+      showToast(getMessage('importEmpty'), 'error');
       return;
     }
 
@@ -126,34 +138,29 @@ async function importProfiles(e: Event): Promise<void> {
       getMessage('confirmImport', String(importedProfiles.length))
     );
 
-    if (confirmed) {
-      const normalizedProfiles = importedProfiles.map((profile) => ({
-        ...profile,
-        enabled: profile.enabled === true,
-      }));
+    if (!confirmed) return;
 
-      await browserAPI.storage.local.set({ [STORAGE_KEYS.PROFILES]: normalizedProfiles });
+    const normalizedProfiles = normalizeProfiles(importedProfiles);
 
-      // Select the first profile if profiles were imported
-      if (normalizedProfiles.length > 0) {
-        await browserAPI.storage.local.set({
-          [STORAGE_KEYS.ACTIVE_PROFILE]: normalizedProfiles[0].id,
-        });
-      }
+    await browserAPI.storage.local.set({
+      [STORAGE_KEYS.PROFILES]: normalizedProfiles,
+      [STORAGE_KEYS.ACTIVE_PROFILE]: normalizedProfiles[0].id,
+    });
 
-      showToast(getMessage('profilesImported') || 'Profiles imported successfully', 'success');
-    }
+    showToast(getMessage('profilesImported'), 'success');
   } catch (error) {
     showToast(getMessage('errorImportingProfiles', (error as Error).message), 'error');
+  } finally {
+    // Allow selecting the same file again
+    input.value = '';
   }
-
-  input.value = '';
 }
 
 /**
  * Show toast notification
  */
 function showToast(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
+  const container = document.getElementById('toast-container') ?? document.body;
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
 
@@ -173,71 +180,89 @@ function showToast(message: string, type: 'success' | 'error' | 'info' = 'info')
   toast.appendChild(icon);
   toast.appendChild(text);
 
-  document.body.appendChild(toast);
-
-  setTimeout(() => toast.classList.add('show'), 10);
+  container.appendChild(toast);
 
   setTimeout(() => {
-    toast.classList.remove('show');
+    toast.classList.add('fade-out');
     setTimeout(() => toast.remove(), 300);
   }, 3000);
 }
 
 /**
- * Show confirm dialog
+ * Show confirm dialog (built with DOM APIs: messages are never parsed as HTML)
  */
 function showConfirm(title: string, message: string): Promise<boolean> {
   return new Promise((resolve) => {
+    const previousFocus = document.activeElement as HTMLElement | null;
+
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
     modal.id = 'confirm-modal';
     modal.style.display = 'flex';
-    modal.style.background = 'rgba(0, 0, 0, 0.5)';
-    modal.innerHTML = `
-      <div class="modal" style="
-        background: var(--background);
-        border-radius: 12px;
-        padding: 0;
-        max-width: 420px;
-        width: calc(100% - 40px);
-        box-shadow: 0 8px 24px var(--shadow);
-      ">
-        <div class="modal-header" style="
-          padding: 20px;
-          border-bottom: 1px solid var(--border);
-        ">
-          <h3 style="margin: 0; font-size: 18px;">${title}</h3>
-        </div>
-        <div class="modal-body" style="
-          padding: 20px;
-        ">
-          <p id="confirm-message" style="margin: 0; line-height: 1.5;">${message}</p>
-        </div>
-        <div class="modal-footer" style="
-          padding: 16px 20px;
-          border-top: 1px solid var(--border);
-          display: flex;
-          gap: 8px;
-          justify-content: flex-end;
-        ">
-          <button class="btn-secondary" id="confirm-cancel">Cancel</button>
-          <button class="btn-primary" id="confirm-ok">OK</button>
-        </div>
-      </div>
-    `;
 
+    const content = document.createElement('div');
+    content.className = 'modal-content';
+    content.setAttribute('role', 'alertdialog');
+    content.setAttribute('aria-modal', 'true');
+    content.setAttribute('aria-labelledby', 'confirm-title');
+    content.setAttribute('aria-describedby', 'confirm-message');
+
+    const titleEl = document.createElement('h3');
+    titleEl.id = 'confirm-title';
+    titleEl.className = 'modal-title';
+    titleEl.textContent = title;
+
+    const messageEl = document.createElement('p');
+    messageEl.id = 'confirm-message';
+    messageEl.className = 'modal-message';
+    messageEl.textContent = message;
+
+    const actions = document.createElement('div');
+    actions.className = 'modal-actions';
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.id = 'confirm-cancel';
+    cancelBtn.className = 'btn-secondary';
+    cancelBtn.textContent = getMessage('cancel');
+
+    const okBtn = document.createElement('button');
+    okBtn.type = 'button';
+    okBtn.id = 'confirm-ok';
+    okBtn.className = 'btn-primary';
+    okBtn.textContent = getMessage('ok');
+
+    actions.append(cancelBtn, okBtn);
+    content.append(titleEl, messageEl, actions);
+    modal.appendChild(content);
     document.body.appendChild(modal);
 
-    const handleClick = (confirmed: boolean) => {
+    const close = (confirmed: boolean) => {
+      document.removeEventListener('keydown', handleKeydown);
       modal.remove();
+      previousFocus?.focus();
       resolve(confirmed);
     };
 
-    modal.querySelector('#confirm-ok')?.addEventListener('click', () => handleClick(true));
-    modal.querySelector('#confirm-cancel')?.addEventListener('click', () => handleClick(false));
+    const handleKeydown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        close(false);
+      } else if (e.key === 'Tab') {
+        // Keep focus inside the dialog
+        e.preventDefault();
+        (document.activeElement === okBtn ? cancelBtn : okBtn).focus();
+      }
+    };
+
+    okBtn.addEventListener('click', () => close(true));
+    cancelBtn.addEventListener('click', () => close(false));
     modal.addEventListener('click', (e) => {
-      if (e.target === modal) handleClick(false);
+      if (e.target === modal) close(false);
     });
+    document.addEventListener('keydown', handleKeydown);
+
+    okBtn.focus();
   });
 }
 
