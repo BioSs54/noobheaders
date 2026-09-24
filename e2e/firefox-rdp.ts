@@ -100,11 +100,13 @@ async function findBackgroundConsoleActor(
   try {
     const watcher = await client.request(descriptorActor, 'getWatcher', {});
     const watcherActor: string = watcher.actor ?? watcher.watcher?.actor;
+    // The background page is a sub-frame of a hidden host document: pick it by URL
     const targetEvent = client.waitFor(
       (packet) =>
         packet.from === watcherActor &&
         packet.type === 'target-available-form' &&
-        typeof packet.target?.consoleActor === 'string',
+        typeof packet.target?.consoleActor === 'string' &&
+        /^moz-extension:\/\/[^/]+\/_generated_background_page\.html/.test(packet.target.url ?? ''),
       10000
     );
     await client.request(watcherActor, 'watchTargets', { targetType: 'frame' });
@@ -180,7 +182,7 @@ export class FirefoxAddonBackground {
     await this.rawEvaluate(
       `(async () => (${fnSource})(${JSON.stringify(arg ?? null)}))().then(
         (v) => { globalThis.${key} = JSON.stringify({ ok: true, v: v === undefined ? null : v }); },
-        (e) => { globalThis.${key} = JSON.stringify({ ok: false, e: String((e && e.stack) || e) }); }
+        (e) => { globalThis.${key} = JSON.stringify({ ok: false, e: String(e) + ' ' + ((e && e.stack) || '') }); }
       ); undefined`
     );
     const deadline = Date.now() + 10000;
