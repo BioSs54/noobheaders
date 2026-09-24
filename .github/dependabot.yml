@@ -1,11 +1,11 @@
-# To get started with Dependabot version updates, you'll need to specify which
-# package ecosystems to update and where the package manifests are located.
-# Please see the documentation for all configuration options:
+# Dependabot configuration
 # https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+#
+# Each ecosystem/directory pair may appear only once. Updates are grouped to keep the
+# number of pull requests low.
 
 version: 2
 updates:
-  # Production dependencies (direct) — weekly
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
@@ -13,21 +13,25 @@ updates:
     open-pull-requests-limit: 5
     labels:
       - dependencies
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      dev-dependencies-minor:
+        dependency-type: "development"
+        update-types: ["minor", "patch"]
+      security:
+        applies-to: security-updates
+        patterns: ["*"]
 
-  # Dev dependencies — monthly (less urgent)
-  - package-ecosystem: "npm"
+  - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "monthly"
     open-pull-requests-limit: 3
     labels:
-      - dev-dependencies
-
-  # GitHub Actions updates (workflows) — weekly
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 3
-    labels:
       - actions
+    commit-message:
+      prefix: "chore(ci)"
+    groups:
+      actions:
+        patterns: ["*"]
