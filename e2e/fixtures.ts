@@ -81,8 +81,11 @@ export const test = base.extend<ExtensionFixtures, { testServer: Server }>({
         executablePath: process.env.FIREFOX_BIN || undefined,
         headless: process.env.HEADED !== '1',
         locale: uiLocale,
-        args: ['-start-debugger-server', String(debuggerPort)],
+        // Without a value the flag uses the `devtools.debugger.remote-port` preference
+        // (the launcher rejects positional arguments)
+        args: ['-start-debugger-server'],
         firefoxUserPrefs: {
+          'devtools.debugger.remote-port': debuggerPort,
           'devtools.debugger.remote-enabled': true,
           'devtools.debugger.prompt-connection': false,
           'devtools.chrome.enabled': true,
