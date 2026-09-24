@@ -1,23 +1,13 @@
-import type { Filter, Header, Profile } from './types/index.js';
-
-import { matchFilter } from './auto-switch.js';
+import { filtersMatchUrl, isUsableHeader } from './matching.js';
+import type { Header, Profile } from './types/index.js';
 
 export function headerAppliesToUrl(
   profile: Profile,
   header: Header,
   url: string | undefined
 ): boolean {
-  if (!header.enabled) return false;
-  if (!url) return true; // conservative: if no URL, assume applies
-
-  const activeFilters = profile.filters?.filter((f) => f.enabled && f.value) ?? [];
-  if (activeFilters.length === 0) return true;
-
-  for (const f of activeFilters) {
-    if (matchFilter(url, f)) return true;
-  }
-
-  return false;
+  if (!isUsableHeader(header)) return false;
+  return filtersMatchUrl(profile.filters, url);
 }
 
 export function countApplicableHeadersForUrl(profiles: Profile[], url: string | undefined): number {

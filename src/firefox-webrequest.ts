@@ -69,17 +69,19 @@ function modifyRequestHeaders(details: any): any {
   // Process each active profile
   for (const profile of activeProfiles) {
     for (const header of profile.headers || []) {
-      if (!header.name || header.type !== 'request') continue;
+      if (header.type !== 'request') continue;
 
+      // Also validates the header name/value (same rules as Chrome)
       if (!headerAppliesToUrl(profile, header, details.url)) continue;
 
+      const name = header.name.trim();
       // Remove existing headers with this name (case-insensitive)
-      headers = headers.filter((h) => h.name.toLowerCase() !== header.name.toLowerCase());
+      headers = headers.filter((h) => h.name.toLowerCase() !== name.toLowerCase());
 
       // Add new header if value is provided
       if (header.value !== undefined && header.value !== '') {
         headers.push({
-          name: header.name,
+          name,
           value: header.value,
         });
       }
@@ -105,17 +107,19 @@ function modifyResponseHeaders(details: any): any {
   // Process each active profile
   for (const profile of activeProfiles) {
     for (const header of profile.headers || []) {
-      if (!header.name || header.type !== 'response') continue;
+      if (header.type !== 'response') continue;
 
+      // Also validates the header name/value (same rules as Chrome)
       if (!headerAppliesToUrl(profile, header, details.url)) continue;
 
+      const name = header.name.trim();
       // Remove existing headers with this name (case-insensitive)
-      headers = headers.filter((h) => h.name.toLowerCase() !== header.name.toLowerCase());
+      headers = headers.filter((h) => h.name.toLowerCase() !== name.toLowerCase());
 
       // Add new header if value is provided
       if (header.value !== undefined && header.value !== '') {
         headers.push({
-          name: header.name,
+          name,
           value: header.value,
         });
       }

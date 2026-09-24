@@ -3,6 +3,7 @@
  * Simple, local-first HTTP header modifier
  */
 
+import { selectProfileForUrl } from './auto-switch.js';
 import {
   detectBrowser,
   getActionApi,
@@ -10,16 +11,16 @@ import {
   supportsDeclarativeNetRequest,
 } from './browser-compat.js';
 import { applyHeadersWebRequest } from './firefox-webrequest.js';
+import { countApplicableHeadersForUrl } from './header-utils.js';
+import { isUsableHeader } from './matching.js';
 import { convertProfileToRules, resolveProfilesToApply } from './rules.js';
-import { STORAGE_KEYS, createDefaultProfile, normalizeProfiles } from './types/index.js';
-import type {
-  Filter,
-  Header,
-  HeaderAction,
-  ModifyHeaderRule,
-  Profile,
-  StorageData,
+import {
+  STORAGE_KEYS,
+  createDefaultProfile,
+  generateProfileId,
+  normalizeProfiles,
 } from './types/index.js';
+import type { ModifyHeaderRule, Profile } from './types/index.js';
 
 const IS_FIREFOX = detectBrowser() === 'firefox';
 const USE_DECLARATIVE_NET_REQUEST = supportsDeclarativeNetRequest();
@@ -46,18 +47,6 @@ interface ExtensionStateSnapshot {
 }
 
 /**
- * Generate unique ID
- */
-function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
-}
-
-/**
- * Convert profile to declarativeNetRequest rules
- */
-// convertProfileToRules is implemented in ./rules.ts to keep URL-filter OR semantics
-
-/**
  * Apply rules to declarativeNetRequest
  */
 async function applyRules(rules: ModifyHeaderRule[]): Promise<boolean> {
@@ -81,13 +70,19 @@ async function applyRules(rules: ModifyHeaderRule[]): Promise<boolean> {
   }
 }
 
-/**
- * Handle update rules request
- */
-async function handleUpdateRules(snapshot?: ExtensionStateSnapshot): Promise<void> {
+// Rule updates are serialized: concurrent getDynamicRules/updateDynamicRules calls would
+// otherwise race and fail with duplicate rule ids.
+let rulesQueue: Promise<void> = Promise.resolve();
+
+function handleUpdateRules(snapshot?: ExtensionStateSnapshot): Promise<void> {
+  const run = rulesQueue.then(() => updateRulesNow(snapshot));
+  rulesQueue = run.catch(() => undefined);
+  return run;
+}
+
+async function updateRulesNow(snapshot?: ExtensionStateSnapshot): Promise<void> {
   try {
     console.log('[NoobHeaders] handleUpdateRules called');
-    const browserAPI = IS_FIREFOX ? browser : chrome;
     const data = snapshot
       ? {
           [STORAGE_KEYS.PROFILES]: snapshot.profiles,
@@ -130,6 +125,14 @@ async function handleUpdateRules(snapshot?: ExtensionStateSnapshot): Promise<voi
       console.log('[NoobHeaders] Using Firefox webRequest API');
       // Firefox: Use webRequest API (Manifest V2)
       applyHeadersWebRequest(profilesToApply, globalEnabled);
+      debugState.lastComputedRuleCount = globalEnabled
+        ? profilesToApply.reduce(
+            (count, profile) => count + (profile.headers ?? []).filter(isUsableHeader).length,
+            0
+          )
+        : 0;
+      debugState.lastAppliedRuleCount = debugState.lastComputedRuleCount;
+      debugState.lastError = '';
     } else {
       console.log('[NoobHeaders] Using Chrome declarativeNetRequest API');
       // Chrome: Use declarativeNetRequest API (Manifest V3)
@@ -139,7 +142,7 @@ async function handleUpdateRules(snapshot?: ExtensionStateSnapshot): Promise<voi
         return;
       }
 
-      let rules: any[] = [];
+      let rules: ModifyHeaderRule[] = [];
       let ruleIdOffset = RULE_ID_OFFSET;
       for (const [index, profile] of profilesToApply.entries()) {
         const prs = convertProfileToRules(profile, true, ruleIdOffset, index + 1);
@@ -149,7 +152,7 @@ async function handleUpdateRules(snapshot?: ExtensionStateSnapshot): Promise<voi
 
       debugState.lastComputedRuleCount = rules.length;
 
-      await applyRules(rules as any);
+      await applyRules(rules);
     }
   } catch (error) {
     debugState.lastError = error instanceof Error ? error.message : String(error);
@@ -198,7 +201,6 @@ async function updateBadge(): Promise<void> {
     }
 
     // Count headers that are enabled and whose filters match the active URL
-    const { countApplicableHeadersForUrl } = await import('./header-utils.js');
     const applicableCount = countApplicableHeadersForUrl(profilesToCheck, url);
 
     if (applicableCount === 0) {
@@ -219,7 +221,7 @@ browserAPI.runtime.onInstalled.addListener(async (details) => {
     await browserAPI.tabs.create({ url: 'welcome.html' });
 
     // Initialize default profile
-    const defaultProfile: Profile = createDefaultProfile(generateId());
+    const defaultProfile: Profile = createDefaultProfile(generateProfileId());
 
     await browserAPI.storage.local.set({
       [STORAGE_KEYS.PROFILES]: [defaultProfile],
@@ -242,24 +244,29 @@ browserAPI.storage.onChanged.addListener(async (changes, namespace) => {
   ) {
     await handleUpdateRules();
     await updateBadge();
+  } else if (namespace === 'local' && changes.showBadge) {
+    await updateBadge();
   }
 });
 
-// Auto-switch profiles based on active tab URL
-import { selectProfileForUrl } from './auto-switch.js';
-
+// Auto-switch the selected profile based on the active tab URL
 async function tryAutoSwitch(tabId: number) {
   try {
     const tab = await browserAPI.tabs.get(tabId);
-    if (!tab || !tab.url) return;
+    if (!tab || !tab.url || !tab.active) return;
 
     const data = await browserAPI.storage.local.get([
       STORAGE_KEYS.PROFILES,
       STORAGE_KEYS.ACTIVE_PROFILE,
+      STORAGE_KEYS.GLOBAL_ENABLED,
     ]);
-    const profiles: Profile[] = data[STORAGE_KEYS.PROFILES] || [];
+    if (!data[STORAGE_KEYS.GLOBAL_ENABLED]) return;
+
+    const profiles = normalizeProfiles(data[STORAGE_KEYS.PROFILES]);
     const activeProfileId: string = data[STORAGE_KEYS.ACTIVE_PROFILE];
 
+    // Only enabled profiles with filters matching the tab are eligible, so switching the
+    // selection never changes which headers are applied.
     const matched = selectProfileForUrl(profiles, tab.url);
     if (matched && matched.id !== activeProfileId) {
       await browserAPI.storage.local.set({ [STORAGE_KEYS.ACTIVE_PROFILE]: matched.id });
@@ -272,12 +279,14 @@ async function tryAutoSwitch(tabId: number) {
 
 browserAPI.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete' || changeInfo.url) {
-    tryAutoSwitch(tabId);
+    void tryAutoSwitch(tabId);
+    if (tab?.active) void updateBadge();
   }
 });
 
 browserAPI.tabs.onActivated.addListener(async (activeInfo) => {
-  tryAutoSwitch(activeInfo.tabId);
+  void tryAutoSwitch(activeInfo.tabId);
+  void updateBadge();
 });
 
 // Handle messages from popup/options
@@ -311,10 +320,10 @@ browserAPI.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           storageProfiles,
           storageActiveProfileId || ''
         );
-        const dynamicRules =
-          IS_FIREFOX || !USE_DECLARATIVE_NET_REQUEST
-            ? []
-            : await chrome.declarativeNetRequest.getDynamicRules();
+        const usesWebRequest = IS_FIREFOX || !USE_DECLARATIVE_NET_REQUEST;
+        const dynamicRules = usesWebRequest
+          ? []
+          : await chrome.declarativeNetRequest.getDynamicRules();
 
         sendResponse({
           success: true,
@@ -347,6 +356,7 @@ browserAPI.runtime.onMessage.addListener((message, _sender, sendResponse) => {
             profilesToApplyCount: profilesToApply.length,
           },
           dynamicRules,
+          activeRuleCount: usesWebRequest ? debugState.lastAppliedRuleCount : dynamicRules.length,
           lastAppliedRuleCount: debugState.lastAppliedRuleCount,
           lastComputedRuleCount: debugState.lastComputedRuleCount,
           lastError: debugState.lastError,

@@ -86,7 +86,7 @@ describe('Profile Enable/Disable Logic', () => {
 
     // Find handleUpdateRules function
     const handleUpdateRulesMatch = src.match(
-      /async function handleUpdateRules\([^)]*\)[^}]+\{[\s\S]+?\n\}/
+      /async function updateRulesNow\([^)]*\)[^}]+\{[\s\S]+?\n\}/
     );
 
     assert.ok(handleUpdateRulesMatch, 'Should have handleUpdateRules function');
