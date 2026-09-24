@@ -13,6 +13,11 @@ const FIREFOX_EXTENSION_UUID = '6c6b2f2e-4d0c-4a53-9f1f-6e0b2d7a1c11';
 
 export type BrowserKind = 'chromium' | 'firefox';
 
+/** Verbose fixture logs, enabled with E2E_DEBUG=1 (used in CI to diagnose browser setup) */
+export function debugLog(...args: unknown[]): void {
+  if (process.env.E2E_DEBUG === '1') console.log('[e2e]', ...args);
+}
+
 function getExtensionPath(kind: BrowserKind): string {
   return path.join(process.cwd(), 'packages', kind === 'chromium' ? 'chrome' : 'firefox');
 }
@@ -80,7 +85,9 @@ export const test = base.extend<ExtensionFixtures, { testServer: Server }>({
           'intl.locale.requested': uiLocale,
         },
       });
-      await installTemporaryAddon(debuggerPort, extensionPath);
+      debugLog('firefox launched', browser.version(), 'debugger port', debuggerPort);
+      const addonId = await installTemporaryAddon(debuggerPort, extensionPath);
+      debugLog('temporary add-on installed', addonId);
       const context = await browser.newContext({ locale: uiLocale });
       await use(context);
       await context.close();

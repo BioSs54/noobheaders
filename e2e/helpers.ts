@@ -47,7 +47,16 @@ export async function openExtensionPage(
   pagePath: 'popup.html' | 'options.html'
 ): Promise<Page> {
   const page = await context.newPage();
-  await page.goto(`${extensionOrigin}/${pagePath}`);
+  if (process.env.E2E_DEBUG === '1') {
+    page.on('console', (message) =>
+      console.log(`[${pagePath}] ${message.type()}: ${message.text()}`)
+    );
+    page.on('pageerror', (error) => console.log(`[${pagePath}] pageerror: ${error.message}`));
+  }
+  const response = await page.goto(`${extensionOrigin}/${pagePath}`);
+  if (process.env.E2E_DEBUG === '1') {
+    console.log(`[e2e] opened ${page.url()} status=${response?.status()}`);
+  }
   if (pagePath === 'popup.html') {
     await page.locator('body[data-ready="true"]').waitFor();
   } else {
