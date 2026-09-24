@@ -163,7 +163,30 @@ async function updateRulesNow(snapshot?: ExtensionStateSnapshot): Promise<void> 
 /**
  * Update extension badge
  */
-async function updateBadge(): Promise<void> {
+// Several updates can run concurrently (tab events, storage changes): only the latest one
+// may write the badge, so that a slow, stale computation never overwrites a newer one.
+let badgeGeneration = 0;
+
+async function getActiveTabUrl(tabId?: number): Promise<string | undefined> {
+  try {
+    if (typeof tabId === 'number') {
+      const tab = await browserAPI.tabs.get(tabId);
+      return tab?.url;
+    }
+    const tabs = await browserAPI.tabs.query({ active: true, currentWindow: true });
+    return tabs?.[0]?.url;
+  } catch (_e) {
+    return undefined;
+  }
+}
+
+/**
+ * Update extension badge. `tabId` is the tab known to be active (from a tab event), which
+ * avoids querying the active tab while the browser is still switching tabs.
+ */
+async function updateBadge(tabId?: number): Promise<void> {
+  const generation = ++badgeGeneration;
+  const isStale = () => generation !== badgeGeneration;
   try {
     const data = await browserAPI.storage.local.get([
       STORAGE_KEYS.PROFILES,
@@ -179,11 +202,12 @@ async function updateBadge(): Promise<void> {
     const actionAPI = getActionApi();
 
     if (!actionAPI || !showBadge) {
-      await actionAPI?.setBadgeText({ text: '' });
+      if (!isStale()) await actionAPI?.setBadgeText({ text: '' });
       return;
     }
 
     if (!globalEnabled) {
+      if (isStale()) return;
       await actionAPI.setBadgeText({ text: '' });
       await actionAPI.setBadgeBackgroundColor({ color: '#808080' });
       return;
@@ -192,17 +216,12 @@ async function updateBadge(): Promise<void> {
     const profilesToCheck = resolveProfilesToApply(profiles, activeProfileId);
 
     // Get active tab URL to compute which headers actually apply
-    let url: string | undefined;
-    try {
-      const tabs = await browserAPI.tabs.query({ active: true, currentWindow: true });
-      if (tabs && tabs.length > 0) url = tabs[0].url;
-    } catch (_e) {
-      // ignore
-    }
+    const url = await getActiveTabUrl(tabId);
 
     // Count headers that are enabled and whose filters match the active URL
     const applicableCount = countApplicableHeadersForUrl(profilesToCheck, url);
 
+    if (isStale()) return;
     if (applicableCount === 0) {
       await actionAPI.setBadgeText({ text: '' });
     } else {
@@ -280,12 +299,18 @@ async function tryAutoSwitch(tabId: number) {
 browserAPI.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete' || changeInfo.url) {
     void tryAutoSwitch(tabId);
-    if (tab?.active) void updateBadge();
+    if (tab?.active) void updateBadge(tabId);
   }
 });
 
 browserAPI.tabs.onActivated.addListener(async (activeInfo) => {
   void tryAutoSwitch(activeInfo.tabId);
+  void updateBadge(activeInfo.tabId);
+});
+
+// Closing the active tab activates another one; some browsers report it before the tab list
+// is up to date, so refresh once the tab is really gone.
+browserAPI.tabs.onRemoved.addListener(() => {
   void updateBadge();
 });
 
