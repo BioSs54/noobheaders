@@ -221,7 +221,8 @@ test.describe('Header engine', () => {
     await other.bringToFront();
     await expect.poll(() => badgeText(background)).toBe('');
 
-    await probe.bringToFront();
+    // Closing the active tab re-activates the previous one
+    await other.close();
     await expect.poll(() => badgeText(background)).toBe('2');
 
     await setStorage(background, { showBadge: false });
