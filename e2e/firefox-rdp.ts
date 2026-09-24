@@ -76,7 +76,8 @@ class RdpClient {
     const body = Buffer.from(JSON.stringify({ to, type, ...extra }), 'utf8');
     this.socket.write(`${body.length}:`);
     this.socket.write(body);
-    const reply = await this.waitFor((packet) => packet.from === to);
+    // Replies carry no `type` (events from the same actor do)
+    const reply = await this.waitFor((packet) => packet.from === to && !packet.type);
     if (reply.error) {
       throw new Error(`RDP ${type} failed: ${reply.error} ${reply.message ?? ''}`);
     }
@@ -85,6 +86,35 @@ class RdpClient {
 
   close(): void {
     this.socket.end();
+  }
+}
+
+/**
+ * Resolve the console actor of the add-on background page. Recent Firefox versions expose
+ * targets through a watcher (getWatcher + watchTargets); older ones through getTarget.
+ */
+async function findBackgroundConsoleActor(
+  client: RdpClient,
+  descriptorActor: string
+): Promise<string | null> {
+  try {
+    const watcher = await client.request(descriptorActor, 'getWatcher', {});
+    const watcherActor: string = watcher.actor ?? watcher.watcher?.actor;
+    const targetEvent = client.waitFor(
+      (packet) =>
+        packet.from === watcherActor &&
+        packet.type === 'target-available-form' &&
+        typeof packet.target?.consoleActor === 'string',
+      10000
+    );
+    await client.request(watcherActor, 'watchTargets', { targetType: 'frame' });
+    const event = await targetEvent;
+    return event.target.consoleActor;
+  } catch (watcherError) {
+    if (process.env.E2E_DEBUG === '1') console.log('[rdp] watcher failed', watcherError);
+    const reply = await client.request(descriptorActor, 'getTarget');
+    const form = reply.form ?? reply;
+    return typeof form.consoleActor === 'string' ? form.consoleActor : null;
   }
 }
 
@@ -110,11 +140,10 @@ export class FirefoxAddonBackground {
       const { addons = [] } = await client.request('root', 'listAddons');
       const descriptor = addons.find((addon: any) => addon.id === addonId);
       if (descriptor) {
-        const reply = await client.request(descriptor.actor, 'getTarget');
-        lastReply = reply;
-        const form = reply.form ?? reply;
-        if (form.consoleActor) {
-          return new FirefoxAddonBackground(client, form.consoleActor);
+        const consoleActor = await findBackgroundConsoleActor(client, descriptor.actor);
+        lastReply = consoleActor;
+        if (consoleActor) {
+          return new FirefoxAddonBackground(client, consoleActor);
         }
       }
       await new Promise((resolve) => setTimeout(resolve, 250));
