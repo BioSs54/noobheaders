@@ -24,6 +24,13 @@ export function createTestServer(port = 3456) {
       return;
     }
 
+    if (req.url === '/' || req.url === '/page') {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.writeHead(200);
+      res.end('<!doctype html><title>NoobHeaders test page</title><h1>Test page</h1>');
+      return;
+    }
+
     if (req.url === '/headers') {
       // Return request headers as JSON
       res.setHeader('Content-Type', 'application/json');
