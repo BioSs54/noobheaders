@@ -289,7 +289,7 @@
     "message": "Aplicar os cabeçalhos do perfil \"$1\""
   },
   "profilesHint": {
-    "message": "Ative os perfis a aplicar. Clique em um nome para editá-lo."
+    "message": "Ative os perfis a aplicar. Clique em um perfil para editá-lo."
   },
   "profileDisabledHint": {
     "message": "Este perfil está desativado: seus cabeçalhos não são aplicados."
@@ -368,5 +368,8 @@
   },
   "donations": {
     "message": "Doações"
+  },
+  "profileCounts": {
+    "message": "Cabeçalhos: $1 · Filtros: $2"
   }
 }

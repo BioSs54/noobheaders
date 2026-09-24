@@ -369,8 +369,29 @@ function validateProfileName(value: string, ignoreId?: string): string | null {
   return exists ? getMessage('profileNameExists') : null;
 }
 
-function uniqueProfileName(baseName: string): string {
+// `copySuffix` of every locale in _locales
+const COPY_SUFFIXES = [
+  'Kopie',
+  'copia',
+  'copie',
+  'copy',
+  'cópia',
+  'копия',
+  'コピー',
+  '副本',
+  '사본',
+];
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function uniqueProfileName(sourceName: string): string {
   const copyLabel = getMessage('copySuffix');
+  // Duplicating "Work (copy)" gives "Work (copy 2)", not "Work (copy) (copy)". Names outlive
+  // a UI language change, so the suffix of every supported language is recognized.
+  const suffixes = [...new Set([copyLabel, ...COPY_SUFFIXES])].map(escapeRegExp).join('|');
+  const baseName = sourceName.replace(new RegExp(`\\s\\((?:${suffixes})(?: \\d+)?\\)$`), '');
   let candidate = `${baseName} (${copyLabel})`;
   let counter = 2;
   while (validateProfileName(candidate)) {
@@ -720,7 +741,10 @@ function renderProfiles(): void {
 
     const meta = document.createElement('div');
     meta.className = 'profile-row-meta';
-    meta.textContent = `${profile.headers?.length || 0} ${getMessage('headers')} • ${profile.filters?.length || 0} ${getMessage('filters')}`;
+    meta.textContent = getMessage('profileCounts', [
+      String(profile.headers?.length || 0),
+      String(profile.filters?.length || 0),
+    ]);
 
     if (isSelected) {
       const badge = document.createElement('span');
@@ -737,6 +761,14 @@ function renderProfiles(): void {
     main.appendChild(toggleLabel);
     main.appendChild(copy);
     row.appendChild(main);
+
+    // Pointer shortcut: the whole card selects the profile (the switch only turns it on/off).
+    // Keyboard and screen reader users use the name button, the card's accessible control.
+    row.addEventListener('click', async (event) => {
+      const target = event.target as HTMLElement;
+      if (isSelected || target.closest('label, button, input')) return;
+      await activateProfile(profile.id);
+    });
 
     radioGroup.appendChild(row);
   });

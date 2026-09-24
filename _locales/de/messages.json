@@ -289,7 +289,7 @@
     "message": "Header des Profils „$1“ anwenden"
   },
   "profilesHint": {
-    "message": "Schalte die Profile ein, die angewendet werden sollen. Klicke auf einen Namen, um ihn zu bearbeiten."
+    "message": "Schalte die Profile ein, die angewendet werden sollen. Klicke auf ein Profil, um es zu bearbeiten."
   },
   "profileDisabledHint": {
     "message": "Dieses Profil ist aus: Seine Header werden nicht angewendet."
@@ -368,5 +368,8 @@
   },
   "donations": {
     "message": "Spenden"
+  },
+  "profileCounts": {
+    "message": "Header: $1 · Filter: $2"
   }
 }

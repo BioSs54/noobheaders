@@ -288,7 +288,7 @@
     "message": "Appliquer les en-têtes du profil « $1 »"
   },
   "profilesHint": {
-    "message": "Activez les profils à appliquer. Cliquez sur un nom pour le modifier."
+    "message": "Activez les profils à appliquer. Cliquez sur un profil pour le modifier."
   },
   "profileDisabledHint": {
     "message": "Ce profil est désactivé : ses en-têtes ne sont pas appliqués."
@@ -367,5 +367,8 @@
   },
   "donations": {
     "message": "Dons"
+  },
+  "profileCounts": {
+    "message": "En-têtes : $1 · Filtres : $2"
   }
 }

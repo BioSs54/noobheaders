@@ -4,13 +4,17 @@
   --primary-color: #667eea;
   --primary-dark: #5568d3;
   --secondary-color: #764ba2;
-  --danger-color: #f56565;
+  /* Text/border red and button background: both >= 4.5:1 against their background */
+  --danger-color: #c53030;
+  --danger-bg: #c53030;
   --success-color: #48bb78;
   --background: #ffffff;
   --surface: #f7fafc;
   --border: #e2e8f0;
   --text-primary: #2d3748;
-  --text-secondary: #718096;
+  --text-secondary: #4a5568;
+  --text-tertiary: #4a5568;
+  --warning-color: #975a16;
   --shadow: rgba(0, 0, 0, 0.1);
   --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   --link-color: #2b6cb0;
@@ -40,6 +44,9 @@ a:hover {
     --border: #4a5568;
     --text-primary: #f7fafc;
     --text-secondary: #cbd5e0;
+    --text-tertiary: #a0aec0;
+    --danger-color: #feb2b2;
+    --warning-color: #f6e05e;
     --shadow: rgba(0, 0, 0, 0.3);
   }
 }
@@ -420,7 +427,7 @@ body {
 }
 
 .btn-danger {
-  background: var(--danger-color);
+  background: var(--danger-bg);
   color: white;
 }
 
@@ -558,7 +565,6 @@ body {
 .empty-hint {
   font-size: 13px;
   color: var(--text-secondary);
-  opacity: 0.7;
 }
 
 /* Debug Section */
@@ -664,6 +670,10 @@ body {
   color: var(--text-primary);
 }
 
+.profile-row:not(.active) {
+  cursor: pointer;
+}
+
 .profile-row:hover {
   border-color: rgba(102, 126, 234, 0.22);
 }
@@ -725,13 +735,10 @@ body {
   background: rgba(245, 101, 101, 0.03);
 }
 
-.header-item.is-off > :not(.toggle-container):not(.icon-btn),
-.filter-item.is-off > :not(.toggle-container):not(.icon-btn) {
-  opacity: 0.55;
-}
-
-.profile-row.is-off .profile-row-meta {
-  opacity: 0.7;
+.header-item.is-off,
+.filter-item.is-off {
+  border-style: dashed;
+  background: var(--surface);
 }
 
 .field-error {
@@ -784,24 +791,12 @@ body {
 }
 
 .warning-hint {
-  color: #b7791f;
-}
-
-@media (prefers-color-scheme: dark) {
-  .warning-hint {
-    color: #f6e05e;
-  }
+  color: var(--warning-color);
 }
 
 .profile-summary-hint {
   font-size: 12px;
-  color: #b7791f;
-}
-
-@media (prefers-color-scheme: dark) {
-  .profile-summary-hint {
-    color: #f6e05e;
-  }
+  color: var(--warning-color);
 }
 
 .profile-summary-hint[hidden] {
@@ -913,7 +908,7 @@ body {
 }
 
 .footer a {
-  color: var(--primary-color);
+  color: var(--link-color);
   text-decoration: none;
 }
 
@@ -968,8 +963,13 @@ body {
     filter 0.2s ease;
 }
 
-.donation-link:visited {
-  color: white;
+.donation-link,
+.donation-link:link,
+.donation-link:visited,
+.donation-link:hover,
+.donation-link:active {
+  /* Beats the generic link colors in every browser and link state */
+  color: #ffffff;
 }
 
 .donation-link .ui-icon {
@@ -977,14 +977,15 @@ body {
   height: 20px;
 }
 
+/* Gradients stay dark enough for white text (WCAG AA, >= 4.5:1 on every stop) */
 .donation-link--sponsor {
-  background: linear-gradient(135deg, #e11d48, #fb7185);
-  border-color: rgba(225, 29, 72, 0.4);
+  background: linear-gradient(135deg, #9f1239, #be123c);
+  border-color: rgba(159, 18, 57, 0.6);
 }
 
 .donation-link--paypal {
-  background: linear-gradient(135deg, #003087, #009cde);
-  border-color: rgba(0, 48, 135, 0.45);
+  background: linear-gradient(135deg, #003087, #0059a8);
+  border-color: rgba(0, 48, 135, 0.6);
 }
 
 .donation-link:hover {
@@ -1003,13 +1004,13 @@ body {
 
 @media (prefers-color-scheme: dark) {
   .donation-link--sponsor {
-    background: linear-gradient(135deg, #f43f5e, #fb7185);
-    border-color: rgba(251, 113, 133, 0.55);
+    background: linear-gradient(135deg, #9f1239, #be123c);
+    border-color: rgba(251, 113, 133, 0.45);
   }
 
   .donation-link--paypal {
-    background: linear-gradient(135deg, #0a4abf, #21b4ff);
-    border-color: rgba(33, 180, 255, 0.5);
+    background: linear-gradient(135deg, #003087, #0059a8);
+    border-color: rgba(96, 165, 250, 0.45);
   }
 
   .donation-link {

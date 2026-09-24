@@ -289,7 +289,7 @@
     "message": "应用配置“$1”的请求头"
   },
   "profilesHint": {
-    "message": "打开需要应用的配置。点击名称即可编辑。"
+    "message": "打开需要应用的配置。点击配置即可编辑。"
   },
   "profileDisabledHint": {
     "message": "此配置已关闭：其请求头不会被应用。"
@@ -368,5 +368,8 @@
   },
   "donations": {
     "message": "捐赠"
+  },
+  "profileCounts": {
+    "message": "请求头：$1 · 过滤器：$2"
   }
 }
