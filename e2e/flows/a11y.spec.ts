@@ -26,6 +26,14 @@ for (const colorScheme of ['light', 'dark'] as const) {
       const results = await new AxeBuilder({ page: popup })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
         .analyze();
+
+      // Empty states (no header, no filter) of the second profile
+      await popup.locator('.profile-row').last().locator('.profile-row-meta').click();
+      await expect(popup.locator('#empty-headers')).toBeVisible();
+      const emptyResults = await new AxeBuilder({ page: popup })
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+        .analyze();
+      results.violations.push(...emptyResults.violations);
       expect(
         results.violations.flatMap((v) =>
           v.nodes.map((n) => `${v.id} ${n.target} ${JSON.stringify(n.any[0]?.data ?? {})}`)

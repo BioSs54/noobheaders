@@ -565,7 +565,6 @@ body {
 .empty-hint {
   font-size: 13px;
   color: var(--text-secondary);
-  opacity: 0.7;
 }
 
 /* Debug Section */

@@ -124,6 +124,20 @@ test.describe('Profiles', () => {
     ]);
   });
 
+  test('duplicating recognizes copy suffixes of other languages', async ({
+    context,
+    extensionOrigin,
+  }) => {
+    const page = await openPopup(context, extensionOrigin);
+    await seedState(page, {
+      profiles: [profile('Work'), profile('Work (copie 2)')],
+      activeProfileId: 'Work (copie 2)',
+    });
+
+    await page.click('#duplicate-profile-btn');
+    await expect(page.locator('#active-profile-name')).toHaveText('Work (copy)');
+  });
+
   test('delete a profile after confirmation', async ({ context, extensionOrigin }) => {
     const page = await openPopup(context, extensionOrigin);
     await seedState(page, {
