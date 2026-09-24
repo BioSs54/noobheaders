@@ -55,13 +55,6 @@ export function translatePage(): void {
     (element as HTMLElement).title = message;
     (element as HTMLElement).setAttribute('aria-label', message);
   });
-
-  // Translate elements with data-i18n-html attribute (for HTML content)
-  document.querySelectorAll('[data-i18n-html]').forEach((element) => {
-    const key = element.getAttribute('data-i18n-html');
-    if (!key) return;
-    element.innerHTML = getMessage(key);
-  });
 }
 
 // Auto-translate on page load

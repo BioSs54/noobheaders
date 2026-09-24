@@ -13,10 +13,10 @@ import {
 } from './matching.js';
 import type { Filter, Header, Profile } from './types/index.js';
 import {
-  STORAGE_KEYS,
   createDefaultProfile,
   generateProfileId,
   normalizeProfiles,
+  STORAGE_KEYS,
 } from './types/index.js';
 import { createIcon, replaceWithIcon } from './ui-icons.js';
 
@@ -437,7 +437,7 @@ async function loadState(): Promise<void> {
  */
 async function saveState(): Promise<void> {
   try {
-    if (!browserAPI.storage || !browserAPI.storage.local || !browserAPI.storage.local.set) {
+    if (!browserAPI.storage?.local?.set) {
       throw new Error('browserAPI.storage.local.set is not available');
     }
     isUpdatingStorage = true;
@@ -664,16 +664,15 @@ function renderGlobalState(): void {
  * Render profiles list
  */
 function renderProfiles(): void {
-  const radioGroup = document.getElementById('profiles-radio') as HTMLDivElement;
+  const radioGroup = document.getElementById('profiles-radio') as HTMLUListElement;
   if (!radioGroup) return;
 
-  radioGroup.innerHTML = '';
+  radioGroup.replaceChildren();
 
   profiles.forEach((profile) => {
     const isSelected = profile.id === activeProfileId;
-    const row = document.createElement('div');
+    const row = document.createElement('li');
     row.className = 'profile-row';
-    row.setAttribute('role', 'listitem');
     row.dataset.profileId = profile.id;
     row.classList.toggle('active', isSelected);
     row.classList.toggle('is-off', !profile.enabled);
@@ -836,7 +835,7 @@ function restoreFocus(container: HTMLElement, state: ReturnType<typeof captureFo
   if (state.selStart !== null && state.selEnd !== null) {
     try {
       el.setSelectionRange(state.selStart, state.selEnd);
-    } catch (e) {
+    } catch (_e) {
       // ignore if unavailable (e.g. select elements)
     }
   }
@@ -855,9 +854,9 @@ function renderHeaders(): void {
   // Preserve focus/selection in header inputs across re-renders
   const focusState = captureFocus(container);
 
-  container.innerHTML = '';
+  container.replaceChildren();
 
-  if (!activeProfile || !activeProfile.headers || activeProfile.headers.length === 0) {
+  if (!activeProfile?.headers || activeProfile.headers.length === 0) {
     emptyState.style.display = 'block';
     return;
   }
@@ -1041,7 +1040,7 @@ function renderFilters(): void {
 
   const focusState = captureFocus(container);
 
-  container.innerHTML = '';
+  container.replaceChildren();
 
   const hasFilters = Boolean(activeProfile?.filters && activeProfile.filters.length > 0);
   emptyState.style.display = hasFilters ? 'none' : 'block';
@@ -1281,7 +1280,7 @@ async function addHeader(): Promise<void> {
 
 async function duplicateHeader(index: number): Promise<void> {
   const activeProfile = getActiveProfile();
-  if (!activeProfile || !activeProfile.headers[index]) return;
+  if (!activeProfile?.headers[index]) return;
   activeProfile.headers.splice(index + 1, 0, { ...activeProfile.headers[index] });
   await persistPopupState({ refresh: true });
   focusRowInput('headers-list', index + 1, 'name');
@@ -1292,7 +1291,7 @@ async function duplicateHeader(index: number): Promise<void> {
  */
 async function toggleHeader(index: number): Promise<void> {
   const activeProfile = getActiveProfile();
-  if (!activeProfile || !activeProfile.headers[index]) return;
+  if (!activeProfile?.headers[index]) return;
   activeProfile.headers[index].enabled = !activeProfile.headers[index].enabled;
   await persistPopupState({ refresh: true, syncExtension: true });
 }
@@ -1302,7 +1301,7 @@ async function toggleHeader(index: number): Promise<void> {
  */
 async function updateHeaderType(index: number, type: 'request' | 'response'): Promise<void> {
   const activeProfile = getActiveProfile();
-  if (!activeProfile || !activeProfile.headers[index]) return;
+  if (!activeProfile?.headers[index]) return;
   activeProfile.headers[index].type = type;
   await persistPopupState({ syncExtension: true });
 }
@@ -1312,7 +1311,7 @@ async function updateHeaderType(index: number, type: 'request' | 'response'): Pr
  */
 function updateHeaderName(index: number, name: string): void {
   const activeProfile = getActiveProfile();
-  if (!activeProfile || !activeProfile.headers[index]) return;
+  if (!activeProfile?.headers[index]) return;
   activeProfile.headers[index].name = name;
   // Debounce writes to avoid re-rendering on every keystroke
   scheduleSave();
@@ -1323,7 +1322,7 @@ function updateHeaderName(index: number, name: string): void {
  */
 function updateHeaderValue(index: number, value: string): void {
   const activeProfile = getActiveProfile();
-  if (!activeProfile || !activeProfile.headers[index]) return;
+  if (!activeProfile?.headers[index]) return;
   activeProfile.headers[index].value = value;
   scheduleSave();
 }
@@ -1337,7 +1336,7 @@ async function deleteWithUndo<T>(
   message: string
 ): Promise<void> {
   const activeProfile = getActiveProfile();
-  if (!activeProfile || !activeProfile[list][index]) return;
+  if (!activeProfile?.[list][index]) return;
 
   const profileId = activeProfile.id;
   const [removed] = (activeProfile[list] as T[]).splice(index, 1);
@@ -1390,7 +1389,7 @@ async function addFilter(): Promise<void> {
 
 async function duplicateFilter(index: number): Promise<void> {
   const activeProfile = getActiveProfile();
-  if (!activeProfile || !activeProfile.filters[index]) return;
+  if (!activeProfile?.filters[index]) return;
   activeProfile.filters.splice(index + 1, 0, { ...activeProfile.filters[index] });
   await persistPopupState({ refresh: true });
   focusRowInput('filters-list', index + 1, 'value');
@@ -1401,7 +1400,7 @@ async function duplicateFilter(index: number): Promise<void> {
  */
 async function toggleFilter(index: number): Promise<void> {
   const activeProfile = getActiveProfile();
-  if (!activeProfile || !activeProfile.filters[index]) return;
+  if (!activeProfile?.filters[index]) return;
   activeProfile.filters[index].enabled = !activeProfile.filters[index].enabled;
   await persistPopupState({ refresh: true, syncExtension: true });
 }
@@ -1411,7 +1410,7 @@ async function toggleFilter(index: number): Promise<void> {
  */
 function setFilterType(index: number, type: 'url' | 'domain'): void {
   const activeProfile = getActiveProfile();
-  if (!activeProfile || !activeProfile.filters[index]) return;
+  if (!activeProfile?.filters[index]) return;
   activeProfile.filters[index].type = type;
 }
 
@@ -1420,7 +1419,7 @@ function setFilterType(index: number, type: 'url' | 'domain'): void {
  */
 function setFilterValue(index: number, value: string): void {
   const activeProfile = getActiveProfile();
-  if (!activeProfile || !activeProfile.filters[index]) return;
+  if (!activeProfile?.filters[index]) return;
   activeProfile.filters[index].value = value;
 }
 

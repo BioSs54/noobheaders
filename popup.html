@@ -16,6 +16,7 @@
   <div id="confirm-modal" class="modal-overlay" style="display: none;">
     <div class="modal-content" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title"
       aria-describedby="confirm-message">
+      <!-- biome-ignore lint/a11y/useHeadingContent: filled at runtime -->
       <h3 id="confirm-title" class="modal-title"></h3>
       <p id="confirm-message" class="modal-message"></p>
       <div class="modal-actions">
@@ -28,7 +29,9 @@
   <!-- Prompt modal -->
   <div id="prompt-modal" class="modal-overlay" style="display: none;">
     <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="prompt-title">
+      <!-- biome-ignore lint/a11y/useHeadingContent: filled at runtime -->
       <h3 id="prompt-title" class="modal-title"></h3>
+      <!-- biome-ignore lint/a11y/noLabelWithoutControl: text filled at runtime -->
       <label id="prompt-message" class="modal-message" for="prompt-input"></label>
       <input type="text" id="prompt-input" class="modal-input" maxlength="80" aria-describedby="prompt-error" />
       <p id="prompt-error" class="field-error modal-error" role="alert" hidden></p>
@@ -104,7 +107,7 @@
           </div>
         </div>
 
-        <div id="profiles-radio" class="profiles-radio" role="list" data-i18n-title="profiles"></div>
+        <ul id="profiles-radio" class="profiles-radio" data-i18n-title="profiles"></ul>
         <p class="section-hint" data-i18n="profilesHint">Switch on the profiles to apply. Click a name to edit it.</p>
       </div>
     </section>

@@ -51,8 +51,8 @@ a:hover {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
-    sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   font-size: 15px;
   line-height: 1.45;
   color: var(--text-primary);
@@ -178,7 +178,7 @@ body {
 .btn-secondary:focus-visible,
 .btn-danger:focus-visible,
 .icon-btn:focus-visible,
-.toggle-container:focus-within .toggle-slider,
+.toggle-input:focus-visible + .toggle-slider,
 .header-name:focus-visible,
 .header-value:focus-visible,
 .filter-value:focus-visible,
@@ -285,6 +285,23 @@ body {
   justify-content: flex-end;
 }
 
+/* Content only exposed to assistive technologies */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.profiles-radio {
+  list-style: none;
+}
+
 /* Toggle Switch */
 .toggle-container {
   display: flex;
@@ -298,8 +315,18 @@ body {
   gap: 8px;
 }
 
+.toggle-container {
+  position: relative;
+}
+
+/* Visually hidden but still focusable with the keyboard */
 .toggle-input {
-  display: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .toggle-slider {
@@ -362,7 +389,11 @@ body {
   font-weight: 600;
   cursor: pointer;
   line-height: 1.2;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease;
   white-space: nowrap;
 }
 
@@ -410,7 +441,11 @@ body {
   height: 42px;
   padding: 0;
   border-radius: 12px;
-  transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .icon-btn:hover {
@@ -549,8 +584,11 @@ body {
   background: var(--background);
   border: 1px solid var(--border);
   border-radius: 10px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, transform 0.2s
-    ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
 }
 
 .profile-row::before {
@@ -608,7 +646,9 @@ body {
 .profile-row.active {
   background: linear-gradient(135deg, rgba(102, 126, 234, 0.14), rgba(118, 75, 162, 0.08));
   border-color: rgba(102, 126, 234, 0.4);
-  box-shadow: 0 10px 22px rgba(102, 126, 234, 0.12), 0 0 0 1px rgba(102, 126, 234, 0.08);
+  box-shadow:
+    0 10px 22px rgba(102, 126, 234, 0.12),
+    0 0 0 1px rgba(102, 126, 234, 0.08);
   transform: translateY(-1px);
 }
 
@@ -632,7 +672,9 @@ body {
   .profile-summary-card {
     border-color: rgba(144, 183, 255, 0.32);
     background: linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(99, 102, 241, 0.18));
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 10px 24px rgba(15, 23, 42, 0.35);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      0 10px 24px rgba(15, 23, 42, 0.35);
   }
 
   .profile-summary-label {
@@ -650,7 +692,9 @@ body {
   .profile-row.active {
     background: linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(99, 102, 241, 0.24));
     border-color: rgba(147, 197, 253, 0.45);
-    box-shadow: 0 14px 26px rgba(15, 23, 42, 0.45), 0 0 0 1px rgba(147, 197, 253, 0.18);
+    box-shadow:
+      0 14px 26px rgba(15, 23, 42, 0.45),
+      0 0 0 1px rgba(147, 197, 253, 0.18);
   }
 
   .profile-row.active::before {
@@ -849,7 +893,9 @@ body {
   font: inherit;
   font-weight: 600;
   color: var(--text-secondary);
-  transition: color 0.2s ease, transform 0.2s ease;
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .footer-version-trigger:hover {
@@ -916,7 +962,10 @@ body {
   color: white;
   text-decoration: none;
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
 }
 
 .donation-link:visited {
@@ -1021,11 +1070,17 @@ body {
 
 @keyframes trollBackdrop {
   0% {
-    background-position: 0 0, 0 0, 0 0;
+    background-position:
+      0 0,
+      0 0,
+      0 0;
   }
 
   100% {
-    background-position: 240px 0, -180px 0, 0 0;
+    background-position:
+      240px 0,
+      -180px 0,
+      0 0;
   }
 }
 
@@ -1069,16 +1124,21 @@ body {
   position: relative;
   overflow-x: hidden;
   overflow-y: auto;
-  animation: noobGlow 0.9s ease-in-out 3, trollHue 1s linear infinite alternate;
-  background: repeating-linear-gradient(
-      120deg,
-      rgba(255, 0, 102, 0.14) 0 22px,
-      transparent 22px 44px
-    ), repeating-linear-gradient(-120deg, rgba(0, 245, 255, 0.12) 0 18px, transparent 18px 36px),
+  animation:
+    noobGlow 0.9s ease-in-out 3,
+    trollHue 1s linear infinite alternate;
+  background:
+    repeating-linear-gradient(120deg, rgba(255, 0, 102, 0.14) 0 22px, transparent 22px 44px),
+    repeating-linear-gradient(-120deg, rgba(0, 245, 255, 0.12) 0 18px, transparent 18px 36px),
     radial-gradient(circle at top right, rgba(255, 196, 0, 0.22), transparent 34%),
     radial-gradient(circle at bottom left, rgba(0, 255, 163, 0.18), transparent 28%),
     var(--background);
-  background-size: 220px 220px, 180px 180px, auto, auto, auto;
+  background-size:
+    220px 220px,
+    180px 180px,
+    auto,
+    auto,
+    auto;
   animation-composition: replace, replace;
 }
 
@@ -1088,14 +1148,14 @@ body {
   inset: 0;
   pointer-events: none;
   z-index: 90;
-  background: repeating-linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.04) 0 3px,
-      transparent 3px 18px
-    ), radial-gradient(circle at 15% 20%, rgba(255, 0, 128, 0.12), transparent 22%),
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.04) 0 3px, transparent 3px 18px),
+    radial-gradient(circle at 15% 20%, rgba(255, 0, 128, 0.12), transparent 22%),
     radial-gradient(circle at 80% 15%, rgba(0, 224, 255, 0.1), transparent 18%);
   mix-blend-mode: screen;
-  animation: trollBackdrop 2.6s linear infinite, trollStripeFlash 0.45s steps(2) infinite;
+  animation:
+    trollBackdrop 2.6s linear infinite,
+    trollStripeFlash 0.45s steps(2) infinite;
 }
 
 .noob-mode::before {
@@ -1116,7 +1176,9 @@ body {
   transform: translateX(-50%);
   border: 2px solid rgba(255, 255, 255, 0.35);
   box-shadow: 0 16px 32px rgba(255, 0, 110, 0.34);
-  animation: noobBanner 0.24s ease-out, trollBackdrop 1.6s linear infinite;
+  animation:
+    noobBanner 0.24s ease-out,
+    trollBackdrop 1.6s linear infinite;
 }
 
 .noob-mode .section,
@@ -1127,7 +1189,9 @@ body {
 }
 
 .noob-mode .header {
-  animation: pulse 0.7s ease-in-out infinite, trollTilt 0.9s ease-in-out infinite;
+  animation:
+    pulse 0.7s ease-in-out infinite,
+    trollTilt 0.9s ease-in-out infinite;
   text-shadow: 0 8px 22px rgba(255, 0, 110, 0.2);
 }
 
