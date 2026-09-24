@@ -23,16 +23,19 @@ jobs:
             - name: Checkout
               uses: actions/checkout@v5
 
+            # pnpm must be installed before setup-node: setup-node enables the pnpm cache
+            # automatically from the `packageManager` field of package.json
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v4
+
             - name: Setup Node
               uses: actions/setup-node@v5
               with:
                   node-version: 22.x
-
-            - name: Setup pnpm
-              uses: pnpm/action-setup@v4
+                  cache: "pnpm"
 
             - name: Install deps
-              run: pnpm install --no-frozen-lockfile
+              run: pnpm install --frozen-lockfile
 
             - name: Determine tag
               id: tag
