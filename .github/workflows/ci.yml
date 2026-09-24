@@ -76,7 +76,21 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Install Playwright browser
-        run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
+        if: matrix.browser == 'chromium'
+        run: pnpm exec playwright install --with-deps chromium
+
+      # Firefox extension pages can only be driven through WebDriver BiDi on a stock Firefox
+      - name: Install Firefox
+        if: matrix.browser == 'firefox'
+        uses: browser-actions/setup-firefox@v1
+        with:
+          firefox-version: latest
+
+      - name: Locate Firefox
+        if: matrix.browser == 'firefox'
+        run: |
+          echo "FIREFOX_BIN=$(readlink -f "$(command -v firefox)")" >> "$GITHUB_ENV"
+          firefox --version
 
       - name: Build and package extension
         run: pnpm run package

@@ -55,52 +55,14 @@ async function waitForExtensionPageReady(page: Page, pagePath: string): Promise<
   }
 }
 
-/**
- * Firefox (Juggler) cannot navigate to moz-extension:// URLs itself, so extension pages are
- * opened by the extension: an already open extension page (the welcome tab opened on install)
- * calls tabs.create() and the new tab is picked up by Playwright.
- */
-async function openFirefoxExtensionPage(
-  context: BrowserContext,
-  extensionOrigin: string,
-  pagePath: string
-): Promise<Page> {
-  const isExtensionPage = (candidate: Page) => candidate.url().startsWith(extensionOrigin);
-  let host = context.pages().find(isExtensionPage);
-  if (!host) {
-    host = await context.waitForEvent('page', {
-      predicate: (candidate) => candidate.url().startsWith('moz-extension://'),
-      timeout: 15000,
-    });
-  }
-  await host.waitForLoadState('domcontentloaded');
-
-  const url = `${extensionOrigin}/${pagePath}`;
-  const [page] = await Promise.all([
-    context.waitForEvent('page', { predicate: (candidate) => candidate !== host }),
-    host.evaluate(async (target) => {
-      const runtime = globalThis as any;
-      await runtime.browser.tabs.create({ url: target, active: true });
-    }, url),
-  ]);
-  attachDebugLogs(page, pagePath);
-  await page.waitForURL(url);
-  return page;
-}
-
 export async function openExtensionPage(
   context: BrowserContext,
   extensionOrigin: string,
   pagePath: 'popup.html' | 'options.html'
 ): Promise<Page> {
-  let page: Page;
-  if (extensionOrigin.startsWith('moz-extension://')) {
-    page = await openFirefoxExtensionPage(context, extensionOrigin, pagePath);
-  } else {
-    page = await context.newPage();
-    attachDebugLogs(page, pagePath);
-    await page.goto(`${extensionOrigin}/${pagePath}`);
-  }
+  const page = await context.newPage();
+  attachDebugLogs(page, pagePath);
+  await page.goto(`${extensionOrigin}/${pagePath}`);
   if (process.env.E2E_DEBUG === '1') console.log(`[e2e] opened ${page.url()}`);
   await waitForExtensionPageReady(page, pagePath);
   return page;

@@ -73,9 +73,12 @@ export const test = base.extend<ExtensionFixtures, { testServer: Server }>({
     if (browserKind === 'firefox') {
       const debuggerPort = await getFreePort();
       const userDataDir = await mkdtemp(path.join(os.tmpdir(), 'noobheaders-e2e-ff-'));
-      // Extensions are active in the default (persistent) context only: pages opened in the
-      // isolated contexts of browser.newContext() cannot load moz-extension:// URLs.
+      // The Playwright Firefox build (Juggler) cannot drive moz-extension:// pages, so a stock
+      // Firefox is driven through WebDriver BiDi (`moz-firefox` channel). Its path can be set
+      // with FIREFOX_BIN (CI installs it with browser-actions/setup-firefox).
       const context = await firefox.launchPersistentContext(userDataDir, {
+        channel: 'moz-firefox',
+        executablePath: process.env.FIREFOX_BIN || undefined,
         headless: process.env.HEADED !== '1',
         locale: uiLocale,
         args: ['-start-debugger-server', String(debuggerPort)],
