@@ -2,8 +2,12 @@ import { defineConfig, devices } from '@playwright/test';
 
 /**
  * Playwright configuration for E2E testing of the NoobHeaders extension.
- * Every flow runs in Chromium (MV3, declarativeNetRequest) and Firefox (MV2, webRequest).
  * Run `pnpm run package` first: the tests load the packaged extensions from ./packages.
+ *
+ * - e2e/engine: header engine flows driven from the extension background, in Chromium
+ *   (MV3, declarativeNetRequest) and Firefox (MV2, webRequest).
+ * - e2e/flows: UI flows (popup, options). Chromium only: Firefox forbids automation of
+ *   moz-extension:// pages (both with Playwright's Juggler and WebDriver BiDi).
  */
 export default defineConfig({
   testDir: './e2e',
@@ -26,6 +30,7 @@ export default defineConfig({
     },
     {
       name: 'firefox',
+      testMatch: 'engine/**/*.spec.ts',
       use: { ...devices['Desktop Firefox'] },
     },
   ],

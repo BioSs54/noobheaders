@@ -88,6 +88,90 @@ class RdpClient {
   }
 }
 
+/**
+ * Evaluates code in the background page of a temporary add-on through the debugger
+ * server (the page is not reachable with Playwright in Firefox).
+ */
+export class FirefoxAddonBackground {
+  private counter = 0;
+
+  private constructor(
+    private readonly client: RdpClient,
+    private readonly consoleActor: string
+  ) {}
+
+  static async connect(port: number, addonId: string): Promise<FirefoxAddonBackground> {
+    const client = new RdpClient(await connect(port));
+    await client.waitFor((packet) => packet.from === 'root');
+
+    const deadline = Date.now() + 15000;
+    let lastReply: unknown = null;
+    while (Date.now() < deadline) {
+      const { addons = [] } = await client.request('root', 'listAddons');
+      const descriptor = addons.find((addon: any) => addon.id === addonId);
+      if (descriptor) {
+        const reply = await client.request(descriptor.actor, 'getTarget');
+        lastReply = reply;
+        const form = reply.form ?? reply;
+        if (form.consoleActor) {
+          return new FirefoxAddonBackground(client, form.consoleActor);
+        }
+      }
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+    client.close();
+    throw new Error(`Could not reach the add-on background page: ${JSON.stringify(lastReply)}`);
+  }
+
+  private async rawEvaluate(text: string): Promise<unknown> {
+    const reply = await this.client.request(this.consoleActor, 'evaluateJSAsync', { text });
+    const result = await this.client.waitFor(
+      (packet) => packet.type === 'evaluationResult' && packet.resultID === reply.resultID
+    );
+    if (result.exceptionMessage) {
+      throw new Error(`Background evaluation failed: ${JSON.stringify(result.exceptionMessage)}`);
+    }
+    const value = result.result;
+    if (value && typeof value === 'object') {
+      if (value.type === 'undefined' || value.type === 'null') return null;
+      if (value.type === 'longString') {
+        const full = await this.client.request(value.actor, 'substring', {
+          start: 0,
+          end: value.length,
+        });
+        return full.substring;
+      }
+    }
+    return value;
+  }
+
+  /** Run `fn(arg)` in the background page and return its (JSON-serializable) result */
+  async evaluate<T>(fnSource: string, arg: unknown): Promise<T> {
+    const key = `__noobheadersE2E${this.counter++}`;
+    await this.rawEvaluate(
+      `(async () => (${fnSource})(${JSON.stringify(arg ?? null)}))().then(
+        (v) => { globalThis.${key} = JSON.stringify({ ok: true, v: v === undefined ? null : v }); },
+        (e) => { globalThis.${key} = JSON.stringify({ ok: false, e: String((e && e.stack) || e) }); }
+      ); undefined`
+    );
+    const deadline = Date.now() + 10000;
+    while (Date.now() < deadline) {
+      const raw = await this.rawEvaluate(`globalThis.${key} ?? ''`);
+      if (typeof raw === 'string' && raw !== '') {
+        const parsed = JSON.parse(raw);
+        if (!parsed.ok) throw new Error(`Background evaluation failed: ${parsed.e}`);
+        return parsed.v as T;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+    throw new Error('Timed out waiting for the background evaluation');
+  }
+
+  close(): void {
+    this.client.close();
+  }
+}
+
 async function connect(port: number, timeoutMs = 20000): Promise<net.Socket> {
   const deadline = Date.now() + timeoutMs;
   let lastError: unknown;

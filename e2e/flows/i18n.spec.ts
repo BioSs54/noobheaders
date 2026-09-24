@@ -24,15 +24,7 @@ for (const locale of locales) {
     // Chrome expects BCP 47 tags (pt-BR), the _locales folders use underscores (pt_BR)
     test.use({ uiLocale: locale.replace('_', '-') });
 
-    test('popup, dialogs and options are translated', async ({
-      context,
-      extensionOrigin,
-      browserKind,
-    }) => {
-      test.skip(
-        browserKind === 'firefox' && locale !== 'en',
-        'The Playwright Firefox build only ships the en-US language pack'
-      );
+    test('popup, dialogs and options are translated', async ({ context, extensionOrigin }) => {
       const strings = messages(locale);
       const popup = await openPopup(context, extensionOrigin);
 

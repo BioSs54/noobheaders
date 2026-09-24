@@ -4,7 +4,7 @@ import type { AddressInfo } from 'node:net';
 import os from 'node:os';
 import path from 'node:path';
 import { type BrowserContext, test as base, chromium, firefox } from '@playwright/test';
-import { getFreePort, installTemporaryAddon } from './firefox-rdp';
+import { FirefoxAddonBackground, getFreePort, installTemporaryAddon } from './firefox-rdp';
 import { closeServer, createTestServer } from './test-server.js';
 
 export const FIREFOX_EXTENSION_ID = 'noobheaders@bioss54.github.io';
@@ -22,7 +22,16 @@ function getExtensionPath(kind: BrowserKind): string {
   return path.join(process.cwd(), 'packages', kind === 'chromium' ? 'chrome' : 'firefox');
 }
 
+/** Code evaluation in the extension background (service worker or background page) */
+export interface ExtensionBackground {
+  evaluate<T, A = undefined>(fn: (arg: A) => T | Promise<T>, arg?: A): Promise<T>;
+}
+
+// Debugger port of each Firefox context, used to reach the add-on background page
+const firefoxDebuggerPorts = new WeakMap<BrowserContext, number>();
+
 export interface ExtensionFixtures {
+  background: ExtensionBackground;
   /** UI language used to launch the browser */
   uiLocale: string;
   browserKind: BrowserKind;
@@ -98,6 +107,7 @@ export const test = base.extend<ExtensionFixtures, { testServer: Server }>({
       debugLog('firefox launched, debugger port', debuggerPort);
       const addonId = await installTemporaryAddon(debuggerPort, extensionPath);
       debugLog('temporary add-on installed', addonId);
+      firefoxDebuggerPorts.set(context, debuggerPort);
       await use(context);
       await context.close();
       await rm(userDataDir, { recursive: true, force: true });
@@ -134,6 +144,24 @@ export const test = base.extend<ExtensionFixtures, { testServer: Server }>({
       background = await context.waitForEvent('serviceworker', { timeout: 10000 });
     }
     await use(background.url().split('/')[2]);
+  },
+
+  background: async ({ context, browserKind }, use) => {
+    if (browserKind === 'firefox') {
+      const port = firefoxDebuggerPorts.get(context);
+      if (!port) throw new Error('Missing Firefox debugger port');
+      const addon = await FirefoxAddonBackground.connect(port, FIREFOX_EXTENSION_ID);
+      await use({ evaluate: (fn, arg) => addon.evaluate(fn.toString(), arg) });
+      addon.close();
+      return;
+    }
+
+    let [worker] = context.serviceWorkers();
+    if (!worker) worker = await context.waitForEvent('serviceworker', { timeout: 10000 });
+    await use({
+      evaluate: <T, A>(fn: (arg: A) => T | Promise<T>, arg?: A) =>
+        worker.evaluate(fn as (arg: A) => T | Promise<T>, arg as A) as Promise<T>,
+    });
   },
 
   extensionOrigin: async ({ extensionId, browserKind }, use) => {
