@@ -88,86 +88,75 @@
       </div>
 
       <div class="profile-controls">
+        <input type="search" id="profile-search" class="profile-search" data-i18n-placeholder="searchProfiles"
+          data-i18n-title="searchProfiles"
+          placeholder="Search profiles" autocomplete="off" spellcheck="false" hidden>
         <ul id="profiles-radio" class="profiles-radio" data-i18n-title="profiles"></ul>
+        <p id="profile-search-empty" class="section-hint" data-i18n="noProfileMatches" hidden>No profile matches.</p>
         <p class="section-hint" data-i18n="profilesHint">Switch on the profiles to apply. Click a profile to edit it.</p>
       </div>
     </section>
 
-    <!-- Headers Section -->
-    <section class="section">
-      <div class="section-header">
-        <h2><span data-i18n="headers">Headers</span> <span id="active-profile-name" class="section-context" aria-live="polite"></span></h2>
-        <button id="add-header-btn" class="btn-add" data-i18n="addHeader" type="button">+ Add Header</button>
+    <!-- Editor of the selected profile: headers and filters tabs -->
+    <section class="section editor-section">
+      <div class="editor-header">
+        <div class="editor-tabs" role="tablist">
+          <button id="tab-headers" class="editor-tab" role="tab" type="button" aria-selected="true"
+            aria-controls="panel-headers"><span data-i18n="headers">Headers</span> <span id="headers-count"
+              class="tab-count">0</span></button>
+          <button id="tab-filters" class="editor-tab" role="tab" type="button" aria-selected="false"
+            aria-controls="panel-filters" tabindex="-1"><span data-i18n="filters">Filters</span> <span
+              id="filters-count" class="tab-count">0</span></button>
+        </div>
+        <span id="active-profile-name" class="section-context" aria-live="polite"></span>
+        <div class="editor-actions">
+          <button id="add-header-btn" class="icon-btn" data-i18n-title="addHeader" aria-label="Add Header" type="button">
+            <svg class="ui-icon ui-icon--md" focusable="false" aria-hidden="true">
+              <use href="icons/ui-sprite.svg#plus"></use>
+            </svg>
+          </button>
+          <button id="add-filter-btn" class="icon-btn" data-i18n-title="addFilter" aria-label="Add Filter" type="button" hidden>
+            <svg class="ui-icon ui-icon--md" focusable="false" aria-hidden="true">
+              <use href="icons/ui-sprite.svg#plus"></use>
+            </svg>
+          </button>
+        </div>
       </div>
 
-      <div id="headers-list" class="headers-list">
-        <!-- Headers will be inserted here -->
-      </div>
-
-      <div class="empty-state" id="empty-headers" style="display: none;">
-        <p data-i18n="noHeadersConfigured">No headers configured</p>
-        <p class="empty-hint" data-i18n="clickAddHeaderHint">Click "Add Header" to get started</p>
-      </div>
-    </section>
-
-    <!-- Filters Section -->
-    <section class="section">
-      <div class="section-header">
-        <h2><span data-i18n="filters">Filters</span> <span class="section-context" data-active-profile-name></span></h2>
-        <button id="add-filter-btn" class="btn-add" data-i18n="addFilter" type="button">+ Add Filter</button>
-      </div>
-
-      <div id="filters-list" class="filters-list">
-        <!-- Filters will be inserted here -->
-      </div>
-
-      <p id="filter-help" class="section-hint" data-i18n="filterHelpText">example.com matches the domain and its
-        subdomains, while *://*.example.com/* is a URL pattern.</p>
-
-      <div class="empty-state" id="empty-filters" style="display: none;">
-        <p data-i18n="noFiltersConfigured">No filters configured</p>
-        <p class="empty-hint" data-i18n="headersApplyAllRequests">Headers will apply to all requests</p>
-      </div>
-    </section>
-
-    <!-- Debug Section -->
-    <section class="section debug-section">
-      <div class="section-header">
-        <h2 data-i18n="debug">Debug</h2>
-        <button id="toggle-debug-btn" class="icon-btn" data-i18n-title="showDebugInfo" aria-label="Show Debug Info" aria-expanded="false" aria-controls="debug-content" type="button">
-          <svg class="ui-icon ui-icon--sm" focusable="false" aria-hidden="true">
-            <use href="icons/ui-sprite.svg#chevron-down"></use>
-          </svg>
-        </button>
-      </div>
-
-      <div id="debug-content" class="debug-content" style="display: none;">
-        <div class="debug-info">
-          <div class="debug-row">
-            <span class="debug-label" data-i18n="debugActiveRules">Active rules:</span>
-            <span id="debug-rules-count" class="debug-value">0</span>
-          </div>
-          <div class="debug-row">
-            <span class="debug-label" data-i18n="debugGlobalEnabled">Global enabled:</span>
-            <span id="debug-global-enabled" class="debug-value">-</span>
-          </div>
-          <div class="debug-row">
-            <span class="debug-label" data-i18n="debugSelectedProfile">Selected profile:</span>
-            <span id="debug-active-profile" class="debug-value">-</span>
-          </div>
-          <div class="debug-row">
-            <span class="debug-label" data-i18n="debugStorageUsed">Storage used:</span>
-            <span id="debug-storage-size" class="debug-value">0 KB</span>
-          </div>
-          <div class="debug-row">
-            <span class="debug-label" data-i18n="debugRuleSync">Rule sync:</span>
-            <span id="debug-rule-sync" class="debug-value">-</span>
-          </div>
+      <div id="panel-headers" class="editor-panel" role="tabpanel" aria-labelledby="tab-headers">
+        <div id="headers-list" class="headers-list">
+          <!-- Headers will be inserted here -->
         </div>
 
-        <pre id="debug-rules-preview" class="debug-rules-preview"></pre>
+        <div class="empty-state" id="empty-headers" style="display: none;">
+          <p data-i18n="noHeadersConfigured">No headers configured</p>
+          <button id="empty-add-header-btn" class="btn-add btn-with-icon" type="button">
+          <svg class="ui-icon ui-icon--sm" focusable="false" aria-hidden="true">
+            <use href="icons/ui-sprite.svg#plus"></use>
+          </svg>
+          <span data-i18n="addHeader">Add Header</span>
+        </button>
+        </div>
+      </div>
 
-        <button id="clear-all-btn" class="btn-danger" data-i18n="clearAllData" type="button">Clear All Data</button>
+      <div id="panel-filters" class="editor-panel" role="tabpanel" aria-labelledby="tab-filters" hidden>
+        <div id="filters-list" class="filters-list">
+          <!-- Filters will be inserted here -->
+        </div>
+
+        <p id="filter-help" class="section-hint" data-i18n="filterHelpText">example.com matches the domain and its
+          subdomains, while *://*.example.com/* is a URL pattern.</p>
+
+        <div class="empty-state" id="empty-filters" style="display: none;">
+          <p data-i18n="noFiltersConfigured">No filters configured</p>
+          <p class="empty-hint" data-i18n="headersApplyAllRequests">Headers will apply to all requests</p>
+          <button id="empty-add-filter-btn" class="btn-add btn-with-icon" type="button">
+          <svg class="ui-icon ui-icon--sm" focusable="false" aria-hidden="true">
+            <use href="icons/ui-sprite.svg#plus"></use>
+          </svg>
+          <span data-i18n="addFilter">Add Filter</span>
+        </button>
+        </div>
       </div>
     </section>
 

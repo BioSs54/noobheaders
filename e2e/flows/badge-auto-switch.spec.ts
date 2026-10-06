@@ -1,12 +1,16 @@
+import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '../fixtures';
 import {
   filter,
   header,
   openPopup,
   profile,
+  profileRow,
   readActiveProfileId,
   readBadgeText,
   seedState,
+  setGlobalEnabled,
+  setProfileEnabled,
 } from '../helpers';
 
 test.describe('Toolbar badge', () => {
@@ -124,4 +128,126 @@ test.describe('Automatic profile selection', () => {
     await local.waitForTimeout(800);
     expect(await readActiveProfileId(popup)).toBe('Default');
   });
+});
+
+test.describe('Popup: profiles applying to the active tab', () => {
+  test('marks the enabled profiles whose headers apply to the active tab', async ({
+    context,
+    extensionOrigin,
+    testServerUrl,
+    altServerUrl,
+  }) => {
+    const popup = await openPopup(context, extensionOrigin);
+    await seedState(popup, {
+      profiles: [
+        profile('Scoped', { headers: [header('X-A', '1')], filters: [filter('localhost')] }),
+        profile('Everywhere', { headers: [header('X-B', '1')] }),
+        profile('Off', { enabled: false, headers: [header('X-C', '1')] }),
+        profile('No headers'),
+        profile('Bad header only', { headers: [header('Bad Name', '1')] }),
+      ],
+      globalEnabled: true,
+    });
+    const marker = (name: string) => profileRow(popup, name).locator('.profile-applies');
+
+    // The active tab is the extension page itself: nothing applies to it
+    for (const name of ['Scoped', 'Everywhere', 'Off', 'No headers', 'Bad header only']) {
+      await expect(marker(name)).toBeHidden();
+    }
+
+    const tab = await context.newPage();
+    await tab.goto(`${testServerUrl}/page`);
+    await tab.bringToFront();
+    await expect(marker('Scoped')).toBeVisible();
+    await expect(marker('Scoped')).toHaveText('Applies to this tab');
+    await expect(marker('Everywhere')).toBeVisible();
+    await expect(marker('Off')).toBeHidden();
+    await expect(marker('No headers')).toBeHidden();
+    await expect(marker('Bad header only')).toBeHidden();
+
+    // Another site: only the profile without filters applies
+    const other = await context.newPage();
+    await other.goto(`${altServerUrl}/page`);
+    await other.bringToFront();
+    await expect(marker('Scoped')).toBeHidden();
+    await expect(marker('Everywhere')).toBeVisible();
+
+    // Navigating the active tab updates the markers
+    await other.goto(`${testServerUrl}/page`);
+    await expect(marker('Scoped')).toBeVisible();
+
+    // Switching the header modification off hides every marker
+    await setGlobalEnabled(popup, false);
+    await expect(marker('Scoped')).toBeHidden();
+    await expect(marker('Everywhere')).toBeHidden();
+    await setGlobalEnabled(popup, true);
+    await expect(marker('Everywhere')).toBeVisible();
+
+    // Switching a profile off hides its marker
+    await setProfileEnabled(popup, 'Everywhere', false);
+    await expect(marker('Everywhere')).toBeHidden();
+
+    // The marker keeps the contrast requirements
+    // No transitions while the colors change: axe must not measure a half-way color
+    for (const colorScheme of ['light', 'dark'] as const) {
+      await popup.emulateMedia({ colorScheme, reducedMotion: 'reduce' });
+      const results = await new AxeBuilder({ page: popup })
+        .include('#profiles-radio')
+        .withTags(['wcag2a', 'wcag2aa'])
+        .analyze();
+      expect(
+        results.violations.flatMap((v) =>
+          v.nodes.map(
+            (n) => `${colorScheme} ${v.id} ${n.target} ${JSON.stringify(n.any[0]?.data ?? {})}`
+          )
+        )
+      ).toEqual([]);
+    }
+  });
+});
+
+test('the "applies to this tab" marker follows the headers being typed', async ({
+  context,
+  extensionOrigin,
+  testServerUrl,
+}) => {
+  const popup = await openPopup(context, extensionOrigin);
+  await seedState(popup, {
+    profiles: [profile('Work', { headers: [header('', '')] })],
+    globalEnabled: true,
+  });
+  const tab = await context.newPage();
+  await tab.goto(`${testServerUrl}/page`);
+  await tab.bringToFront();
+
+  const marker = profileRow(popup, 'Work').locator('.profile-applies');
+  // A header without name is not applied
+  await expect(marker).toBeHidden();
+  await popup.locator('.header-name').fill('X-Typed');
+  await expect(marker).toBeVisible();
+  await popup.locator('.header-name').fill('');
+  await expect(marker).toBeHidden();
+});
+
+test('the marker is refreshed when leaving the field, before the save delay', async ({
+  context,
+  extensionOrigin,
+  testServerUrl,
+}) => {
+  const popup = await openPopup(context, extensionOrigin);
+  await seedState(popup, {
+    profiles: [profile('Work', { headers: [header('', '')] })],
+    globalEnabled: true,
+  });
+  const tab = await context.newPage();
+  await tab.goto(`${testServerUrl}/page`);
+  await tab.bringToFront();
+
+  const marker = profileRow(popup, 'Work').locator('.profile-applies');
+  await expect(marker).toBeHidden();
+  // Freeze the page timers: the debounced save never fires, only leaving the field saves
+  await popup.clock.install();
+  await popup.locator('.header-name').fill('X-Typed');
+  await popup.locator('.header-name').press('Tab');
+  await expect(marker).toBeVisible();
 });

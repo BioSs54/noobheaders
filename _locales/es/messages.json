@@ -30,19 +30,16 @@
     "message": "Encabezados"
   },
   "addHeader": {
-    "message": "+ Añadir encabezado"
+    "message": "Añadir encabezado"
   },
   "filters": {
     "message": "Filtros"
   },
   "addFilter": {
-    "message": "+ Añadir filtro"
+    "message": "Añadir filtro"
   },
   "noHeadersConfigured": {
     "message": "No hay encabezados configurados"
-  },
-  "clickAddHeaderHint": {
-    "message": "Haz clic en «Añadir encabezado» para comenzar"
   },
   "noFiltersConfigured": {
     "message": "No hay filtros configurados"
@@ -103,9 +100,6 @@
   },
   "debug": {
     "message": "Depuración"
-  },
-  "showDebugInfo": {
-    "message": "Mostrar información de depuración"
   },
   "clearAllData": {
     "message": "Borrar todos los datos"
@@ -222,7 +216,7 @@
     "message": "Exporta tus perfiles para compartir con compañeros de equipo"
   },
   "welcomeTip5": {
-    "message": "Revisa la sección de Depuración si algo no funciona"
+    "message": "Revisa la sección de Depuración de las opciones si algo no funciona"
   },
   "welcomeMadeWith": {
     "message": "Hecho por"
@@ -300,7 +294,7 @@
     "message": "Aplicar los encabezados del perfil «$1»"
   },
   "profilesHint": {
-    "message": "Activa los perfiles que quieres aplicar. Haz clic en un perfil para editarlo."
+    "message": "Activa los perfiles que quieres aplicar. Haz clic en un perfil para editarlo; arrástralo (o Alt + ↑/↓) para moverlo."
   },
   "profileDisabledHint": {
     "message": "Este perfil está desactivado: sus encabezados no se aplican."
@@ -382,5 +376,56 @@
   },
   "profileCounts": {
     "message": "Encabezados: $1 · Filtros: $2"
+  },
+  "appliesToThisTab": {
+    "message": "Se aplica a esta pestaña"
+  },
+  "searchProfiles": {
+    "message": "Buscar perfiles"
+  },
+  "noProfileMatches": {
+    "message": "Ningún perfil coincide."
+  },
+  "exportProfile": {
+    "message": "Exportar este perfil"
+  },
+  "profileExported": {
+    "message": "Perfil «$1» exportado"
+  },
+  "profileNotFound": {
+    "message": "Este perfil ya no existe"
+  },
+  "profilesMerged": {
+    "message": "$1 perfil(es) añadido(s)"
+  },
+  "profilesMergedRenamed": {
+    "message": "$1 perfil(es) añadido(s), $2 renombrado(s) para evitar nombres duplicados"
+  },
+  "headerValueBlank": {
+    "message": "El valor solo contiene espacios: el encabezado se envía con un valor vacío."
+  },
+  "commandToggleDescription": {
+    "message": "Activar o desactivar la modificación de encabezados"
+  },
+  "shortcutTitle": {
+    "message": "Atajo de teclado"
+  },
+  "shortcutDesc": {
+    "message": "Activa o desactiva la modificación de encabezados sin abrir la ventana emergente. El icono muestra brevemente ON u OFF."
+  },
+  "shortcutChangeHint": {
+    "message": "Puedes cambiarlo en los ajustes de atajos de extensiones de tu navegador."
+  },
+  "shortcutNotSet": {
+    "message": "Sin definir"
+  },
+  "refresh": {
+    "message": "Actualizar"
+  },
+  "moveUp": {
+    "message": "Subir"
+  },
+  "moveDown": {
+    "message": "Bajar"
   }
 }

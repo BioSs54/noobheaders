@@ -31,19 +31,16 @@
     "message": "Header"
   },
   "addHeader": {
-    "message": "+ Header hinzufügen"
+    "message": "Header hinzufügen"
   },
   "filters": {
     "message": "Filter"
   },
   "addFilter": {
-    "message": "+ Filter hinzufügen"
+    "message": "Filter hinzufügen"
   },
   "noHeadersConfigured": {
     "message": "Keine Header konfiguriert"
-  },
-  "clickAddHeaderHint": {
-    "message": "Klicke auf „Header hinzufügen“, um zu beginnen"
   },
   "noFiltersConfigured": {
     "message": "Keine Filter konfiguriert"
@@ -104,9 +101,6 @@
   },
   "debug": {
     "message": "Debug"
-  },
-  "showDebugInfo": {
-    "message": "Debug-Infos anzeigen"
   },
   "clearAllData": {
     "message": "Alle Daten löschen"
@@ -223,7 +217,7 @@
     "message": "Exportiere deine Profile, um sie mit Kollegen zu teilen"
   },
   "welcomeTip5": {
-    "message": "Sieh im Debug-Bereich nach, wenn etwas nicht funktioniert"
+    "message": "Sieh im Abschnitt Debug der Optionen nach, wenn etwas nicht funktioniert"
   },
   "welcomeMadeWith": {
     "message": "Erstellt von"
@@ -301,7 +295,7 @@
     "message": "Header des Profils „$1“ anwenden"
   },
   "profilesHint": {
-    "message": "Schalte die Profile ein, die angewendet werden sollen. Klicke auf ein Profil, um es zu bearbeiten."
+    "message": "Schalte die anzuwendenden Profile ein. Klicke auf ein Profil, um es zu bearbeiten; ziehe es (oder Alt + ↑/↓), um es zu verschieben."
   },
   "profileDisabledHint": {
     "message": "Dieses Profil ist aus: Seine Header werden nicht angewendet."
@@ -383,5 +377,56 @@
   },
   "profileCounts": {
     "message": "Header: $1 · Filter: $2"
+  },
+  "appliesToThisTab": {
+    "message": "Gilt für diesen Tab"
+  },
+  "searchProfiles": {
+    "message": "Profile suchen"
+  },
+  "noProfileMatches": {
+    "message": "Kein Profil gefunden."
+  },
+  "exportProfile": {
+    "message": "Dieses Profil exportieren"
+  },
+  "profileExported": {
+    "message": "Profil „$1“ exportiert"
+  },
+  "profileNotFound": {
+    "message": "Dieses Profil existiert nicht mehr"
+  },
+  "profilesMerged": {
+    "message": "$1 Profil(e) hinzugefügt"
+  },
+  "profilesMergedRenamed": {
+    "message": "$1 Profil(e) hinzugefügt, $2 umbenannt, damit die Namen eindeutig bleiben"
+  },
+  "headerValueBlank": {
+    "message": "Der Wert enthält nur Leerzeichen: Der Header wird mit leerem Wert gesendet."
+  },
+  "commandToggleDescription": {
+    "message": "Header-Änderung ein- oder ausschalten"
+  },
+  "shortcutTitle": {
+    "message": "Tastenkürzel"
+  },
+  "shortcutDesc": {
+    "message": "Schaltet die Header-Änderung ein oder aus, ohne das Popup zu öffnen. Das Symbol zeigt kurz ON oder OFF."
+  },
+  "shortcutChangeHint": {
+    "message": "Du kannst es in den Tastenkürzel-Einstellungen für Erweiterungen deines Browsers ändern."
+  },
+  "shortcutNotSet": {
+    "message": "Nicht festgelegt"
+  },
+  "refresh": {
+    "message": "Aktualisieren"
+  },
+  "moveUp": {
+    "message": "Nach oben"
+  },
+  "moveDown": {
+    "message": "Nach unten"
   }
 }

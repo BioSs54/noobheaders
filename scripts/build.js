@@ -77,6 +77,16 @@ const builds = [
   },
   {
     ...commonOptions,
+    entryPoints: ['src/commands.ts'],
+    outfile: 'dist/commands.js',
+  },
+  {
+    ...commonOptions,
+    entryPoints: ['src/badge-flash.ts'],
+    outfile: 'dist/badge-flash.js',
+  },
+  {
+    ...commonOptions,
     entryPoints: ['src/firefox-webrequest.ts'],
     outfile: 'dist/firefox-webrequest.js',
   },

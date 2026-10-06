@@ -1,0 +1,36 @@
+/**
+ * Keyboard shortcuts (manifest "commands")
+ */
+
+import { STORAGE_KEYS } from './types/index.js';
+
+export const TOGGLE_COMMAND = 'toggle-header-modification';
+
+interface LocalStorageArea {
+  get(keys: string[]): Promise<Record<string, unknown>>;
+  set(items: Record<string, unknown>): Promise<void>;
+}
+
+/**
+ * Run a command. Switching the header modification only writes the storage: the background
+ * storage listener then applies the rules and refreshes the badge (and an open popup).
+ * `onToggle` runs with the new state before the write (to show it on the badge first).
+ * Returns whether the command was handled.
+ */
+export async function handleCommand(
+  command: string,
+  storage: LocalStorageArea,
+  onToggle?: (enabled: boolean) => void | Promise<void>
+): Promise<boolean> {
+  if (command !== TOGGLE_COMMAND) return false;
+  const data = await storage.get([STORAGE_KEYS.GLOBAL_ENABLED]);
+  const enabled = !data[STORAGE_KEYS.GLOBAL_ENABLED];
+  try {
+    await onToggle?.(enabled);
+  } catch (error) {
+    // The feedback is cosmetic: it must never prevent the switch itself
+    console.warn('[NoobHeaders] Shortcut feedback failed', error);
+  }
+  await storage.set({ [STORAGE_KEYS.GLOBAL_ENABLED]: enabled });
+  return true;
+}

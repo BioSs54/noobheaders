@@ -26,5 +26,13 @@
   "options_ui": {
     "page": "options.html",
     "open_in_tab": true
+  },
+  "commands": {
+    "toggle-header-modification": {
+      "suggested_key": {
+        "default": "Alt+Shift+H"
+      },
+      "description": "__MSG_commandToggleDescription__"
+    }
   }
 }

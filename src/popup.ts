@@ -4,6 +4,8 @@
 
 import { getBrowserApi } from './browser-compat.js';
 import { detectFilterType } from './filter-utils.js';
+import { HEADER_SUGGESTION_LIST_IDS, installHeaderSuggestions } from './header-suggestions.js';
+import { headerAppliesToUrl } from './header-utils.js';
 import { getMessage } from './i18n.js';
 import {
   isActiveFilter,
@@ -18,7 +20,7 @@ import {
   normalizeProfiles,
   STORAGE_KEYS,
 } from './types/index.js';
-import { createIcon, replaceWithIcon } from './ui-icons.js';
+import { createIcon } from './ui-icons.js';
 
 const browserAPI = getBrowserApi();
 const EASTER_EGG_TRIGGER_COUNT = 3;
@@ -33,6 +35,16 @@ const UNDO_TOAST_DURATION_MS = 6000;
 let profiles: Profile[] = [];
 let activeProfileId: string | null = null;
 let globalEnabled = false;
+
+/** URL of the active tab, to show which profiles apply to it */
+let currentTabUrl: string | undefined;
+/** Text of the profile search field (shown when there are many profiles) */
+let profileSearch = '';
+const PROFILE_SEARCH_THRESHOLD = 6;
+
+type EditorTab = 'headers' | 'filters';
+const EDITOR_TAB_KEY = 'noobheaders_popup_editor_tab';
+let editorTab: EditorTab = 'headers';
 
 // Debounce timer for storage writes + extension sync after text input updates
 let saveTimer: number | null = null;
@@ -459,12 +471,26 @@ async function loadState(): Promise<void> {
 /**
  * Save state to storage
  */
+/** Profiles recently written by this popup, to tell its own storage events from external ones */
+const recentProfilesWrites: string[] = [];
+
+function rememberProfilesWrite(written: Profile[]): void {
+  // Compared after normalization, like the stored value
+  recentProfilesWrites.push(JSON.stringify(normalizeProfiles(written)));
+  if (recentProfilesWrites.length > 5) recentProfilesWrites.shift();
+}
+
+function isOwnProfilesWrite(change: chrome.storage.StorageChange): boolean {
+  return recentProfilesWrites.includes(JSON.stringify(normalizeProfiles(change.newValue)));
+}
+
 async function saveState(): Promise<void> {
   try {
     if (!browserAPI.storage?.local?.set) {
       throw new Error('browserAPI.storage.local.set is not available');
     }
     isUpdatingStorage = true;
+    rememberProfilesWrite(profiles);
     await browserAPI.storage.local.set({
       [STORAGE_KEYS.PROFILES]: profiles,
       [STORAGE_KEYS.ACTIVE_PROFILE]: activeProfileId,
@@ -555,16 +581,6 @@ async function syncExtensionState(): Promise<void> {
   } catch (error) {
     console.warn('Failed to sync extension state', error);
   }
-  await updateDebugInfo();
-}
-
-async function getBackgroundDebugState(): Promise<any | null> {
-  try {
-    return await browserAPI.runtime.sendMessage({ action: 'getDebugState' });
-  } catch (error) {
-    console.warn('Failed to read background debug state', error);
-    return null;
-  }
 }
 
 async function persistPopupState(options: PersistOptions = {}): Promise<void> {
@@ -584,8 +600,6 @@ async function persistPopupState(options: PersistOptions = {}): Promise<void> {
 
   if (syncExtension) {
     await syncExtensionState();
-  } else if (refresh) {
-    await updateDebugInfo();
   }
 }
 
@@ -598,6 +612,17 @@ async function flushPendingSave(): Promise<void> {
   saveTimer = null;
   await saveStateImmediately();
   await syncExtensionState();
+  // Same as the debounced save: counts and "applies to this tab" markers follow the edit
+  renderProfiles();
+}
+
+/** Drop the edit waiting to be saved (replaced by a change made elsewhere) */
+function cancelPendingSave(): void {
+  if (saveTimer !== null) {
+    clearTimeout(saveTimer);
+    saveTimer = null;
+  }
+  clearDraftState();
 }
 
 /**
@@ -616,6 +641,8 @@ function scheduleSave(delay = SAVE_DEBOUNCE_MS): void {
     try {
       await saveStateImmediately();
       await syncExtensionState();
+      // Counts and "applies to this tab" markers follow the typed headers and filters
+      renderProfiles();
     } catch (error) {
       console.error('Debounced save failed', error);
     }
@@ -632,15 +659,17 @@ function setupEventListeners(): void {
   // Profile controls
   document.getElementById('add-profile-btn')?.addEventListener('click', addProfile);
 
-  // Header controls
+  document.getElementById('profile-search')?.addEventListener('input', (event) => {
+    profileSearch = (event.target as HTMLInputElement).value;
+    renderProfiles();
+  });
+
+  // Header and filter controls
   document.getElementById('add-header-btn')?.addEventListener('click', addHeader);
-
-  // Filter controls
+  document.getElementById('empty-add-header-btn')?.addEventListener('click', addHeader);
   document.getElementById('add-filter-btn')?.addEventListener('click', addFilter);
-
-  // Debug
-  document.getElementById('toggle-debug-btn')?.addEventListener('click', toggleDebug);
-  document.getElementById('clear-all-btn')?.addEventListener('click', clearAllData);
+  document.getElementById('empty-add-filter-btn')?.addEventListener('click', addFilter);
+  setupEditorTabs();
 
   // Options
   document.getElementById('options-btn')?.addEventListener('click', () => {
@@ -692,6 +721,19 @@ function renderProfiles(): void {
 
   // The actions of the selected profile are re-created: keep the keyboard focus on them
   const focusedId = radioGroup.contains(document.activeElement) ? document.activeElement?.id : '';
+
+  // Search field: only useful with many profiles; reordering is off while searching
+  const searchInput = document.getElementById('profile-search') as HTMLInputElement | null;
+  const searchEmpty = document.getElementById('profile-search-empty');
+  const showSearch = profiles.length > PROFILE_SEARCH_THRESHOLD || profileSearch !== '';
+  if (searchInput) {
+    searchInput.hidden = !showSearch;
+    if (!showSearch) profileSearch = '';
+    if (searchInput.value !== profileSearch) searchInput.value = profileSearch;
+  }
+  const searchQuery = profileSearch.trim().toLowerCase();
+  const searching = searchQuery !== '';
+  let visibleCount = 0;
 
   radioGroup.replaceChildren();
 
@@ -751,9 +793,15 @@ function renderProfiles(): void {
       String(profile.filters?.length || 0),
     ]);
 
+    const appliesHere = document.createElement('div');
+    appliesHere.className = 'profile-applies';
+    appliesHere.textContent = getMessage('appliesToThisTab');
+    appliesHere.hidden = !profileAppliesToCurrentTab(profile);
+
     headline.appendChild(nameBtn);
     copy.appendChild(headline);
     copy.appendChild(meta);
+    copy.appendChild(appliesHere);
     main.appendChild(toggleLabel);
     main.appendChild(copy);
     row.appendChild(main);
@@ -766,7 +814,7 @@ function renderProfiles(): void {
         hint.textContent = getMessage('profileDisabledHint');
         copy.appendChild(hint);
       }
-      row.appendChild(createSelectedProfileActions());
+      row.appendChild(createSelectedProfileActions(!searching));
     }
 
     // Pointer shortcut: the whole card selects the profile (the switch only turns it on/off).
@@ -777,8 +825,17 @@ function renderProfiles(): void {
       await activateProfile(profile.id);
     });
 
+    if (searching) {
+      row.hidden = !profile.name.toLowerCase().includes(searchQuery);
+      if (!row.hidden) visibleCount += 1;
+    } else {
+      setupProfileReorder(row, profile.id);
+    }
+
     radioGroup.appendChild(row);
   });
+
+  if (searchEmpty) searchEmpty.hidden = !searching || visibleCount > 0;
 
   if (focusedId) document.getElementById(focusedId)?.focus();
   // Keep the selected profile visible in the scrollable list, only when the selection changes
@@ -806,7 +863,7 @@ function scrollRowIntoList(list: HTMLElement, row: HTMLElement | null): void {
 /**
  * Rename, duplicate and delete act on the selected profile: they are shown in its row
  */
-function createSelectedProfileActions(): HTMLDivElement {
+function createSelectedProfileActions(canReorder: boolean): HTMLDivElement {
   const actions = document.createElement('div');
   actions.className = 'profile-row-actions';
 
@@ -814,6 +871,13 @@ function createSelectedProfileActions(): HTMLDivElement {
   renameBtn.id = 'rename-profile-btn';
   const duplicateBtn = createIconButton('copy', getMessage('duplicate'), '', duplicateProfile);
   duplicateBtn.id = 'duplicate-profile-btn';
+  const exportBtn = createIconButton(
+    'download',
+    getMessage('exportProfile'),
+    '',
+    exportSelectedProfile
+  );
+  exportBtn.id = 'export-profile-btn';
   const deleteBtn = createIconButton(
     'trash',
     getMessage('deleteProfile'),
@@ -824,8 +888,210 @@ function createSelectedProfileActions(): HTMLDivElement {
   // The last profile cannot be deleted
   deleteBtn.disabled = profiles.length <= 1;
 
-  actions.append(renameBtn, duplicateBtn, deleteBtn);
+  // Move up / down: visible alternative to drag and drop and Alt + arrow keys. Off while the
+  // list is filtered by the search, like the other ways to reorder.
+  const index = profiles.findIndex((profile) => profile.id === activeProfileId);
+  const moveUpBtn = createIconButton('chevron-up', getMessage('moveUp'), '', () =>
+    moveSelectedProfile(-1)
+  );
+  moveUpBtn.id = 'move-up-profile-btn';
+  moveUpBtn.disabled = !canReorder || index <= 0;
+  const moveDownBtn = createIconButton('chevron-down', getMessage('moveDown'), '', () =>
+    moveSelectedProfile(1)
+  );
+  moveDownBtn.id = 'move-down-profile-btn';
+  moveDownBtn.disabled = !canReorder || index === -1 || index >= profiles.length - 1;
+
+  // Keyboard order: edit actions first, then moves (the grid places the moves on the left)
+  actions.append(renameBtn, duplicateBtn, exportBtn, deleteBtn, moveUpBtn, moveDownBtn);
   return actions;
+}
+
+async function moveSelectedProfile(step: -1 | 1): Promise<void> {
+  if (!activeProfileId) return;
+  const index = profiles.findIndex((profile) => profile.id === activeProfileId);
+  await moveProfile(activeProfileId, index + step);
+  // At the top or bottom the button is now disabled: keep the focus on the other one
+  const clicked = document.getElementById(
+    step < 0 ? 'move-up-profile-btn' : 'move-down-profile-btn'
+  );
+  const other = document.getElementById(step < 0 ? 'move-down-profile-btn' : 'move-up-profile-btn');
+  if (clicked instanceof HTMLButtonElement && clicked.disabled) other?.focus();
+}
+
+function isWebUrl(url: string | undefined): boolean {
+  return typeof url === 'string' && /^(https?|wss?):/i.test(url);
+}
+
+/** Whether at least one header of the profile is applied to the active tab */
+function profileAppliesToCurrentTab(profile: Profile): boolean {
+  if (!globalEnabled || !profile.enabled || !isWebUrl(currentTabUrl)) return false;
+  return (profile.headers ?? []).some((header) =>
+    headerAppliesToUrl(profile, header, currentTabUrl)
+  );
+}
+
+async function loadCurrentTabUrl(): Promise<void> {
+  try {
+    const [tab] = await browserAPI.tabs.query({ active: true, currentWindow: true });
+    currentTabUrl = tab?.url;
+  } catch {
+    currentTabUrl = undefined;
+  }
+}
+
+/** Refresh the "applies to this tab" markers when the active tab or its URL changes */
+function watchCurrentTab(): void {
+  const refresh = async () => {
+    await loadCurrentTabUrl();
+    renderProfiles();
+  };
+  browserAPI.tabs.onActivated.addListener(() => void refresh());
+  browserAPI.tabs.onUpdated.addListener((_tabId, changeInfo, tab) => {
+    if (changeInfo.url && tab.active) void refresh();
+  });
+}
+
+/**
+ * Move a profile to another position. The order matters: when several profiles set the
+ * same header, the later one wins (the selected profile always wins).
+ */
+async function moveProfile(profileId: string, toIndex: number): Promise<void> {
+  const fromIndex = profiles.findIndex((profile) => profile.id === profileId);
+  const target = Math.max(0, Math.min(profiles.length - 1, toIndex));
+  if (fromIndex === -1 || fromIndex === target) return;
+
+  await flushPendingSave();
+  const [moved] = profiles.splice(fromIndex, 1);
+  profiles.splice(target, 0, moved);
+  await persistPopupState({ refresh: true });
+}
+
+function focusProfileName(profileId: string): void {
+  const row = document.querySelector(`.profile-row[data-profile-id="${CSS.escape(profileId)}"]`);
+  row?.querySelector<HTMLButtonElement>('.profile-name-btn')?.focus();
+}
+
+/**
+ * Reorder with the mouse (drag and drop) or the keyboard (Alt + Up / Down)
+ */
+function setupProfileReorder(row: HTMLLIElement, profileId: string): void {
+  row.draggable = true;
+
+  row.addEventListener('keydown', async (event) => {
+    if (!event.altKey || (event.key !== 'ArrowUp' && event.key !== 'ArrowDown')) return;
+    event.preventDefault();
+    const index = profiles.findIndex((profile) => profile.id === profileId);
+    await moveProfile(profileId, index + (event.key === 'ArrowUp' ? -1 : 1));
+    focusProfileName(profileId);
+  });
+
+  row.addEventListener('dragstart', (event) => {
+    event.dataTransfer?.setData('text/plain', profileId);
+    if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+    row.classList.add('is-dragging');
+  });
+  row.addEventListener('dragend', () => {
+    row.classList.remove('is-dragging');
+  });
+
+  const dropPosition = (event: DragEvent): 'before' | 'after' => {
+    const box = row.getBoundingClientRect();
+    return event.clientY < box.top + box.height / 2 ? 'before' : 'after';
+  };
+  const clearMarkers = () => row.classList.remove('drop-before', 'drop-after');
+
+  row.addEventListener('dragover', (event) => {
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+    const position = dropPosition(event);
+    row.classList.toggle('drop-before', position === 'before');
+    row.classList.toggle('drop-after', position === 'after');
+  });
+  row.addEventListener('dragleave', clearMarkers);
+  row.addEventListener('drop', async (event) => {
+    event.preventDefault();
+    clearMarkers();
+    const draggedId = event.dataTransfer?.getData('text/plain');
+    if (!draggedId || draggedId === profileId) return;
+
+    const fromIndex = profiles.findIndex((profile) => profile.id === draggedId);
+    let toIndex = profiles.findIndex((profile) => profile.id === profileId);
+    if (dropPosition(event) === 'after') toIndex += 1;
+    // Removing the dragged profile first shifts the positions after it
+    if (fromIndex < toIndex) toIndex -= 1;
+    await moveProfile(draggedId, toIndex);
+  });
+}
+
+/**
+ * Export the selected profile. The popup cannot reliably download files (it closes when it
+ * loses the focus): the options page does it.
+ */
+async function exportSelectedProfile(): Promise<void> {
+  const active = getActiveProfile();
+  if (!active) return;
+  await flushPendingSave();
+  await browserAPI.storage.local.set({
+    pendingAction: 'export',
+    pendingExportProfileId: active.id,
+  });
+  browserAPI.runtime.openOptionsPage();
+}
+
+function readSavedEditorTab(): EditorTab {
+  try {
+    return window.localStorage.getItem(EDITOR_TAB_KEY) === 'filters' ? 'filters' : 'headers';
+  } catch {
+    return 'headers';
+  }
+}
+
+/**
+ * Show the headers or the filters of the selected profile (ARIA tabs)
+ */
+function showEditorTab(tab: EditorTab, focusTab = false): void {
+  editorTab = tab;
+  const parts: Array<[EditorTab, string, string, string]> = [
+    ['headers', 'tab-headers', 'panel-headers', 'add-header-btn'],
+    ['filters', 'tab-filters', 'panel-filters', 'add-filter-btn'],
+  ];
+  for (const [name, tabId, panelId, addId] of parts) {
+    const selected = name === tab;
+    const tabEl = document.getElementById(tabId);
+    tabEl?.setAttribute('aria-selected', String(selected));
+    tabEl?.setAttribute('tabindex', selected ? '0' : '-1');
+    if (selected && focusTab) tabEl?.focus();
+    const panel = document.getElementById(panelId);
+    if (panel) panel.hidden = !selected;
+    const addBtn = document.getElementById(addId);
+    if (addBtn) addBtn.hidden = !selected;
+  }
+  try {
+    window.localStorage.setItem(EDITOR_TAB_KEY, tab);
+  } catch {
+    // localStorage can be unavailable: the tab is then not remembered
+  }
+}
+
+function setupEditorTabs(): void {
+  document.getElementById('tab-headers')?.addEventListener('click', () => showEditorTab('headers'));
+  document.getElementById('tab-filters')?.addEventListener('click', () => showEditorTab('filters'));
+  document.querySelector('.editor-tabs')?.addEventListener('keydown', (event) => {
+    const key = (event as KeyboardEvent).key;
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(key)) return;
+    event.preventDefault();
+    const next: EditorTab =
+      key === 'Home'
+        ? 'headers'
+        : key === 'End'
+          ? 'filters'
+          : editorTab === 'headers'
+            ? 'filters'
+            : 'headers';
+    showEditorTab(next, true);
+  });
+  showEditorTab(readSavedEditorTab());
 }
 
 /**
@@ -847,7 +1113,6 @@ function refreshProfileViews(): void {
 
 async function refreshPopupUi(): Promise<void> {
   refreshProfileViews();
-  await updateDebugInfo();
 }
 
 async function activateProfile(profileId: string, persist = true): Promise<void> {
@@ -901,6 +1166,11 @@ function restoreFocus(container: HTMLElement, state: ReturnType<typeof captureFo
   }
 }
 
+function setText(id: string, text: string): void {
+  const element = document.getElementById(id);
+  if (element) element.textContent = text;
+}
+
 /**
  * Render headers list
  */
@@ -910,6 +1180,8 @@ function renderHeaders(): void {
   const activeProfile = getActiveProfile();
 
   if (!container || !emptyState) return;
+
+  setText('headers-count', String(activeProfile?.headers.length ?? 0));
 
   // Preserve focus/selection in header inputs across re-renders
   const focusState = captureFocus(container);
@@ -951,7 +1223,7 @@ function createRowToggle(checked: boolean, label: string, onChange: () => void) 
 }
 
 function createIconButton(
-  icon: 'copy' | 'edit' | 'trash',
+  icon: 'chevron-down' | 'chevron-up' | 'copy' | 'download' | 'edit' | 'trash',
   label: string,
   className: string,
   onClick: () => void
@@ -1028,13 +1300,19 @@ function createHeaderElement(header: Header, index: number): HTMLDivElement {
   removalNote.className = 'field-note';
   removalNote.id = `header-note-${index}`;
   const updateRemovalNote = () => {
-    const showNote = header.name.trim() !== '' && header.value === '';
-    removalNote.hidden = !showNote;
-    removalNote.textContent = showNote
-      ? getMessage(
-          header.type === 'response' ? 'headerRemovedFromResponses' : 'headerRemovedFromRequests'
-        )
-      : '';
+    const hasName = header.name.trim() !== '';
+    let note = '';
+    if (hasName && header.value === '') {
+      note = getMessage(
+        header.type === 'response' ? 'headerRemovedFromResponses' : 'headerRemovedFromRequests'
+      );
+    } else if (hasName && header.value.trim() === '') {
+      // Spaces are not an empty value: the header is sent, with a blank value
+      note = getMessage('headerValueBlank');
+    }
+    removalNote.hidden = note === '';
+    removalNote.textContent = note;
+    nameInput.setAttribute('list', HEADER_SUGGESTION_LIST_IDS[header.type]);
   };
 
   // Name input
@@ -1116,6 +1394,8 @@ function renderFilters(): void {
   const activeProfile = getActiveProfile();
 
   if (!container || !emptyState) return;
+
+  setText('filters-count', String(activeProfile?.filters.length ?? 0));
 
   const focusState = captureFocus(container);
 
@@ -1330,6 +1610,8 @@ async function duplicateProfile(): Promise<void> {
 async function toggleGlobalEnabled(e: Event): Promise<void> {
   globalEnabled = (e.target as HTMLInputElement).checked;
   renderGlobalState();
+  // The "applies to this tab" markers depend on the global switch
+  renderProfiles();
   await persistPopupState({ syncExtension: true });
 }
 
@@ -1346,6 +1628,7 @@ function focusRowInput(listId: string, index: number, field: string): void {
 async function addHeader(): Promise<void> {
   const activeProfile = getActiveProfile();
   if (!activeProfile) return;
+  showEditorTab('headers');
 
   activeProfile.headers.push({
     enabled: true,
@@ -1447,6 +1730,7 @@ async function addFilter(): Promise<void> {
     console.warn('No active profile found when adding filter');
     return;
   }
+  showEditorTab('filters');
 
   activeProfile.filters.push({
     enabled: true,
@@ -1573,162 +1857,6 @@ async function initializeNoobMode(): Promise<void> {
   await clearNoobMode(false);
 }
 
-function isDebugOpen(): boolean {
-  const content = document.getElementById('debug-content');
-  return Boolean(content && content.style.display !== 'none');
-}
-
-/**
- * Toggle debug section
- */
-async function toggleDebug(): Promise<void> {
-  const content = document.getElementById('debug-content') as HTMLElement;
-  const btn = document.getElementById('toggle-debug-btn') as HTMLButtonElement | null;
-
-  if (!content || !btn) return;
-
-  if (content.style.display === 'none') {
-    content.style.display = 'block';
-    btn.setAttribute('aria-expanded', 'true');
-    replaceWithIcon(btn, 'chevron-up', 'ui-icon ui-icon--sm');
-    await updateDebugInfo();
-  } else {
-    content.style.display = 'none';
-    btn.setAttribute('aria-expanded', 'false');
-    replaceWithIcon(btn, 'chevron-down', 'ui-icon ui-icon--sm');
-  }
-}
-
-/**
- * Update debug info (read-only: never changes the extension state).
- * Skipped while the debug panel is collapsed.
- */
-async function updateDebugInfo(): Promise<void> {
-  if (!isDebugOpen()) return;
-
-  const activeProfile = getActiveProfile();
-  let activeRuleCount = 0;
-  let dynamicRules: chrome.declarativeNetRequest.Rule[] = [];
-  let syncStatus = '-';
-  let storageSnapshot: any = null;
-
-  const debugState = await getBackgroundDebugState();
-
-  if (debugState?.success) {
-    dynamicRules = Array.isArray(debugState.dynamicRules) ? debugState.dynamicRules : [];
-    activeRuleCount = Number(debugState.activeRuleCount ?? dynamicRules.length) || 0;
-    syncStatus = `${debugState.lastComputedRuleCount}/${debugState.lastAppliedRuleCount}`;
-    storageSnapshot = debugState.storageSnapshot || null;
-    if (debugState.lastError) {
-      syncStatus = `ERR: ${debugState.lastError}`;
-    }
-    if (storageSnapshot && !debugState.lastError) {
-      syncStatus += ` | storage:${storageSnapshot.profileCount}/${storageSnapshot.profilesToApplyCount}/${storageSnapshot.globalEnabled ? 'on' : 'off'}`;
-    }
-  }
-
-  const yes = getMessage('yes');
-  const no = getMessage('no');
-
-  const rulesCountEl = document.getElementById('debug-rules-count');
-  if (rulesCountEl) {
-    rulesCountEl.textContent = activeRuleCount.toString();
-  }
-
-  const globalEnabledEl = document.getElementById('debug-global-enabled');
-  if (globalEnabledEl) {
-    globalEnabledEl.textContent = globalEnabled ? yes : no;
-  }
-
-  const activeProfileEl = document.getElementById('debug-active-profile');
-  if (activeProfileEl) {
-    activeProfileEl.textContent = activeProfile?.name || '-';
-  }
-
-  const storageSizeEl = document.getElementById('debug-storage-size');
-  if (storageSizeEl) {
-    try {
-      const bytesUsed = await browserAPI.storage.local.getBytesInUse();
-      storageSizeEl.textContent = `${(bytesUsed / 1024).toFixed(2)} KB`;
-    } catch {
-      // getBytesInUse is not implemented in every Firefox version
-      storageSizeEl.textContent = '-';
-    }
-  }
-
-  const syncEl = document.getElementById('debug-rule-sync');
-  if (syncEl) {
-    syncEl.textContent = syncStatus;
-  }
-
-  const previewEl = document.getElementById('debug-rules-preview');
-  if (previewEl) {
-    if (dynamicRules.length === 0) {
-      const debugLines = [getMessage('debugNoRules')];
-      if (storageSnapshot) {
-        debugLines.push(`Storage profiles: ${storageSnapshot.profileCount}`);
-        debugLines.push(`Storage profiles to apply: ${storageSnapshot.profilesToApplyCount}`);
-        debugLines.push(`Storage global enabled: ${storageSnapshot.globalEnabled ? yes : no}`);
-        debugLines.push(`Storage active profile: ${storageSnapshot.activeProfileName || '-'}`);
-        debugLines.push(
-          `Storage active headers: ${storageSnapshot.activeProfileHeaderCount} (${storageSnapshot.activeProfileEnabledHeaderCount} enabled)`
-        );
-        debugLines.push(
-          `Storage active filters: ${storageSnapshot.activeProfileFilterCount} (${storageSnapshot.activeProfileEnabledFilterCount} enabled)`
-        );
-        for (const [index, header] of (storageSnapshot.activeProfileHeaders || []).entries()) {
-          debugLines.push(
-            `Header ${index + 1}: ${header.enabled ? 'on' : 'off'} ${header.type} ${header.name || '<empty>'} = ${header.value || '<empty>'}`
-          );
-        }
-        for (const [index, filter] of (storageSnapshot.activeProfileFilters || []).entries()) {
-          debugLines.push(
-            `Filter ${index + 1}: ${filter.enabled ? 'on' : 'off'} ${filter.type} ${filter.value || '<empty>'}`
-          );
-        }
-      }
-      previewEl.textContent = debugLines.join('\n');
-    } else {
-      previewEl.textContent = dynamicRules
-        .slice(0, 8)
-        .map((rule) => {
-          const requestHeader = rule.action.requestHeaders?.[0];
-          const responseHeader = rule.action.responseHeaders?.[0];
-          const header = requestHeader ?? responseHeader;
-          const direction = requestHeader ? 'REQ' : 'RES';
-          const operation = header?.operation === 'remove' ? 'remove' : header?.value || 'set';
-          const condition =
-            rule.condition.regexFilter ??
-            rule.condition.requestDomains?.join(', ') ??
-            rule.condition.urlFilter;
-          return `${rule.id}. ${direction} ${header?.header || 'unknown'} = ${operation} :: ${condition}`;
-        })
-        .join('\n');
-    }
-  }
-}
-
-/**
- * Clear all data
- */
-async function clearAllData(): Promise<void> {
-  const confirmed = await showConfirm(getMessage('clearAllData'), getMessage('confirmClearAll'));
-  if (!confirmed) return;
-
-  if (saveTimer !== null) {
-    clearTimeout(saveTimer);
-    saveTimer = null;
-  }
-  clearDraftState();
-  // Our own reload below handles the change: ignore the storage events it triggers
-  isUpdatingStorage = true;
-  await browserAPI.storage.local.clear();
-  await loadState();
-  await clearNoobMode(false);
-  await refreshPopupUi();
-  showToast(getMessage('dataCleared'), 'success');
-}
-
 /**
  * Easter egg - Noob mode
  */
@@ -1764,9 +1892,11 @@ async function triggerEasterEgg(): Promise<void> {
 // Initialize popup
 document.addEventListener('DOMContentLoaded', async () => {
   renderVersion();
-  await loadState();
+  installHeaderSuggestions();
+  await Promise.all([loadState(), loadCurrentTabUrl()]);
   await initializeNoobMode();
   setupEventListeners();
+  watchCurrentTab();
   await refreshPopupUi();
   document.body.dataset.ready = 'true';
 
@@ -1783,13 +1913,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
-    // Ignore changes that we caused ourselves to prevent re-render during typing
-    if (isUpdatingStorage) {
+    const profilesChange = changes[STORAGE_KEYS.PROFILES];
+    const externalProfiles = Boolean(profilesChange) && !isOwnProfilesWrite(profilesChange);
+
+    // Ignore the events of our own writes (they would re-render while typing)
+    if (isUpdatingStorage && !externalProfiles) {
       return;
     }
 
     if (
-      changes[STORAGE_KEYS.PROFILES] ||
+      profilesChange ||
       changes[STORAGE_KEYS.ACTIVE_PROFILE] ||
       changes[STORAGE_KEYS.GLOBAL_ENABLED]
     ) {
@@ -1797,9 +1930,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
 
-      // Don't clobber an edit that is still being typed
-      if (saveTimer !== null) {
+      if (profilesChange && profilesChange.newValue === undefined) {
+        // Storage cleared elsewhere (options "clear all data"): drop the pending edit and wait
+        // for the data written right after, instead of recreating a demo profile now
+        cancelPendingSave();
         return;
+      }
+
+      if (saveTimer !== null) {
+        if (externalProfiles) {
+          // The profiles were replaced elsewhere (options import): that wins over the edit
+          // being typed, which must not write the old profiles back
+          cancelPendingSave();
+        } else {
+          // Only the switch or the selection changed (shortcut, auto-switch): keep the edit
+          // being typed, and take the new global switch so the pending save keeps it
+          if (changes[STORAGE_KEYS.GLOBAL_ENABLED]) {
+            globalEnabled = Boolean(changes[STORAGE_KEYS.GLOBAL_ENABLED].newValue);
+            const globalToggle = document.getElementById('global-enabled') as HTMLInputElement;
+            if (globalToggle) globalToggle.checked = globalEnabled;
+            persistDraftState();
+            renderGlobalState();
+            renderProfiles();
+          }
+          return;
+        }
       }
 
       await loadState();

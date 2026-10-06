@@ -203,6 +203,21 @@ test.describe('Header engine', () => {
     await expectRequestHeader(probe, testServerUrl, 'X-Env', 'base');
   });
 
+  test('among the other profiles, the later one in the list wins', async ({
+    background,
+    testServerUrl,
+  }) => {
+    const first = profile('First', { headers: [header('X-Order', 'first')] });
+    const second = profile('Second', { headers: [header('X-Order', 'second')] });
+    const selected = profile('Selected', { headers: [header('X-Selected', '1')] });
+    await seed(background, { profiles: [first, second, selected], activeProfileId: 'Selected' });
+    await expectRequestHeader(probe, testServerUrl, 'X-Order', 'second');
+
+    // Reordering the profiles (popup drag and drop) changes the winner
+    await setStorage(background, { [STORAGE_KEYS.profiles]: [second, first, selected] });
+    await expectRequestHeader(probe, testServerUrl, 'X-Order', 'first');
+  });
+
   test('the badge counts the headers applying to the active tab', async ({
     background,
     context,

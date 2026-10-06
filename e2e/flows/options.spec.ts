@@ -1,6 +1,7 @@
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import type { Page } from '@playwright/test';
 import { expect, test } from '../fixtures';
 import {
   answerPrompt,
@@ -15,6 +16,13 @@ import {
   seedState,
   setToggle,
 } from '../helpers';
+
+async function setStorageValues(page: Page, values: Record<string, unknown>): Promise<void> {
+  await page.evaluate(async (items) => {
+    const runtime = globalThis as any;
+    await (runtime.browser ?? runtime.chrome).storage.local.set(items);
+  }, values);
+}
 
 let tmpDir: string;
 
@@ -60,6 +68,131 @@ test.describe('Options page', () => {
     await expect(popup.locator('#active-profile-name')).toHaveText('Auto');
     await expect(popup.locator('#profile-disabled-hint')).toBeHidden();
     await expect.poll(async () => (await readProfiles(popup))[1]?.enabled).toBe(true);
+  });
+
+  test('debug panel shows the live rule state', async ({ context, extensionOrigin }) => {
+    const options = await openOptions(context, extensionOrigin);
+    await seedState(options, {
+      profiles: [profile('Work', { headers: [header('X-Debug', '1'), header('X-Two', '2')] })],
+      globalEnabled: true,
+    });
+
+    await expect(options.locator('#debug-content')).toBeVisible();
+    // Refreshed after the storage change, without reloading the page
+    await expect(options.locator('#debug-rules-count')).toHaveText('2');
+    await expect(options.locator('#debug-active-profile')).toHaveText('Work');
+    await expect(options.locator('#debug-global-enabled')).toHaveText('Yes');
+    await expect(options.locator('#debug-rule-sync')).not.toContainText('ERR');
+    await expect(options.locator('#debug-rules-preview')).toContainText('X-Debug');
+
+    await setStorageValues(options, { [STORAGE_KEYS.globalEnabled]: false });
+    await expect(options.locator('#debug-rules-count')).toHaveText('0');
+    await expect(options.locator('#debug-global-enabled')).toHaveText('No');
+
+    await options.click('#refresh-debug-btn');
+    await expect(options.locator('#debug-rules-count')).toHaveText('0');
+  });
+
+  test('clear all data asks for confirmation and resets to the demo profile', async ({
+    context,
+    extensionOrigin,
+  }) => {
+    const popup = await openPopup(context, extensionOrigin);
+    await seedState(popup, {
+      profiles: [profile('Work'), profile('Staging')],
+      globalEnabled: true,
+      extra: { autoEnable: true },
+    });
+    const options = await openOptions(context, extensionOrigin);
+
+    await options.click('#clear-all-btn');
+    await expect(options.locator('#confirm-modal')).toBeVisible();
+    // Destructive action: the safe choice is focused
+    await expect(options.locator('#confirm-cancel')).toBeFocused();
+    await options.click('#confirm-cancel');
+    await expect(options.locator('#confirm-modal')).toHaveCount(0);
+    expect(await readProfiles(options)).toHaveLength(2);
+
+    await options.click('#clear-all-btn');
+    await options.click('#confirm-ok');
+    await expect(options.locator('.toast.success')).toBeVisible();
+
+    const storage = await readStorage(options);
+    expect(storage[STORAGE_KEYS.profiles]).toHaveLength(1);
+    expect(storage[STORAGE_KEYS.profiles][0].enabled).toBe(false);
+    expect(storage[STORAGE_KEYS.globalEnabled]).toBe(false);
+    expect(storage.autoEnable).toBeUndefined();
+    await expect(options.locator('#auto-enable')).not.toBeChecked();
+
+    // An open popup follows
+    await expect(popup.locator('.profile-row')).toHaveCount(1);
+    await expect(popup.locator('#global-enabled')).not.toBeChecked();
+  });
+
+  test('shows the keyboard shortcut of the header modification switch', async ({
+    context,
+    extensionOrigin,
+  }) => {
+    const options = await openOptions(context, extensionOrigin);
+    await expect(options.locator('#shortcut-value')).toHaveText('Alt+Shift+H');
+  });
+
+  test('importing without name clash only says how many were added', async ({
+    context,
+    extensionOrigin,
+  }) => {
+    const options = await openOptions(context, extensionOrigin);
+    await seedState(options, { profiles: [profile('Work')] });
+
+    const file = await writeJson('profiles.json', [{ name: 'Local', headers: [], filters: [] }]);
+    await options.locator('#import-profiles-input').setInputFiles(file);
+    await options.click('#import-merge');
+    await expect(options.locator('.toast.success')).toHaveText('1 profile(s) added');
+  });
+
+  test('the popup exports the selected profile only', async ({ context, extensionOrigin }) => {
+    const popup = await openPopup(context, extensionOrigin);
+    await seedState(popup, {
+      profiles: [
+        profile('Work'),
+        profile('Staging API', { headers: [header('X-Stage', '1')], filters: [] }),
+      ],
+      activeProfileId: 'Staging API',
+    });
+
+    // The options page opens and downloads the file (a popup cannot download reliably)
+    const optionsPromise = context.waitForEvent('page');
+    await popup.click('#export-profile-btn');
+    const options = await optionsPromise;
+    const download = await options.waitForEvent('download');
+    expect(download.suggestedFilename()).toMatch(/^noobheaders-profile-staging-api-.*\.json$/);
+    const exported = JSON.parse(await readFile(await download.path(), 'utf-8'));
+    expect(exported).toHaveLength(1);
+    expect(exported[0]).toMatchObject({ name: 'Staging API', headers: [{ name: 'X-Stage' }] });
+    await expect(options.locator('.toast.success')).toHaveText('Profile "Staging API" exported');
+
+    // The request is consumed
+    expect((await readStorage(options)).pendingAction).toBeUndefined();
+
+    // With the options page already open, it exports again without reloading
+    await popup.getByRole('button', { name: 'Work', exact: true }).click();
+    const secondDownload = options.waitForEvent('download');
+    await popup.click('#export-profile-btn');
+    const second = JSON.parse(await readFile(await (await secondDownload).path(), 'utf-8'));
+    expect(second.map((p: { name: string }) => p.name)).toEqual(['Work']);
+
+    // The exported file can be imported again
+    const file = await writeJson('profile.json', exported);
+    await options.locator('#import-profiles-input').setInputFiles(file);
+    await options.click('#import-merge');
+    await expect(options.locator('.toast.success').last()).toHaveText(
+      '1 profile(s) added, 1 renamed to keep names unique'
+    );
+    expect((await readProfiles(options)).map((p) => p.name)).toEqual([
+      'Work',
+      'Staging API',
+      'Staging API (2)',
+    ]);
   });
 
   test('export downloads every profile as JSON', async ({ context, extensionOrigin }) => {
@@ -123,8 +256,24 @@ test.describe('Options page', () => {
       { name: 'Local', headers: [], filters: [] },
     ]);
     await options.locator('#import-profiles-input').setInputFiles(file);
+
+    // Keyboard: the focus stays in the dialog, and comes back to it from outside the buttons
+    await expect(options.locator('#import-merge')).toBeFocused();
+    await options.keyboard.press('Tab');
+    await expect(options.locator('#confirm-cancel')).toBeFocused();
+    await options.keyboard.press('Shift+Tab');
+    await expect(options.locator('#import-merge')).toBeFocused();
+    await options.locator('#confirm-message').click();
+    await options.keyboard.press('Shift+Tab');
+    await expect(options.locator('#import-merge')).toBeFocused();
+    await options.locator('#confirm-message').click();
+    await options.keyboard.press('Tab');
+    await expect(options.locator('#confirm-cancel')).toBeFocused();
+
     await options.click('#import-merge');
-    await expect(options.locator('.toast.success')).toBeVisible();
+    await expect(options.locator('.toast.success')).toHaveText(
+      '2 profile(s) added, 1 renamed to keep names unique'
+    );
 
     const storage = await readStorage(options);
     const profiles = storage[STORAGE_KEYS.profiles];

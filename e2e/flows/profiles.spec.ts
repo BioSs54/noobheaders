@@ -87,7 +87,6 @@ test.describe('Profiles', () => {
 
     await answerPrompt(page, 'Production');
     await expect(page.locator('#active-profile-name')).toHaveText('Production');
-    await expect(page.locator('[data-active-profile-name]')).toHaveText('Production');
     await expect(profileRow(page, 'Production')).toBeVisible();
     // The row is re-rendered: the focus comes back to its rename button
     await expect(page.locator('#rename-profile-btn')).toBeFocused();
@@ -197,6 +196,154 @@ test.describe('Profiles', () => {
     await expect.poll(async () => (await readProfiles(page))[0].enabled).toBe(true);
     expect(await list.evaluate((el) => el.scrollTop)).toBe(0);
     expect(await isRowInList('Profile 11')).toBe(false);
+  });
+
+  test('profiles are reordered with Alt + arrow keys', async ({ context, extensionOrigin }) => {
+    const page = await openPopup(context, extensionOrigin);
+    await seedState(page, {
+      profiles: [profile('A'), profile('B'), profile('C')],
+      activeProfileId: 'B',
+    });
+    const names = async () => (await readProfiles(page)).map((p) => p.name);
+    const rowNames = () => page.locator('.profile-row .profile-name-btn').allTextContents();
+
+    await profileRow(page, 'A').getByRole('button', { name: 'A', exact: true }).focus();
+    await page.keyboard.press('Alt+ArrowDown');
+    await expect.poll(names).toEqual(['B', 'A', 'C']);
+    await expect.poll(rowNames).toEqual(['B', 'A', 'C']);
+    // The focus follows the moved profile, so it can be moved again
+    await expect(page.getByRole('button', { name: 'A', exact: true })).toBeFocused();
+    await page.keyboard.press('Alt+ArrowDown');
+    await expect.poll(names).toEqual(['B', 'C', 'A']);
+
+    // Already last: nothing changes
+    await page.keyboard.press('Alt+ArrowDown');
+    await page.keyboard.press('Alt+ArrowUp');
+    await expect.poll(names).toEqual(['B', 'A', 'C']);
+
+    // Moving does not change the selection or the enabled state
+    expect(await readActiveProfileId(page)).toBe('B');
+    expect((await readProfiles(page)).every((p) => p.enabled)).toBe(true);
+  });
+
+  test('the selected profile has move up and move down buttons', async ({
+    context,
+    extensionOrigin,
+  }) => {
+    const page = await openPopup(context, extensionOrigin);
+    await seedState(page, {
+      profiles: [profile('A'), profile('B'), profile('C')],
+      activeProfileId: 'B',
+    });
+    const names = async () => (await readProfiles(page)).map((p) => p.name);
+    const up = page.locator('#move-up-profile-btn');
+    const down = page.locator('#move-down-profile-btn');
+
+    // Only on the selected profile, labelled, and big enough to click (WCAG 2.5.8)
+    await expect(up).toHaveCount(1);
+    await expect(profileRow(page, 'B').locator('#move-up-profile-btn')).toBeVisible();
+    await expect(up).toHaveAttribute('aria-label', 'Move up');
+    await expect(down).toHaveAttribute('aria-label', 'Move down');
+    for (const button of [up, down]) {
+      const box = await button.boundingBox();
+      expect(box?.width).toBeGreaterThanOrEqual(24);
+      expect(box?.height).toBeGreaterThanOrEqual(24);
+    }
+    await expect(up).toBeEnabled();
+    await expect(down).toBeEnabled();
+
+    await up.click();
+    await expect.poll(names).toEqual(['B', 'A', 'C']);
+    // First now: "up" is disabled and the focus goes to "down"
+    await expect(up).toBeDisabled();
+    await expect(down).toBeFocused();
+
+    await page.keyboard.press('Enter');
+    await expect.poll(names).toEqual(['A', 'B', 'C']);
+    await expect(down).toBeFocused();
+    await down.click();
+    await expect.poll(names).toEqual(['A', 'C', 'B']);
+    await expect(down).toBeDisabled();
+    await expect(up).toBeFocused();
+
+    // The selection does not change
+    expect(await readActiveProfileId(page)).toBe('B');
+
+    // A single profile cannot move
+    await seedState(page, { profiles: [profile('Only')] });
+    await expect(up).toBeDisabled();
+    await expect(down).toBeDisabled();
+  });
+
+  test('profiles are reordered with drag and drop', async ({ context, extensionOrigin }) => {
+    const page = await openPopup(context, extensionOrigin);
+    await seedState(page, { profiles: [profile('A'), profile('B'), profile('C')] });
+    const names = async () => (await readProfiles(page)).map((p) => p.name);
+
+    // Drop C on the top half of A: before A
+    await profileRow(page, 'C').dragTo(profileRow(page, 'A'), {
+      targetPosition: { x: 40, y: 4 },
+    });
+    await expect.poll(names).toEqual(['C', 'A', 'B']);
+
+    // Drop C on the bottom half of B: after B
+    const boxB = await profileRow(page, 'B').boundingBox();
+    await profileRow(page, 'C').dragTo(profileRow(page, 'B'), {
+      targetPosition: { x: 40, y: (boxB?.height ?? 40) - 4 },
+    });
+    await expect.poll(names).toEqual(['A', 'B', 'C']);
+    await expect(page.locator('.drop-before, .drop-after, .is-dragging')).toHaveCount(0);
+  });
+
+  test('a search field filters the profiles when there are many', async ({
+    context,
+    extensionOrigin,
+  }) => {
+    const page = await openPopup(context, extensionOrigin);
+    const many = ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta'].map((name) =>
+      profile(name)
+    );
+    await seedState(page, { profiles: many });
+    const search = page.locator('#profile-search');
+    // Six profiles or fewer: no search field
+    await expect(search).toBeHidden();
+
+    await seedState(page, { profiles: [...many, profile('Staging API')] });
+    await expect(search).toBeVisible();
+    await expect(search).toHaveAttribute('placeholder', 'Search profiles');
+
+    await search.fill('ta');
+    await expect(page.locator('.profile-row:visible .profile-name-btn')).toHaveText([
+      'Beta',
+      'Delta',
+      'Zeta',
+      'Staging API',
+    ]);
+    // Reordering is off while the list is filtered
+    await expect(profileRow(page, 'Beta')).not.toHaveAttribute('draggable', 'true');
+    await page.getByRole('button', { name: 'Zeta', exact: true }).click();
+    await expect(page.locator('#move-up-profile-btn')).toBeDisabled();
+    await expect(page.locator('#move-down-profile-btn')).toBeDisabled();
+
+    // Case-insensitive
+    await search.fill('API');
+    await expect(page.locator('.profile-row:visible .profile-name-btn')).toHaveText([
+      'Staging API',
+    ]);
+
+    // Selecting a filtered profile keeps the search
+    await page.getByRole('button', { name: 'Staging API', exact: true }).click();
+    await expect(page.locator('#active-profile-name')).toHaveText('Staging API');
+    await expect(search).toHaveValue('API');
+
+    await search.fill('nothing');
+    await expect(page.locator('.profile-row:visible')).toHaveCount(0);
+    await expect(page.locator('#profile-search-empty')).toBeVisible();
+
+    await search.fill('');
+    await expect(page.locator('.profile-row:visible')).toHaveCount(7);
+    await expect(page.locator('#profile-search-empty')).toBeHidden();
+    await expect(profileRow(page, 'Beta')).toHaveAttribute('draggable', 'true');
   });
 
   test('delete a profile after confirmation', async ({ context, extensionOrigin }) => {

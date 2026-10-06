@@ -3,24 +3,33 @@
  */
 
 import { getBrowserApi } from './browser-compat.js';
+import { updateDebugPanel } from './debug-panel.js';
 import { getMessage } from './i18n.js';
-import { mergeProfiles, normalizeProfiles, STORAGE_KEYS } from './types/index.js';
+import {
+  createDefaultProfile,
+  generateProfileId,
+  mergeProfiles,
+  normalizeProfiles,
+  STORAGE_KEYS,
+} from './types/index.js';
 import { createIcon } from './ui-icons.js';
 
 const browserAPI = getBrowserApi();
 
+/** Draft of the popup edits (shared localStorage of the extension pages) */
+const POPUP_DRAFT_STATE_KEY = 'noobheaders_popup_draft_state';
+
 interface OptionsData {
   autoEnable?: boolean;
   showBadge?: boolean;
+  /** Set by the popup, which cannot reliably show file pickers or downloads */
   pendingAction?: 'import' | 'export';
+  /** With `pendingAction: 'export'`: export only this profile */
+  pendingExportProfileId?: string;
 }
 
 async function loadOptions(): Promise<void> {
-  const data = (await browserAPI.storage.local.get([
-    'autoEnable',
-    'showBadge',
-    'pendingAction',
-  ])) as OptionsData;
+  const data = (await browserAPI.storage.local.get(['autoEnable', 'showBadge'])) as OptionsData;
 
   const autoEnableEl = document.getElementById('auto-enable') as HTMLInputElement;
   const showBadgeEl = document.getElementById('show-badge') as HTMLInputElement;
@@ -43,20 +52,58 @@ async function loadOptions(): Promise<void> {
     }
   }
 
-  // Handle pending action from popup
-  if (data.pendingAction) {
-    // Clear the pending action
-    await browserAPI.storage.local.remove('pendingAction');
+  await renderShortcut();
+  await runPendingAction();
+}
 
-    // Execute the action after a small delay to ensure UI is ready
-    setTimeout(() => {
-      if (data.pendingAction === 'export') {
-        exportProfiles();
-      } else if (data.pendingAction === 'import') {
-        (document.getElementById('import-profiles-input') as HTMLInputElement)?.click();
-      }
-    }, 100);
+/**
+ * Show the current shortcut of the "toggle header modification" command
+ */
+async function renderShortcut(): Promise<void> {
+  const element = document.getElementById('shortcut-value');
+  if (!element) return;
+  try {
+    const commands = await browserAPI.commands.getAll();
+    const toggle = commands.find((command) => command.name === 'toggle-header-modification');
+    element.textContent = toggle?.shortcut || getMessage('shortcutNotSet');
+  } catch {
+    element.textContent = getMessage('shortcutNotSet');
   }
+}
+
+let pendingActionRunning = false;
+
+/**
+ * Run the action requested by the popup (export, import), once
+ */
+async function runPendingAction(): Promise<void> {
+  // The page load and the storage event can both see the same request
+  if (pendingActionRunning) return;
+  pendingActionRunning = true;
+  try {
+    await runPendingActionOnce();
+  } finally {
+    pendingActionRunning = false;
+  }
+}
+
+async function runPendingActionOnce(): Promise<void> {
+  const data = (await browserAPI.storage.local.get([
+    'pendingAction',
+    'pendingExportProfileId',
+  ])) as OptionsData;
+  if (!data.pendingAction) return;
+
+  await browserAPI.storage.local.remove(['pendingAction', 'pendingExportProfileId']);
+
+  // Execute the action after a small delay to ensure UI is ready
+  setTimeout(() => {
+    if (data.pendingAction === 'export') {
+      void exportProfiles(data.pendingExportProfileId);
+    } else if (data.pendingAction === 'import') {
+      (document.getElementById('import-profiles-input') as HTMLInputElement)?.click();
+    }
+  }, 100);
 }
 
 function setupListeners(): void {
@@ -70,32 +117,111 @@ function setupListeners(): void {
   });
 
   // Import/Export
-  document.getElementById('export-profiles-btn')?.addEventListener('click', exportProfiles);
+  document
+    .getElementById('export-profiles-btn')
+    ?.addEventListener('click', () => void exportProfiles());
   document.getElementById('import-profiles-btn')?.addEventListener('click', () => {
     (document.getElementById('import-profiles-input') as HTMLInputElement)?.click();
   });
   document.getElementById('import-profiles-input')?.addEventListener('change', importProfiles);
+
+  // Debug
+  document.getElementById('refresh-debug-btn')?.addEventListener('click', () => {
+    void updateDebugPanel();
+  });
+  document.getElementById('clear-all-btn')?.addEventListener('click', () => {
+    void clearAllData();
+  });
+
+  // The background applies the rules after a storage change: refresh the panel shortly after
+  let debugTimer: number | undefined;
+  browserAPI.storage.onChanged.addListener((changes, area) => {
+    if (area !== 'local') return;
+    // The popup can request an action while this page is already open
+    if (changes.pendingAction?.newValue) void runPendingAction();
+    window.clearTimeout(debugTimer);
+    debugTimer = window.setTimeout(() => void updateDebugPanel(), 300);
+  });
 }
 
 /**
- * Export profiles to JSON file
+ * Clear every profile and setting, then start again from the demo profile (switched off)
  */
-async function exportProfiles(): Promise<void> {
+async function clearAllData(): Promise<void> {
+  const choice = await showDialog(getMessage('clearAllData'), getMessage('confirmClearAll'), [
+    // Destructive: the safe choice has the focus
+    {
+      id: 'confirm-cancel',
+      label: getMessage('cancel'),
+      className: 'btn-secondary',
+      initialFocus: true,
+    },
+    {
+      id: 'confirm-ok',
+      label: getMessage('confirm'),
+      className: 'btn-danger',
+      value: 'clear',
+    },
+  ]);
+  if (choice !== 'clear') return;
+
+  try {
+    window.localStorage.removeItem(POPUP_DRAFT_STATE_KEY);
+  } catch {
+    // localStorage can be unavailable
+  }
+  await browserAPI.storage.local.clear();
+  const defaultProfile = createDefaultProfile(generateProfileId());
+  await browserAPI.storage.local.set({
+    [STORAGE_KEYS.PROFILES]: [defaultProfile],
+    [STORAGE_KEYS.ACTIVE_PROFILE]: defaultProfile.id,
+    [STORAGE_KEYS.GLOBAL_ENABLED]: false,
+  });
+  await loadOptions();
+  showToast(getMessage('dataCleared'), 'success');
+}
+
+function fileNamePart(name: string): string {
+  return (
+    name
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'profile'
+  );
+}
+
+/**
+ * Export the profiles (or a single one) to a JSON file that the import accepts
+ */
+async function exportProfiles(profileId?: string): Promise<void> {
   const data = await browserAPI.storage.local.get([STORAGE_KEYS.PROFILES]);
-  const profiles = normalizeProfiles(data[STORAGE_KEYS.PROFILES]);
+  const allProfiles = normalizeProfiles(data[STORAGE_KEYS.PROFILES]);
+  const single = profileId ? allProfiles.find((profile) => profile.id === profileId) : undefined;
+  if (profileId && !single) {
+    showToast(getMessage('profileNotFound'), 'error');
+    return;
+  }
+  const profiles = single ? [single] : allProfiles;
   const dataStr = JSON.stringify(profiles, null, 2);
   const dataBlob = new Blob([dataStr], { type: 'application/json' });
   const url = URL.createObjectURL(dataBlob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `noobheaders-profiles-${new Date().toISOString().slice(0, 10)}.json`;
+  const date = new Date().toISOString().slice(0, 10);
+  link.download = single
+    ? `noobheaders-profile-${fileNamePart(single.name)}-${date}.json`
+    : `noobheaders-profiles-${date}.json`;
   document.body.appendChild(link);
   link.click();
   link.remove();
   // Revoking synchronously can cancel the download in some browsers (Firefox)
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 
-  showToast(getMessage('profilesExported'), 'success');
+  showToast(
+    single ? getMessage('profileExported', single.name) : getMessage('profilesExported'),
+    'success'
+  );
 }
 
 function isImportableProfile(profile: unknown): boolean {
@@ -164,6 +290,7 @@ async function importProfiles(e: Event): Promise<void> {
         [STORAGE_KEYS.PROFILES]: normalizedProfiles,
         [STORAGE_KEYS.ACTIVE_PROFILE]: normalizedProfiles[0].id,
       });
+      showToast(getMessage('profilesImported'), 'success');
     } else {
       const current = await browserAPI.storage.local.get([
         STORAGE_KEYS.PROFILES,
@@ -178,9 +305,19 @@ async function importProfiles(e: Event): Promise<void> {
         [STORAGE_KEYS.PROFILES]: merged,
         [STORAGE_KEYS.ACTIVE_PROFILE]: hasActive ? activeId : merged[0].id,
       });
-    }
 
-    showToast(getMessage('profilesImported'), 'success');
+      // Say how many were added, and how many got a new name to stay unique
+      const added = merged.slice(existing.length);
+      const renamed = added.filter(
+        (profile, index) => profile.name !== normalizedProfiles[index].name.trim()
+      ).length;
+      showToast(
+        renamed > 0
+          ? getMessage('profilesMergedRenamed', [String(added.length), String(renamed)])
+          : getMessage('profilesMerged', String(added.length)),
+        'success'
+      );
+    }
   } catch (error) {
     showToast(getMessage('errorImportingProfiles', (error as Error).message), 'error');
   } finally {
@@ -294,7 +431,14 @@ function showDialog<T extends string>(
         e.preventDefault();
         const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
         const step = e.shiftKey ? -1 : 1;
-        buttons[(index + step + buttons.length) % buttons.length].focus();
+        // Focus outside the buttons: Tab goes to the first one, Shift+Tab to the last one
+        const next =
+          index === -1
+            ? e.shiftKey
+              ? buttons.length - 1
+              : 0
+            : (index + step + buttons.length) % buttons.length;
+        buttons[next].focus();
       }
     };
 
@@ -315,4 +459,5 @@ function showDialog<T extends string>(
 document.addEventListener('DOMContentLoaded', async () => {
   await loadOptions();
   setupListeners();
+  await updateDebugPanel();
 });

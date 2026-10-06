@@ -53,6 +53,25 @@
       color: var(--text-secondary);
       line-height: 1.5;
     }
+
+    .option-info .option-hint {
+      margin-top: 4px;
+      font-size: 13px;
+    }
+
+    .shortcut-value {
+      flex-shrink: 0;
+      margin-left: 16px;
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      border-bottom-width: 2px;
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--text-primary);
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      font-size: 14px;
+      white-space: nowrap;
+    }
   </style>
 </head>
 
@@ -98,6 +117,16 @@
           <span class="toggle-slider"></span>
         </label>
       </div>
+
+      <div class="option-item">
+        <div class="option-info">
+          <h3 data-i18n="shortcutTitle">Keyboard shortcut</h3>
+          <p data-i18n="shortcutDesc">Switch the header modification on or off without opening the popup. The icon briefly shows ON or OFF.</p>
+          <p class="option-hint" data-i18n="shortcutChangeHint">You can change it in the keyboard shortcut settings of
+            your browser's extensions.</p>
+        </div>
+        <kbd id="shortcut-value" class="shortcut-value">-</kbd>
+      </div>
     </section>
 
     <section class="section options-section">
@@ -124,6 +153,42 @@
           </button>
           <input type="file" id="import-profiles-input" accept=".json" style="display: none;">
         </div>
+      </div>
+    </section>
+
+    <section class="section options-section debug-section" id="debug-section">
+      <div class="section-header">
+        <h2 data-i18n="debug">Debug</h2>
+        <button id="refresh-debug-btn" class="btn-secondary" data-i18n="refresh" type="button">Refresh</button>
+      </div>
+
+      <div id="debug-content" class="debug-content">
+        <div class="debug-info">
+          <div class="debug-row">
+            <span class="debug-label" data-i18n="debugActiveRules">Active rules:</span>
+            <span id="debug-rules-count" class="debug-value">0</span>
+          </div>
+          <div class="debug-row">
+            <span class="debug-label" data-i18n="debugGlobalEnabled">Global enabled:</span>
+            <span id="debug-global-enabled" class="debug-value">-</span>
+          </div>
+          <div class="debug-row">
+            <span class="debug-label" data-i18n="debugSelectedProfile">Selected profile:</span>
+            <span id="debug-active-profile" class="debug-value">-</span>
+          </div>
+          <div class="debug-row">
+            <span class="debug-label" data-i18n="debugStorageUsed">Storage used:</span>
+            <span id="debug-storage-size" class="debug-value">0 KB</span>
+          </div>
+          <div class="debug-row">
+            <span class="debug-label" data-i18n="debugRuleSync">Rule sync:</span>
+            <span id="debug-rule-sync" class="debug-value">-</span>
+          </div>
+        </div>
+
+        <pre id="debug-rules-preview" class="debug-rules-preview"></pre>
+
+        <button id="clear-all-btn" class="btn-danger" data-i18n="clearAllData" type="button">Clear All Data</button>
       </div>
     </section>
 

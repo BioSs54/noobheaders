@@ -11,7 +11,9 @@
 - **🎯 Multiple Profiles**: Create and switch between different header configurations
 - **🔧 Request & Response Headers**: Modify both request and response headers
 - **🎨 Smart Filters**: Apply headers to specific URLs or domains
-- **📦 Import/Export**: Share configurations or backup your profiles
+- **👀 Active Tab Indicator**: See which profiles apply to the current tab
+- **⌨️ Keyboard Shortcut**: `Alt+Shift+H` switches the header modification on or off
+- **📦 Import/Export**: Share one profile or all of them, or back them up
 - **🔒 Privacy First**: No ads, no tracking, no analytics. Your data stays on your device
 - **🌍 Open Source**: Built in the open on GitHub
 - **⚡ Lightweight**: Fast and efficient with minimal permissions
@@ -74,14 +76,30 @@ filter matches. Invalid filters are highlighted and never widen the scope.
 ### Managing Profiles
 
 - **Create**: Click the ➕ button next to the profile list
-- **Select**: Click a profile name to edit it
-- **Rename**: Click "Rename" button
-- **Duplicate**: Click "Duplicate" to copy the current profile
-- **Delete**: Click the 🗑️ button (requires at least 2 profiles)
+- **Select**: Click a profile to edit its headers and filters (in the Headers and Filters tabs)
+- **Rename, duplicate, export, delete**: Use the buttons of the selected profile (deleting requires at
+  least 2 profiles)
+- **Reorder**: Use the move up / down buttons of the selected profile, drag a profile, or press
+  `Alt + ↑/↓`. When several profiles set the same header, the
+  selected profile wins, then the lowest one in the list
+- **Search**: A search field appears when you have more than 6 profiles
+- **Applies to this tab**: Profiles whose headers apply to the current tab are marked
+
+### Keyboard Shortcut
+
+`Alt+Shift+H` switches the header modification on or off without opening the popup; the icon briefly
+shows ON or OFF. The options page shows the current shortcut; change it in your browser's extension
+shortcut settings.
+
+### Debugging
+
+The **Debug** section of the options page shows the rules currently applied and lets you clear all
+data.
 
 ### Import/Export
 
-- **Export**: Click "Export Profiles" to save all profiles as JSON
+- **Export**: Click "Export Profiles" in the options to save all profiles as JSON, or the export button
+  of the selected profile in the popup to save only that one
 - **Import**: Click "Import Profiles" to load profiles from a JSON file, then choose to add them to your profiles (names and ids already in use are made unique) or to replace all your profiles
 
 ## 🛠️ Development
@@ -101,6 +119,8 @@ noobheaders/
 │   ├── background.ts   # Service worker with type safety
 │   ├── popup.ts        # Main UI logic
 │   ├── options.ts      # Options page
+│   ├── debug-panel.ts  # Debug section of the options page
+│   ├── commands.ts     # Keyboard shortcuts
 │   └── i18n.ts         # Internationalization helper
 ├── dist/               # Compiled JavaScript (generated)
 ├── packages/           # Packaged extensions (generated)

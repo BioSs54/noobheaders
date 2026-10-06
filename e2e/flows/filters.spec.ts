@@ -4,6 +4,7 @@ import {
   filter,
   flushEdits,
   inputValues,
+  openEditorTab,
   openPopup,
   profile,
   readProfiles,
@@ -15,6 +16,7 @@ test.describe('Filters editor', () => {
   test('filter type is detected from the value', async ({ context, extensionOrigin }) => {
     const page = await openPopup(context, extensionOrigin);
     await seedState(page, { profiles: [profile('Work')] });
+    await openEditorTab(page, 'filters');
     await expect(page.locator('#empty-filters')).toBeVisible();
     await expect(page.locator('#filter-help')).toBeHidden();
 
@@ -49,6 +51,7 @@ test.describe('Filters editor', () => {
   }) => {
     const page = await openPopup(context, extensionOrigin);
     await seedState(page, { profiles: [profile('Work', { filters: [filter('example.com')] })] });
+    await openEditorTab(page, 'filters');
 
     const row = page.locator('.filter-item');
     await row.locator('.filter-value').fill('not a domain');
@@ -69,6 +72,7 @@ test.describe('Filters editor', () => {
     await seedState(page, {
       profiles: [profile('Work', { filters: [filter('one.example'), filter('two.example')] })],
     });
+    await openEditorTab(page, 'filters');
 
     await page.locator('.filter-item').first().locator('.duplicate-btn').click();
     await expect
@@ -94,6 +98,7 @@ test.describe('Filters editor', () => {
         profile('Staging', { filters: [filter('staging.example'), filter('*.staging.example')] }),
       ],
     });
+    await openEditorTab(page, 'filters');
 
     await expect.poll(() => inputValues(page.locator('.filter-value'))).toEqual(['work.example']);
     await page.getByRole('button', { name: 'Staging', exact: true }).click();
