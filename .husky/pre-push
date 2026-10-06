@@ -1,2 +1,2 @@
-# Run test suite before pushing
-pnpm -s test
+# Type check and run the test suite before pushing
+pnpm -s typecheck && pnpm -s test

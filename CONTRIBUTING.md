@@ -92,6 +92,9 @@ pnpm test:firefox
 # Lint code
 pnpm run lint
 
+# Type check
+pnpm run typecheck
+
 # Format code
 pnpm run format
 
@@ -105,7 +108,7 @@ pnpm run check
 2. **Add tests** for new features
 3. **Ensure all tests pass**: `pnpm test`
 4. **Ensure code is formatted**: `pnpm run format`
-5. **Ensure code is linted**: `pnpm run lint`
+5. **Ensure code is linted and type checks**: `pnpm run lint` and `pnpm run typecheck`
 6. **Update CHANGELOG.md** if it's a significant change
 7. **Use conventional commits** (see below)
 

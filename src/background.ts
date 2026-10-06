@@ -28,6 +28,11 @@ const USE_DECLARATIVE_NET_REQUEST = supportsDeclarativeNetRequest();
 // Get the appropriate browser API
 const browserAPI = getBrowserApi();
 
+/** Storage values are untyped: read a string, or '' when missing or invalid */
+function readString(value: unknown): string {
+  return typeof value === 'string' ? value : '';
+}
+
 // Log browser detection
 console.log('[NoobHeaders] Browser detected:', IS_FIREFOX ? 'Firefox' : 'Chrome/Chromium');
 console.log('[NoobHeaders] Using declarativeNetRequest:', USE_DECLARATIVE_NET_REQUEST);
@@ -96,8 +101,8 @@ async function updateRulesNow(snapshot?: ExtensionStateSnapshot): Promise<void> 
         ]);
 
     const profiles: Profile[] = normalizeProfiles(data[STORAGE_KEYS.PROFILES]);
-    const activeProfileId: string = data[STORAGE_KEYS.ACTIVE_PROFILE];
-    const globalEnabled: boolean = data[STORAGE_KEYS.GLOBAL_ENABLED] || false;
+    const activeProfileId = readString(data[STORAGE_KEYS.ACTIVE_PROFILE]);
+    const globalEnabled = Boolean(data[STORAGE_KEYS.GLOBAL_ENABLED]);
 
     console.log('[NoobHeaders] Storage data:', {
       profileCount: profiles.length,
@@ -196,8 +201,8 @@ async function updateBadge(tabId?: number): Promise<void> {
     ]);
 
     const profiles: Profile[] = normalizeProfiles(data[STORAGE_KEYS.PROFILES]);
-    const activeProfileId: string = data[STORAGE_KEYS.ACTIVE_PROFILE];
-    const globalEnabled: boolean = data[STORAGE_KEYS.GLOBAL_ENABLED] || false;
+    const activeProfileId = readString(data[STORAGE_KEYS.ACTIVE_PROFILE]);
+    const globalEnabled = Boolean(data[STORAGE_KEYS.GLOBAL_ENABLED]);
     const showBadge: boolean = data.showBadge !== false;
     const actionAPI = getActionApi();
 
@@ -282,7 +287,7 @@ async function tryAutoSwitch(tabId: number) {
     if (!data[STORAGE_KEYS.GLOBAL_ENABLED]) return;
 
     const profiles = normalizeProfiles(data[STORAGE_KEYS.PROFILES]);
-    const activeProfileId: string = data[STORAGE_KEYS.ACTIVE_PROFILE];
+    const activeProfileId = readString(data[STORAGE_KEYS.ACTIVE_PROFILE]);
 
     // Only enabled profiles with filters matching the tab are eligible, so switching the
     // selection never changes which headers are applied.
@@ -335,8 +340,7 @@ browserAPI.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           STORAGE_KEYS.GLOBAL_ENABLED,
         ]);
         const storageProfiles: Profile[] = normalizeProfiles(storageData[STORAGE_KEYS.PROFILES]);
-        const storageActiveProfileId: string | null =
-          storageData[STORAGE_KEYS.ACTIVE_PROFILE] || null;
+        const storageActiveProfileId = readString(storageData[STORAGE_KEYS.ACTIVE_PROFILE]) || null;
         const storageGlobalEnabled: boolean = Boolean(storageData[STORAGE_KEYS.GLOBAL_ENABLED]);
         const storageActiveProfile = storageProfiles.find(
           (profile) => profile.id === storageActiveProfileId
@@ -400,6 +404,9 @@ browserAPI.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     })();
     return true;
   }
+
+  // Not handled here: no response
+  return false;
 });
 
 // Initialize on startup

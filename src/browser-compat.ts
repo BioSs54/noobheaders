@@ -5,7 +5,11 @@
 
 export type BrowserType = 'chrome' | 'firefox';
 
-type BrowserApi = typeof chrome | typeof browser;
+/**
+ * The extension API, typed as `chrome`. Firefox's `browser` namespace implements the same
+ * promise-based APIs used by the shared code; Firefox-only code casts to `typeof browser`.
+ */
+type BrowserApi = typeof chrome;
 
 /**
  * Detect which browser is running
@@ -48,7 +52,7 @@ export function supportsWebRequestBlocking(): boolean {
  */
 export function getBrowserApi(): BrowserApi {
   if (detectBrowser() === 'firefox' && typeof browser !== 'undefined' && browser.runtime) {
-    return browser;
+    return browser as unknown as BrowserApi;
   }
 
   return chrome;

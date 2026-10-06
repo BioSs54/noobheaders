@@ -18,11 +18,12 @@
     "test:e2e:debug": "pnpm run package && playwright test --debug",
     "test:firefox": "node scripts/test-firefox.js",
     "lint": "biome check .",
+    "typecheck": "tsc --noEmit -p .",
     "lint:fix": "biome check --write .",
     "prepare": "husky",
     "semantic-release:dry": "semantic-release --dry-run",
     "format": "biome format --write .",
-    "check": "pnpm build && biome check --write . && pnpm test",
+    "check": "pnpm build && biome check --write . && pnpm typecheck && pnpm test",
     "icons": "node scripts/generate-icons.js",
     "semantic-release": "semantic-release",
     "package": "pnpm build && node scripts/package.js"
