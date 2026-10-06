@@ -1,3 +1,10 @@
+# [2.5.0](https://github.com/BioSs54/noobheaders/compare/v2.4.0...v2.5.0) (2026-10-06)
+
+
+### Features
+
+* ✨ tabs, active tab indicator, reorder, search, shortcut and single export ([#20](https://github.com/BioSs54/noobheaders/issues/20)) ([bde0401](https://github.com/BioSs54/noobheaders/commit/bde0401a136ca66108d9bb4e55af58458a19e203))
+
 # [2.4.0](https://github.com/BioSs54/noobheaders/compare/v2.3.0...v2.4.0) (2026-10-06)
 
 
