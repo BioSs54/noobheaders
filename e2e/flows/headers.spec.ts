@@ -47,9 +47,50 @@ test.describe('Headers editor', () => {
     await row.locator('.header-value').fill('');
     await expect(note).toBeVisible();
 
+    // Spaces are not an empty value: the header is sent with a blank value
+    await row.locator('.header-value').fill('   ');
+    await expect(note).toHaveText(
+      'The value only contains spaces: the header is sent with a blank value.'
+    );
+    await row.locator('.header-value').fill('');
+
     // No note while the header has no name yet
     await row.locator('.header-name').fill('');
     await expect(note).toBeHidden();
+  });
+
+  test('common header names are suggested for the header type', async ({
+    context,
+    extensionOrigin,
+  }) => {
+    const page = await openPopup(context, extensionOrigin);
+    await seedState(page, { profiles: [profile('Work', { headers: [header('', '')] })] });
+
+    const row = page.locator('.header-item');
+    const name = row.locator('.header-name');
+    await expect(name).toHaveAttribute('list', 'request-header-suggestions');
+    const requestNames = await page
+      .locator('#request-header-suggestions option')
+      .evaluateAll((options) => options.map((option) => (option as HTMLOptionElement).value));
+    expect(requestNames).toEqual(expect.arrayContaining(['Authorization', 'Cookie', 'User-Agent']));
+
+    await row.locator('.header-type').selectOption('response');
+    await expect(name).toHaveAttribute('list', 'response-header-suggestions');
+    const responseNames = await page
+      .locator('#response-header-suggestions option')
+      .evaluateAll((options) => options.map((option) => (option as HTMLOptionElement).value));
+    expect(responseNames).toEqual(
+      expect.arrayContaining(['Access-Control-Allow-Origin', 'Set-Cookie'])
+    );
+
+    // A suggestion is a plain value: it is saved like a typed name
+    await name.fill('Set-Cookie');
+    await expect
+      .poll(async () => (await readProfiles(page))[0].headers?.[0].name)
+      .toBe('Set-Cookie');
+
+    // Each list is added once, whatever the number of rows
+    await expect(page.locator('datalist')).toHaveCount(2);
   });
 
   test('typing keeps the focus and caret while the popup saves', async ({

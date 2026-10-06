@@ -31,19 +31,16 @@
     "message": "Cabeçalhos"
   },
   "addHeader": {
-    "message": "+ Adicionar cabeçalho"
+    "message": "Adicionar cabeçalho"
   },
   "filters": {
     "message": "Filtros"
   },
   "addFilter": {
-    "message": "+ Adicionar filtro"
+    "message": "Adicionar filtro"
   },
   "noHeadersConfigured": {
     "message": "Nenhum cabeçalho configurado"
-  },
-  "clickAddHeaderHint": {
-    "message": "Clique em \"Adicionar cabeçalho\" para começar"
   },
   "noFiltersConfigured": {
     "message": "Nenhum filtro configurado"
@@ -104,9 +101,6 @@
   },
   "debug": {
     "message": "Depuração"
-  },
-  "showDebugInfo": {
-    "message": "Mostrar informações de depuração"
   },
   "clearAllData": {
     "message": "Apagar todos os dados"
@@ -223,7 +217,7 @@
     "message": "Exporte seus perfis para compartilhar com colegas"
   },
   "welcomeTip5": {
-    "message": "Consulte a seção Depuração se algo não funcionar"
+    "message": "Verifique a seção Depuração das opções se algo não funcionar"
   },
   "welcomeMadeWith": {
     "message": "Feito por"
@@ -301,7 +295,7 @@
     "message": "Aplicar os cabeçalhos do perfil \"$1\""
   },
   "profilesHint": {
-    "message": "Ative os perfis a aplicar. Clique em um perfil para editá-lo."
+    "message": "Ative os perfis a aplicar. Clique em um perfil para editá-lo; arraste-o (ou Alt + ↑/↓) para movê-lo."
   },
   "profileDisabledHint": {
     "message": "Este perfil está desativado: seus cabeçalhos não são aplicados."
@@ -383,5 +377,50 @@
   },
   "profileCounts": {
     "message": "Cabeçalhos: $1 · Filtros: $2"
+  },
+  "appliesToThisTab": {
+    "message": "Aplica-se a esta aba"
+  },
+  "searchProfiles": {
+    "message": "Pesquisar perfis"
+  },
+  "noProfileMatches": {
+    "message": "Nenhum perfil corresponde."
+  },
+  "exportProfile": {
+    "message": "Exportar este perfil"
+  },
+  "profileExported": {
+    "message": "Perfil \"$1\" exportado"
+  },
+  "profileNotFound": {
+    "message": "Este perfil não existe mais"
+  },
+  "profilesMerged": {
+    "message": "$1 perfil(is) adicionado(s)"
+  },
+  "profilesMergedRenamed": {
+    "message": "$1 perfil(is) adicionado(s), $2 renomeado(s) para evitar nomes duplicados"
+  },
+  "headerValueBlank": {
+    "message": "O valor contém apenas espaços: o cabeçalho é enviado com valor vazio."
+  },
+  "commandToggleDescription": {
+    "message": "Ativar ou desativar a modificação de cabeçalhos"
+  },
+  "shortcutTitle": {
+    "message": "Atalho de teclado"
+  },
+  "shortcutDesc": {
+    "message": "Ativa ou desativa a modificação de cabeçalhos sem abrir o pop-up."
+  },
+  "shortcutChangeHint": {
+    "message": "Você pode alterá-lo nas configurações de atalhos de extensões do navegador."
+  },
+  "shortcutNotSet": {
+    "message": "Não definido"
+  },
+  "refresh": {
+    "message": "Atualizar"
   }
 }

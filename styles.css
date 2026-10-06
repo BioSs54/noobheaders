@@ -16,6 +16,8 @@
   --text-tertiary: #4a5568;
   /* Track of a switched-off toggle: >= 3:1 against every background (WCAG 1.4.11) */
   --toggle-off: #718096;
+  /* "Applies to this tab" marker: >= 4.5:1 on the row backgrounds */
+  --applies-color: #276749;
   --warning-color: #975a16;
   --shadow: rgba(0, 0, 0, 0.1);
   --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -48,6 +50,7 @@ a:hover {
     --text-secondary: #cbd5e0;
     --text-tertiary: #a0aec0;
     --toggle-off: #8a94a6;
+    --applies-color: #9ae6b4;
     --danger-color: #feb2b2;
     --warning-color: #f6e05e;
     --shadow: rgba(0, 0, 0, 0.3);
@@ -1564,4 +1567,143 @@ body {
   .footer-meta {
     justify-content: center;
   }
+}
+
+/* Editor of the selected profile: headers and filters tabs */
+.editor-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  min-width: 0;
+}
+
+.editor-tabs {
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--background);
+}
+
+.editor-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 7px;
+  background: none;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.editor-tab:hover {
+  color: var(--text-primary);
+}
+
+.editor-tab[aria-selected="true"] {
+  background: rgba(102, 126, 234, 0.16);
+  color: var(--text-primary);
+  box-shadow: inset 0 -2px 0 var(--primary-color);
+}
+
+.editor-tab:focus-visible {
+  outline: 2px solid rgba(102, 126, 234, 0.45);
+  outline-offset: 1px;
+}
+
+.tab-count {
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--border);
+  color: var(--text-primary);
+  font-size: 12px;
+  line-height: 18px;
+  text-align: center;
+}
+
+.editor-header .section-context {
+  flex: 1;
+  min-width: 0;
+  max-width: none;
+}
+
+.editor-actions {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.editor-actions .icon-btn {
+  width: 36px;
+  height: 36px;
+}
+
+.editor-panel[hidden],
+.editor-actions [hidden] {
+  display: none;
+}
+
+.empty-state .btn-add {
+  margin-top: 12px;
+}
+
+/* Profiles: active on the current tab, search, reorder */
+.profile-applies {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--applies-color);
+}
+
+.profile-applies::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.profile-applies[hidden] {
+  display: none;
+}
+
+.profile-search {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--background);
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.profile-search:focus-visible {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.profile-search[hidden],
+.profile-row[hidden] {
+  display: none;
+}
+
+.profile-row.is-dragging {
+  opacity: 0.5;
+}
+
+.profile-row.drop-before {
+  box-shadow: 0 -3px 0 var(--primary-color);
+}
+
+.profile-row.drop-after {
+  box-shadow: 0 3px 0 var(--primary-color);
 }

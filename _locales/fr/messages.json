@@ -30,19 +30,16 @@
     "message": "En-têtes"
   },
   "addHeader": {
-    "message": "+ Ajouter un en-tête"
+    "message": "Ajouter un en-tête"
   },
   "filters": {
     "message": "Filtres"
   },
   "addFilter": {
-    "message": "+ Ajouter un filtre"
+    "message": "Ajouter un filtre"
   },
   "noHeadersConfigured": {
     "message": "Aucun en-tête configuré"
-  },
-  "clickAddHeaderHint": {
-    "message": "Cliquez sur « Ajouter un en-tête » pour commencer"
   },
   "noFiltersConfigured": {
     "message": "Aucun filtre configuré"
@@ -103,9 +100,6 @@
   },
   "debug": {
     "message": "Débogage"
-  },
-  "showDebugInfo": {
-    "message": "Afficher les infos de débogage"
   },
   "clearAllData": {
     "message": "Effacer toutes les données"
@@ -222,7 +216,7 @@
     "message": "Exportez vos profils pour les partager avec vos coéquipiers"
   },
   "welcomeTip5": {
-    "message": "Vérifiez la section Débogage si quelque chose ne fonctionne pas"
+    "message": "Consultez la section Débogage des options si quelque chose ne fonctionne pas"
   },
   "welcomeMadeWith": {
     "message": "Fait par"
@@ -300,7 +294,7 @@
     "message": "Appliquer les en-têtes du profil « $1 »"
   },
   "profilesHint": {
-    "message": "Activez les profils à appliquer. Cliquez sur un profil pour le modifier."
+    "message": "Activez les profils à appliquer. Cliquez sur un profil pour le modifier, glissez-le (ou Alt + ↑/↓) pour le déplacer."
   },
   "profileDisabledHint": {
     "message": "Ce profil est désactivé : ses en-têtes ne sont pas appliqués."
@@ -382,5 +376,50 @@
   },
   "profileCounts": {
     "message": "En-têtes : $1 · Filtres : $2"
+  },
+  "appliesToThisTab": {
+    "message": "S'applique à cet onglet"
+  },
+  "searchProfiles": {
+    "message": "Rechercher un profil"
+  },
+  "noProfileMatches": {
+    "message": "Aucun profil ne correspond."
+  },
+  "exportProfile": {
+    "message": "Exporter ce profil"
+  },
+  "profileExported": {
+    "message": "Profil « $1 » exporté"
+  },
+  "profileNotFound": {
+    "message": "Ce profil n'existe plus"
+  },
+  "profilesMerged": {
+    "message": "$1 profil(s) ajouté(s)"
+  },
+  "profilesMergedRenamed": {
+    "message": "$1 profil(s) ajouté(s), dont $2 renommé(s) pour éviter les doublons"
+  },
+  "headerValueBlank": {
+    "message": "La valeur ne contient que des espaces : l'en-tête est envoyé avec une valeur vide."
+  },
+  "commandToggleDescription": {
+    "message": "Activer ou couper la modification des en-têtes"
+  },
+  "shortcutTitle": {
+    "message": "Raccourci clavier"
+  },
+  "shortcutDesc": {
+    "message": "Active ou coupe la modification des en-têtes sans ouvrir la popup."
+  },
+  "shortcutChangeHint": {
+    "message": "Vous pouvez le modifier dans les réglages des raccourcis des extensions de votre navigateur."
+  },
+  "shortcutNotSet": {
+    "message": "Non défini"
+  },
+  "refresh": {
+    "message": "Actualiser"
   }
 }

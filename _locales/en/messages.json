@@ -31,19 +31,16 @@
     "message": "Headers"
   },
   "addHeader": {
-    "message": "+ Add Header"
+    "message": "Add Header"
   },
   "filters": {
     "message": "Filters"
   },
   "addFilter": {
-    "message": "+ Add Filter"
+    "message": "Add Filter"
   },
   "noHeadersConfigured": {
     "message": "No headers configured"
-  },
-  "clickAddHeaderHint": {
-    "message": "Click \"Add Header\" to get started"
   },
   "noFiltersConfigured": {
     "message": "No filters configured"
@@ -106,9 +103,6 @@
   },
   "debug": {
     "message": "Debug"
-  },
-  "showDebugInfo": {
-    "message": "Show Debug Info"
   },
   "clearAllData": {
     "message": "Clear All Data"
@@ -228,7 +222,7 @@
     "message": "Export your profiles to share with teammates"
   },
   "welcomeTip5": {
-    "message": "Check the Debug section if something isn't working"
+    "message": "Check the Debug section of the options if something isn't working"
   },
   "welcomeMadeWith": {
     "message": "Made by"
@@ -306,7 +300,7 @@
     "message": "Apply the headers of profile \"$1\""
   },
   "profilesHint": {
-    "message": "Switch on the profiles to apply. Click a profile to edit it."
+    "message": "Switch on the profiles to apply. Click a profile to edit it, drag it (or Alt + ↑/↓) to reorder."
   },
   "profileDisabledHint": {
     "message": "This profile is off: its headers are not applied."
@@ -389,5 +383,50 @@
   "profileCounts": {
     "message": "Headers: $1 · Filters: $2",
     "description": "Number of headers ($1) and filters ($2) of a profile"
+  },
+  "appliesToThisTab": {
+    "message": "Applies to this tab"
+  },
+  "searchProfiles": {
+    "message": "Search profiles"
+  },
+  "noProfileMatches": {
+    "message": "No profile matches."
+  },
+  "exportProfile": {
+    "message": "Export this profile"
+  },
+  "profileExported": {
+    "message": "Profile \"$1\" exported"
+  },
+  "profileNotFound": {
+    "message": "This profile no longer exists"
+  },
+  "profilesMerged": {
+    "message": "$1 profile(s) added"
+  },
+  "profilesMergedRenamed": {
+    "message": "$1 profile(s) added, $2 renamed to keep names unique"
+  },
+  "headerValueBlank": {
+    "message": "The value only contains spaces: the header is sent with a blank value."
+  },
+  "commandToggleDescription": {
+    "message": "Switch the header modification on or off"
+  },
+  "shortcutTitle": {
+    "message": "Keyboard shortcut"
+  },
+  "shortcutDesc": {
+    "message": "Switch the header modification on or off without opening the popup."
+  },
+  "shortcutChangeHint": {
+    "message": "You can change it in the extension shortcut settings of your browser."
+  },
+  "shortcutNotSet": {
+    "message": "Not set"
+  },
+  "refresh": {
+    "message": "Refresh"
   }
 }

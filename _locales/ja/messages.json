@@ -31,19 +31,16 @@
     "message": "ヘッダー"
   },
   "addHeader": {
-    "message": "+ ヘッダーを追加"
+    "message": "ヘッダーを追加"
   },
   "filters": {
     "message": "フィルター"
   },
   "addFilter": {
-    "message": "+ フィルターを追加"
+    "message": "フィルターを追加"
   },
   "noHeadersConfigured": {
     "message": "ヘッダーが設定されていません"
-  },
-  "clickAddHeaderHint": {
-    "message": "「ヘッダーを追加」をクリックして始めましょう"
   },
   "noFiltersConfigured": {
     "message": "フィルターが設定されていません"
@@ -104,9 +101,6 @@
   },
   "debug": {
     "message": "デバッグ"
-  },
-  "showDebugInfo": {
-    "message": "デバッグ情報を表示"
   },
   "clearAllData": {
     "message": "すべてのデータを削除"
@@ -223,7 +217,7 @@
     "message": "プロファイルをエクスポートしてチームと共有しましょう"
   },
   "welcomeTip5": {
-    "message": "うまく動かないときはデバッグ欄を確認してください"
+    "message": "うまく動作しない場合は、オプションのデバッグセクションを確認してください"
   },
   "welcomeMadeWith": {
     "message": "作者"
@@ -301,7 +295,7 @@
     "message": "プロファイル「$1」のヘッダーを適用"
   },
   "profilesHint": {
-    "message": "適用するプロファイルをオンにします。プロファイルをクリックすると編集できます。"
+    "message": "適用するプロファイルをオンにします。クリックで編集、ドラッグ（または Alt + ↑/↓）で並べ替えできます。"
   },
   "profileDisabledHint": {
     "message": "このプロファイルはオフです。ヘッダーは適用されません。"
@@ -383,5 +377,50 @@
   },
   "profileCounts": {
     "message": "ヘッダー: $1 · フィルター: $2"
+  },
+  "appliesToThisTab": {
+    "message": "このタブに適用中"
+  },
+  "searchProfiles": {
+    "message": "プロファイルを検索"
+  },
+  "noProfileMatches": {
+    "message": "一致するプロファイルはありません。"
+  },
+  "exportProfile": {
+    "message": "このプロファイルをエクスポート"
+  },
+  "profileExported": {
+    "message": "プロファイル「$1」をエクスポートしました"
+  },
+  "profileNotFound": {
+    "message": "このプロファイルは存在しません"
+  },
+  "profilesMerged": {
+    "message": "$1 件のプロファイルを追加しました"
+  },
+  "profilesMergedRenamed": {
+    "message": "$1 件のプロファイルを追加し、名前の重複を避けるため $2 件の名前を変更しました"
+  },
+  "headerValueBlank": {
+    "message": "値が空白のみです。ヘッダーは空の値で送信されます。"
+  },
+  "commandToggleDescription": {
+    "message": "ヘッダー変更のオン／オフを切り替え"
+  },
+  "shortcutTitle": {
+    "message": "キーボードショートカット"
+  },
+  "shortcutDesc": {
+    "message": "ポップアップを開かずにヘッダー変更のオン／オフを切り替えます。"
+  },
+  "shortcutChangeHint": {
+    "message": "ブラウザの拡張機能のショートカット設定で変更できます。"
+  },
+  "shortcutNotSet": {
+    "message": "未設定"
+  },
+  "refresh": {
+    "message": "更新"
   }
 }

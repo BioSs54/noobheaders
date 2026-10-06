@@ -29,7 +29,12 @@ for (const locale of locales) {
       const popup = await openPopup(context, extensionOrigin);
 
       await expect(popup.locator('html')).toHaveAttribute('lang', locale.split('_')[0]);
-      await expect(popup.locator('#add-header-btn')).toHaveText(strings.addHeader.message);
+      await expect(popup.locator('#add-header-btn')).toHaveAttribute(
+        'aria-label',
+        strings.addHeader.message
+      );
+      await expect(popup.locator('#tab-headers')).toContainText(strings.headers.message);
+      await expect(popup.locator('#tab-filters')).toContainText(strings.filters.message);
       await expect(popup.locator('#add-profile-btn')).toHaveAttribute(
         'aria-label',
         strings.addProfile.message

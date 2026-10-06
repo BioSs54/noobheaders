@@ -10,6 +10,7 @@ import {
   getBrowserApi,
   supportsDeclarativeNetRequest,
 } from './browser-compat.js';
+import { handleCommand } from './commands.js';
 import { applyHeadersWebRequest } from './firefox-webrequest.js';
 import { countApplicableHeadersForUrl } from './header-utils.js';
 import { isUsableHeader } from './matching.js';
@@ -271,6 +272,11 @@ browserAPI.storage.onChanged.addListener(async (changes, namespace) => {
   } else if (namespace === 'local' && changes.showBadge) {
     await updateBadge();
   }
+});
+
+// Keyboard shortcuts
+browserAPI.commands?.onCommand.addListener((command) => {
+  void handleCommand(command, browserAPI.storage.local);
 });
 
 // Auto-switch the selected profile based on the active tab URL

@@ -31,19 +31,16 @@
     "message": "Header"
   },
   "addHeader": {
-    "message": "+ Aggiungi header"
+    "message": "Aggiungi header"
   },
   "filters": {
     "message": "Filtri"
   },
   "addFilter": {
-    "message": "+ Aggiungi filtro"
+    "message": "Aggiungi filtro"
   },
   "noHeadersConfigured": {
     "message": "Nessun header configurato"
-  },
-  "clickAddHeaderHint": {
-    "message": "Fai clic su \"Aggiungi header\" per iniziare"
   },
   "noFiltersConfigured": {
     "message": "Nessun filtro configurato"
@@ -104,9 +101,6 @@
   },
   "debug": {
     "message": "Debug"
-  },
-  "showDebugInfo": {
-    "message": "Mostra info di debug"
   },
   "clearAllData": {
     "message": "Cancella tutti i dati"
@@ -223,7 +217,7 @@
     "message": "Esporta i profili per condividerli con i colleghi"
   },
   "welcomeTip5": {
-    "message": "Controlla la sezione Debug se qualcosa non funziona"
+    "message": "Controlla la sezione Debug delle opzioni se qualcosa non funziona"
   },
   "welcomeMadeWith": {
     "message": "Creato da"
@@ -301,7 +295,7 @@
     "message": "Applica gli header del profilo \"$1\""
   },
   "profilesHint": {
-    "message": "Attiva i profili da applicare. Fai clic su un profilo per modificarlo."
+    "message": "Attiva i profili da applicare. Fai clic su un profilo per modificarlo; trascinalo (o Alt + ↑/↓) per spostarlo."
   },
   "profileDisabledHint": {
     "message": "Questo profilo è disattivato: i suoi header non vengono applicati."
@@ -383,5 +377,50 @@
   },
   "profileCounts": {
     "message": "Header: $1 · Filtri: $2"
+  },
+  "appliesToThisTab": {
+    "message": "Si applica a questa scheda"
+  },
+  "searchProfiles": {
+    "message": "Cerca profili"
+  },
+  "noProfileMatches": {
+    "message": "Nessun profilo corrisponde."
+  },
+  "exportProfile": {
+    "message": "Esporta questo profilo"
+  },
+  "profileExported": {
+    "message": "Profilo \"$1\" esportato"
+  },
+  "profileNotFound": {
+    "message": "Questo profilo non esiste più"
+  },
+  "profilesMerged": {
+    "message": "$1 profilo/i aggiunto/i"
+  },
+  "profilesMergedRenamed": {
+    "message": "$1 profilo/i aggiunto/i, $2 rinominato/i per evitare nomi duplicati"
+  },
+  "headerValueBlank": {
+    "message": "Il valore contiene solo spazi: l'header viene inviato con un valore vuoto."
+  },
+  "commandToggleDescription": {
+    "message": "Attiva o disattiva la modifica degli header"
+  },
+  "shortcutTitle": {
+    "message": "Scorciatoia da tastiera"
+  },
+  "shortcutDesc": {
+    "message": "Attiva o disattiva la modifica degli header senza aprire il popup."
+  },
+  "shortcutChangeHint": {
+    "message": "Puoi modificarla nelle impostazioni delle scorciatoie delle estensioni del browser."
+  },
+  "shortcutNotSet": {
+    "message": "Non impostata"
+  },
+  "refresh": {
+    "message": "Aggiorna"
   }
 }

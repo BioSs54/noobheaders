@@ -31,19 +31,16 @@
     "message": "헤더"
   },
   "addHeader": {
-    "message": "+ 헤더 추가"
+    "message": "헤더 추가"
   },
   "filters": {
     "message": "필터"
   },
   "addFilter": {
-    "message": "+ 필터 추가"
+    "message": "필터 추가"
   },
   "noHeadersConfigured": {
     "message": "설정된 헤더가 없습니다"
-  },
-  "clickAddHeaderHint": {
-    "message": "\"헤더 추가\"를 눌러 시작하세요"
   },
   "noFiltersConfigured": {
     "message": "설정된 필터가 없습니다"
@@ -104,9 +101,6 @@
   },
   "debug": {
     "message": "디버그"
-  },
-  "showDebugInfo": {
-    "message": "디버그 정보 보기"
   },
   "clearAllData": {
     "message": "모든 데이터 삭제"
@@ -223,7 +217,7 @@
     "message": "프로필을 내보내 동료와 공유하세요"
   },
   "welcomeTip5": {
-    "message": "문제가 있으면 디버그 섹션을 확인하세요"
+    "message": "문제가 있으면 옵션의 디버그 섹션을 확인하세요"
   },
   "welcomeMadeWith": {
     "message": "제작"
@@ -301,7 +295,7 @@
     "message": "\"$1\" 프로필의 헤더 적용"
   },
   "profilesHint": {
-    "message": "적용할 프로필을 켜세요. 프로필을 누르면 편집할 수 있습니다."
+    "message": "적용할 프로필을 켜세요. 프로필을 클릭하면 편집하고, 끌어서(또는 Alt + ↑/↓) 순서를 바꿉니다."
   },
   "profileDisabledHint": {
     "message": "이 프로필은 꺼져 있어 헤더가 적용되지 않습니다."
@@ -383,5 +377,50 @@
   },
   "profileCounts": {
     "message": "헤더: $1 · 필터: $2"
+  },
+  "appliesToThisTab": {
+    "message": "이 탭에 적용됨"
+  },
+  "searchProfiles": {
+    "message": "프로필 검색"
+  },
+  "noProfileMatches": {
+    "message": "일치하는 프로필이 없습니다."
+  },
+  "exportProfile": {
+    "message": "이 프로필 내보내기"
+  },
+  "profileExported": {
+    "message": "프로필 \"$1\"을(를) 내보냈습니다"
+  },
+  "profileNotFound": {
+    "message": "이 프로필은 더 이상 존재하지 않습니다"
+  },
+  "profilesMerged": {
+    "message": "프로필 $1개를 추가했습니다"
+  },
+  "profilesMergedRenamed": {
+    "message": "프로필 $1개를 추가했고, 이름 중복을 피하기 위해 $2개의 이름을 변경했습니다"
+  },
+  "headerValueBlank": {
+    "message": "값에 공백만 있습니다. 헤더가 빈 값으로 전송됩니다."
+  },
+  "commandToggleDescription": {
+    "message": "헤더 수정 켜기/끄기"
+  },
+  "shortcutTitle": {
+    "message": "키보드 단축키"
+  },
+  "shortcutDesc": {
+    "message": "팝업을 열지 않고 헤더 수정을 켜거나 끕니다."
+  },
+  "shortcutChangeHint": {
+    "message": "브라우저의 확장 프로그램 단축키 설정에서 변경할 수 있습니다."
+  },
+  "shortcutNotSet": {
+    "message": "설정 안 됨"
+  },
+  "refresh": {
+    "message": "새로 고침"
   }
 }

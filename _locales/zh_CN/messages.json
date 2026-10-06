@@ -31,19 +31,16 @@
     "message": "请求头"
   },
   "addHeader": {
-    "message": "+ 添加请求头"
+    "message": "添加请求头"
   },
   "filters": {
     "message": "过滤器"
   },
   "addFilter": {
-    "message": "+ 添加过滤器"
+    "message": "添加过滤器"
   },
   "noHeadersConfigured": {
     "message": "尚未配置请求头"
-  },
-  "clickAddHeaderHint": {
-    "message": "点击“添加请求头”开始"
   },
   "noFiltersConfigured": {
     "message": "尚未配置过滤器"
@@ -104,9 +101,6 @@
   },
   "debug": {
     "message": "调试"
-  },
-  "showDebugInfo": {
-    "message": "显示调试信息"
   },
   "clearAllData": {
     "message": "清除所有数据"
@@ -223,7 +217,7 @@
     "message": "导出配置以便与同事共享"
   },
   "welcomeTip5": {
-    "message": "遇到问题时请查看“调试”部分"
+    "message": "如果出现问题，请查看选项中的调试部分"
   },
   "welcomeMadeWith": {
     "message": "作者"
@@ -301,7 +295,7 @@
     "message": "应用配置“$1”的请求头"
   },
   "profilesHint": {
-    "message": "打开需要应用的配置。点击配置即可编辑。"
+    "message": "开启要应用的配置。点击配置进行编辑，拖动（或 Alt + ↑/↓）调整顺序。"
   },
   "profileDisabledHint": {
     "message": "此配置已关闭：其请求头不会被应用。"
@@ -383,5 +377,50 @@
   },
   "profileCounts": {
     "message": "请求头：$1 · 过滤器：$2"
+  },
+  "appliesToThisTab": {
+    "message": "适用于此标签页"
+  },
+  "searchProfiles": {
+    "message": "搜索配置"
+  },
+  "noProfileMatches": {
+    "message": "没有匹配的配置。"
+  },
+  "exportProfile": {
+    "message": "导出此配置"
+  },
+  "profileExported": {
+    "message": "已导出配置“$1”"
+  },
+  "profileNotFound": {
+    "message": "此配置已不存在"
+  },
+  "profilesMerged": {
+    "message": "已添加 $1 个配置"
+  },
+  "profilesMergedRenamed": {
+    "message": "已添加 $1 个配置，其中 $2 个已重命名以避免重名"
+  },
+  "headerValueBlank": {
+    "message": "值只包含空格：该头部将以空值发送。"
+  },
+  "commandToggleDescription": {
+    "message": "开启或关闭请求头修改"
+  },
+  "shortcutTitle": {
+    "message": "键盘快捷键"
+  },
+  "shortcutDesc": {
+    "message": "无需打开弹出窗口即可开启或关闭请求头修改。"
+  },
+  "shortcutChangeHint": {
+    "message": "可以在浏览器的扩展程序快捷键设置中更改。"
+  },
+  "shortcutNotSet": {
+    "message": "未设置"
+  },
+  "refresh": {
+    "message": "刷新"
   }
 }

@@ -184,7 +184,16 @@ export async function addHeaderViaUi(
   return row;
 }
 
+/** Show the Headers or Filters tab of the popup editor */
+export async function openEditorTab(page: Page, tab: 'headers' | 'filters'): Promise<void> {
+  const tabButton = page.locator(`#tab-${tab}`);
+  await tabButton.click();
+  await expect(tabButton).toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator(`#panel-${tab}`)).toBeVisible();
+}
+
 export async function addFilterViaUi(page: Page, value: string): Promise<Locator> {
+  await openEditorTab(page, 'filters');
   await page.click('#add-filter-btn');
   const row = page.locator('.filter-item').last();
   await expect(row.locator('.filter-value')).toBeFocused();
