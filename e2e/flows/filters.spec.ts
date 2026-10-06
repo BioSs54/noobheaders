@@ -34,6 +34,12 @@ test.describe('Filters editor', () => {
       await expect
         .poll(async () => (await readProfiles(page))[0].filters?.[0])
         .toEqual({ enabled: true, type, value });
+      // The badge shows a short label, the full type name is in its tooltip
+      await expect(row.locator('.filter-type-badge')).toHaveText(type === 'url' ? 'URL' : 'Domain');
+      await expect(row.locator('.filter-type-badge')).toHaveAttribute(
+        'title',
+        type === 'url' ? 'URL Pattern' : 'Domain'
+      );
     }
   });
 

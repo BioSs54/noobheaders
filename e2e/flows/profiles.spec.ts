@@ -87,7 +87,10 @@ test.describe('Profiles', () => {
 
     await answerPrompt(page, 'Production');
     await expect(page.locator('#active-profile-name')).toHaveText('Production');
+    await expect(page.locator('[data-active-profile-name]')).toHaveText('Production');
     await expect(profileRow(page, 'Production')).toBeVisible();
+    // The row is re-rendered: the focus comes back to its rename button
+    await expect(page.locator('#rename-profile-btn')).toBeFocused();
     expect((await readProfiles(page)).map((p) => p.name)).toEqual(['Production', 'Staging']);
   });
 
@@ -136,6 +139,64 @@ test.describe('Profiles', () => {
 
     await page.click('#duplicate-profile-btn');
     await expect(page.locator('#active-profile-name')).toHaveText('Work (copy)');
+  });
+
+  test('rename, duplicate and delete are shown on the selected profile only', async ({
+    context,
+    extensionOrigin,
+  }) => {
+    const page = await openPopup(context, extensionOrigin);
+    await seedState(page, {
+      profiles: [profile('Work'), profile('Staging', { enabled: false })],
+    });
+
+    const actions = page.locator('.profile-row-actions');
+    await expect(actions).toHaveCount(1);
+    await expect(profileRow(page, 'Work').locator('.profile-row-actions')).toBeVisible();
+    await expect(page.locator('#profile-disabled-hint')).toBeHidden();
+
+    await profileRow(page, 'Staging').locator('.profile-row-meta').click();
+    await expect(actions).toHaveCount(1);
+    await expect(profileRow(page, 'Staging').locator('.profile-row-actions')).toBeVisible();
+    // The "off" hint is shown in the selected row
+    await expect(profileRow(page, 'Staging').locator('#profile-disabled-hint')).toBeVisible();
+  });
+
+  test('the profile list scrolls to the selection, and only when it changes', async ({
+    context,
+    extensionOrigin,
+  }) => {
+    const page = await openPopup(context, extensionOrigin);
+    const names = Array.from({ length: 12 }, (_, i) => `Profile ${i}`);
+    await seedState(page, {
+      profiles: names.map((name) => profile(name, { enabled: false })),
+      activeProfileId: 'Profile 11',
+    });
+
+    const list = page.locator('#profiles-radio');
+    const isRowInList = (name: string) =>
+      list.evaluate((el, rowName) => {
+        const row = [...el.querySelectorAll<HTMLElement>('.profile-row')].find(
+          (r) => r.querySelector('.profile-name-btn')?.textContent === rowName
+        );
+        if (!row) return false;
+        const listBox = el.getBoundingClientRect();
+        const rowBox = row.getBoundingClientRect();
+        return rowBox.top >= listBox.top - 1 && rowBox.bottom <= listBox.bottom + 1;
+      }, name);
+
+    // The list overflows and the selected (last) profile is scrolled into view
+    await expect.poll(() => list.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true);
+    await expect.poll(() => isRowInList('Profile 11')).toBe(true);
+
+    // Switching another profile on re-renders the list without moving it
+    await list.evaluate((el) => {
+      el.scrollTop = 0;
+    });
+    await setProfileEnabled(page, 'Profile 0', true);
+    await expect.poll(async () => (await readProfiles(page))[0].enabled).toBe(true);
+    expect(await list.evaluate((el) => el.scrollTop)).toBe(0);
+    expect(await isRowInList('Profile 11')).toBe(false);
   });
 
   test('delete a profile after confirmation', async ({ context, extensionOrigin }) => {

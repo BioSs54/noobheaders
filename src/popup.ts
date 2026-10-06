@@ -203,6 +203,9 @@ function openModal(options: ModalOptions): void {
     cancelActiveModal = null;
     if (previousFocus && document.contains(previousFocus)) {
       previousFocus.focus();
+    } else if (previousFocus?.id) {
+      // The trigger was re-rendered (e.g. the actions of the selected profile)
+      document.getElementById(previousFocus.id)?.focus();
     }
   };
 
@@ -628,9 +631,6 @@ function setupEventListeners(): void {
 
   // Profile controls
   document.getElementById('add-profile-btn')?.addEventListener('click', addProfile);
-  document.getElementById('delete-profile-btn')?.addEventListener('click', deleteProfile);
-  document.getElementById('rename-profile-btn')?.addEventListener('click', renameProfile);
-  document.getElementById('duplicate-profile-btn')?.addEventListener('click', duplicateProfile);
 
   // Header controls
   document.getElementById('add-header-btn')?.addEventListener('click', addHeader);
@@ -681,12 +681,17 @@ function renderGlobalState(): void {
   document.body.classList.toggle('is-globally-disabled', !globalEnabled);
 }
 
+let lastScrolledProfileId: string | null = null;
+
 /**
  * Render profiles list
  */
 function renderProfiles(): void {
   const radioGroup = document.getElementById('profiles-radio') as HTMLUListElement;
   if (!radioGroup) return;
+
+  // The actions of the selected profile are re-created: keep the keyboard focus on them
+  const focusedId = radioGroup.contains(document.activeElement) ? document.activeElement?.id : '';
 
   radioGroup.replaceChildren();
 
@@ -746,21 +751,23 @@ function renderProfiles(): void {
       String(profile.filters?.length || 0),
     ]);
 
-    if (isSelected) {
-      const badge = document.createElement('span');
-      badge.className = 'profile-status-badge';
-      badge.textContent = getMessage('profileActivePrefix')
-        .replace(/\s*:\s*$/, '')
-        .trim();
-      headline.appendChild(badge);
-    }
-
     headline.appendChild(nameBtn);
     copy.appendChild(headline);
     copy.appendChild(meta);
     main.appendChild(toggleLabel);
     main.appendChild(copy);
     row.appendChild(main);
+
+    if (isSelected) {
+      if (!profile.enabled) {
+        const hint = document.createElement('p');
+        hint.id = 'profile-disabled-hint';
+        hint.className = 'profile-row-hint';
+        hint.textContent = getMessage('profileDisabledHint');
+        copy.appendChild(hint);
+      }
+      row.appendChild(createSelectedProfileActions());
+    }
 
     // Pointer shortcut: the whole card selects the profile (the switch only turns it on/off).
     // Keyboard and screen reader users use the name button, the card's accessible control.
@@ -773,40 +780,61 @@ function renderProfiles(): void {
     radioGroup.appendChild(row);
   });
 
-  // Update delete button state
-  const deleteBtn = document.getElementById('delete-profile-btn') as HTMLButtonElement;
-  if (deleteBtn) {
-    deleteBtn.disabled = profiles.length <= 1;
+  if (focusedId) document.getElementById(focusedId)?.focus();
+  // Keep the selected profile visible in the scrollable list, only when the selection changes
+  if (activeProfileId !== lastScrolledProfileId) {
+    lastScrolledProfileId = activeProfileId;
+    scrollRowIntoList(radioGroup, radioGroup.querySelector<HTMLElement>('.profile-row.active'));
   }
 
-  // Update active profile display elsewhere in the UI
   updateActiveProfileDisplay();
 }
 
+/** Scroll only the list (not the popup) so that the row is visible */
+function scrollRowIntoList(list: HTMLElement, row: HTMLElement | null): void {
+  if (!row) return;
+  // The list is the offset parent of its rows (position: relative)
+  const top = row.offsetTop;
+  const bottom = top + row.offsetHeight;
+  if (top < list.scrollTop) {
+    list.scrollTop = top;
+  } else if (bottom > list.scrollTop + list.clientHeight) {
+    list.scrollTop = bottom - list.clientHeight;
+  }
+}
+
 /**
- * Update the summary card that shows the selected profile
+ * Rename, duplicate and delete act on the selected profile: they are shown in its row
+ */
+function createSelectedProfileActions(): HTMLDivElement {
+  const actions = document.createElement('div');
+  actions.className = 'profile-row-actions';
+
+  const renameBtn = createIconButton('edit', getMessage('rename'), '', renameProfile);
+  renameBtn.id = 'rename-profile-btn';
+  const duplicateBtn = createIconButton('copy', getMessage('duplicate'), '', duplicateProfile);
+  duplicateBtn.id = 'duplicate-profile-btn';
+  const deleteBtn = createIconButton(
+    'trash',
+    getMessage('deleteProfile'),
+    'delete-btn',
+    deleteProfile
+  );
+  deleteBtn.id = 'delete-profile-btn';
+  // The last profile cannot be deleted
+  deleteBtn.disabled = profiles.length <= 1;
+
+  actions.append(renameBtn, duplicateBtn, deleteBtn);
+  return actions;
+}
+
+/**
+ * Show the name of the selected profile in the headings of the sections it edits
  */
 function updateActiveProfileDisplay(): void {
-  const nameEl = document.getElementById('active-profile-name');
-  const container = document.getElementById('active-profile-display');
-  const disabledHint = document.getElementById('profile-disabled-hint');
-  const renameBtn = document.getElementById('rename-profile-btn') as HTMLButtonElement | null;
-  const duplicateBtn = document.getElementById('duplicate-profile-btn') as HTMLButtonElement | null;
-  const active = getActiveProfile();
-  if (container) {
-    container.style.display = active ? 'flex' : 'none';
-  }
-  if (nameEl) {
-    nameEl.textContent = active ? active.name : '';
-  }
-  if (disabledHint) {
-    disabledHint.hidden = !active || active.enabled === true;
-  }
-  if (renameBtn) {
-    renameBtn.disabled = !active;
-  }
-  if (duplicateBtn) {
-    duplicateBtn.disabled = !active;
+  const name = getActiveProfile()?.name ?? '';
+  for (const el of document.querySelectorAll('#active-profile-name, [data-active-profile-name]')) {
+    el.textContent = name;
   }
 }
 
@@ -923,14 +951,14 @@ function createRowToggle(checked: boolean, label: string, onChange: () => void) 
 }
 
 function createIconButton(
-  icon: 'copy' | 'trash',
+  icon: 'copy' | 'edit' | 'trash',
   label: string,
   className: string,
   onClick: () => void
 ): HTMLButtonElement {
   const button = document.createElement('button');
   button.type = 'button';
-  button.className = `icon-btn ${className}`;
+  button.className = `icon-btn icon-btn--row ${className}`.trim();
   button.title = label;
   button.setAttribute('aria-label', label);
   button.appendChild(createIcon(icon, 'ui-icon ui-icon--sm'));
@@ -1118,8 +1146,9 @@ function createFilterElement(filter: Filter, index: number): HTMLDivElement {
 
   const renderTypeBadge = () => {
     const current = getActiveProfile()?.filters[index] ?? filter;
-    typeBadge.textContent =
-      current.type === 'domain' ? getMessage('domain') : getMessage('urlPattern');
+    const isDomain = current.type === 'domain';
+    typeBadge.textContent = getMessage(isDomain ? 'domain' : 'urlPatternShort');
+    typeBadge.title = getMessage(isDomain ? 'domain' : 'urlPattern');
     typeBadge.hidden = !current.value.trim();
   };
 

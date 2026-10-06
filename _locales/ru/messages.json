@@ -120,6 +120,9 @@
   "urlPattern": {
     "message": "Шаблон URL"
   },
+  "urlPatternShort": {
+    "message": "URL"
+  },
   "domain": {
     "message": "Домен"
   },
@@ -212,9 +215,6 @@
   },
   "welcomeMadeWith": {
     "message": "Автор"
-  },
-  "profileActivePrefix": {
-    "message": "Выбран:"
   },
   "aboutTitle": {
     "message": "О расширении"

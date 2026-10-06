@@ -120,6 +120,9 @@
   "urlPattern": {
     "message": "URL パターン"
   },
+  "urlPatternShort": {
+    "message": "URL"
+  },
   "domain": {
     "message": "ドメイン"
   },
@@ -212,9 +215,6 @@
   },
   "welcomeMadeWith": {
     "message": "作者"
-  },
-  "profileActivePrefix": {
-    "message": "選択中："
   },
   "aboutTitle": {
     "message": "このアプリについて"

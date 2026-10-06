@@ -119,6 +119,9 @@
   "urlPattern": {
     "message": "Schéma d'URL"
   },
+  "urlPatternShort": {
+    "message": "URL"
+  },
   "domain": {
     "message": "Domaine"
   },
@@ -211,9 +214,6 @@
   },
   "welcomeMadeWith": {
     "message": "Fait par"
-  },
-  "profileActivePrefix": {
-    "message": "Sélectionné :"
   },
   "aboutTitle": {
     "message": "À propos"

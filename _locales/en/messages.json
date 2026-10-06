@@ -120,6 +120,10 @@
   "urlPattern": {
     "message": "URL Pattern"
   },
+  "urlPatternShort": {
+    "message": "URL",
+    "description": "Short label of the URL pattern filter type"
+  },
   "domain": {
     "message": "Domain"
   },
@@ -212,9 +216,6 @@
   },
   "welcomeMadeWith": {
     "message": "Made by"
-  },
-  "profileActivePrefix": {
-    "message": "Selected:"
   },
   "aboutTitle": {
     "message": "About"
