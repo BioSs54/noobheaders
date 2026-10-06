@@ -471,12 +471,26 @@ async function loadState(): Promise<void> {
 /**
  * Save state to storage
  */
+/** Profiles recently written by this popup, to tell its own storage events from external ones */
+const recentProfilesWrites: string[] = [];
+
+function rememberProfilesWrite(written: Profile[]): void {
+  // Compared after normalization, like the stored value
+  recentProfilesWrites.push(JSON.stringify(normalizeProfiles(written)));
+  if (recentProfilesWrites.length > 5) recentProfilesWrites.shift();
+}
+
+function isOwnProfilesWrite(change: chrome.storage.StorageChange): boolean {
+  return recentProfilesWrites.includes(JSON.stringify(normalizeProfiles(change.newValue)));
+}
+
 async function saveState(): Promise<void> {
   try {
     if (!browserAPI.storage?.local?.set) {
       throw new Error('browserAPI.storage.local.set is not available');
     }
     isUpdatingStorage = true;
+    rememberProfilesWrite(profiles);
     await browserAPI.storage.local.set({
       [STORAGE_KEYS.PROFILES]: profiles,
       [STORAGE_KEYS.ACTIVE_PROFILE]: activeProfileId,
@@ -598,6 +612,17 @@ async function flushPendingSave(): Promise<void> {
   saveTimer = null;
   await saveStateImmediately();
   await syncExtensionState();
+  // Same as the debounced save: counts and "applies to this tab" markers follow the edit
+  renderProfiles();
+}
+
+/** Drop the edit waiting to be saved (replaced by a change made elsewhere) */
+function cancelPendingSave(): void {
+  if (saveTimer !== null) {
+    clearTimeout(saveTimer);
+    saveTimer = null;
+  }
+  clearDraftState();
 }
 
 /**
@@ -1861,13 +1886,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
-    // Ignore changes that we caused ourselves to prevent re-render during typing
-    if (isUpdatingStorage) {
+    const profilesChange = changes[STORAGE_KEYS.PROFILES];
+    const externalProfiles = Boolean(profilesChange) && !isOwnProfilesWrite(profilesChange);
+
+    // Ignore the events of our own writes (they would re-render while typing)
+    if (isUpdatingStorage && !externalProfiles) {
       return;
     }
 
     if (
-      changes[STORAGE_KEYS.PROFILES] ||
+      profilesChange ||
       changes[STORAGE_KEYS.ACTIVE_PROFILE] ||
       changes[STORAGE_KEYS.GLOBAL_ENABLED]
     ) {
@@ -1875,9 +1903,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
 
-      // Don't clobber an edit that is still being typed
-      if (saveTimer !== null) {
+      if (profilesChange && profilesChange.newValue === undefined) {
+        // Storage cleared elsewhere (options "clear all data"): drop the pending edit and wait
+        // for the data written right after, instead of recreating a demo profile now
+        cancelPendingSave();
         return;
+      }
+
+      if (saveTimer !== null) {
+        if (externalProfiles) {
+          // The profiles were replaced elsewhere (options import): that wins over the edit
+          // being typed, which must not write the old profiles back
+          cancelPendingSave();
+        } else {
+          // Only the switch or the selection changed (shortcut, auto-switch): keep the edit
+          // being typed, and take the new global switch so the pending save keeps it
+          if (changes[STORAGE_KEYS.GLOBAL_ENABLED]) {
+            globalEnabled = Boolean(changes[STORAGE_KEYS.GLOBAL_ENABLED].newValue);
+            const globalToggle = document.getElementById('global-enabled') as HTMLInputElement;
+            if (globalToggle) globalToggle.checked = globalEnabled;
+            persistDraftState();
+            renderGlobalState();
+            renderProfiles();
+          }
+          return;
+        }
       }
 
       await loadState();

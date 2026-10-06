@@ -1,12 +1,16 @@
 import { readFileSync } from 'node:fs';
+import type { Page } from '@playwright/test';
 import { expect, test } from '../fixtures';
 import {
   filter,
   header,
+  openOptions,
   openPopup,
   profile,
   readProfiles,
+  readStorage,
   reloadExtensionPage,
+  STORAGE_KEYS,
   seedState,
   setGlobalEnabled,
   trackPageErrors,
@@ -184,5 +188,91 @@ test.describe('Popup: headers and filters tabs', () => {
     await expect(page.locator('.header-item .header-name')).toBeFocused();
     await expect(page.locator('#empty-headers')).toBeHidden();
     await expect(page.locator('#headers-count')).toHaveText('1');
+  });
+});
+
+test.describe('Popup: changes made elsewhere while typing', () => {
+  async function writeStorage(page: Page, values: Record<string, unknown>, clear = false) {
+    await page.evaluate(
+      async ({ items, clearFirst }) => {
+        const runtime = globalThis as any;
+        const storage = (runtime.browser ?? runtime.chrome).storage.local;
+        if (clearFirst) await storage.clear();
+        await storage.set(items);
+      },
+      { items: values, clearFirst: clear }
+    );
+  }
+
+  test('the global switch changed by the shortcut is kept with the typed edit', async ({
+    context,
+    extensionOrigin,
+  }) => {
+    const popup = await openPopup(context, extensionOrigin);
+    await seedState(popup, {
+      profiles: [profile('Work', { headers: [header('', '')] })],
+      globalEnabled: false,
+    });
+    const other = await openOptions(context, extensionOrigin);
+
+    // Type, then switch the header modification on elsewhere before the save
+    await popup.locator('.header-name').fill('X-Typed');
+    await writeStorage(other, { [STORAGE_KEYS.globalEnabled]: true });
+
+    await expect(popup.locator('#global-enabled')).toBeChecked();
+    await expect.poll(async () => (await readProfiles(popup))[0].headers?.[0].name).toBe('X-Typed');
+    await popup.waitForTimeout(800);
+    const storage = await readStorage(popup);
+    expect(storage[STORAGE_KEYS.globalEnabled]).toBe(true);
+    expect(storage[STORAGE_KEYS.profiles][0].headers[0].name).toBe('X-Typed');
+  });
+
+  test('profiles replaced elsewhere are not overwritten by a pending edit', async ({
+    context,
+    extensionOrigin,
+  }) => {
+    const popup = await openPopup(context, extensionOrigin);
+    await seedState(popup, {
+      profiles: [profile('Work', { headers: [header('', '')] })],
+      globalEnabled: true,
+    });
+    const other = await openOptions(context, extensionOrigin);
+
+    // Type, then reset the data elsewhere before the save
+    await popup.locator('.header-name').fill('X-Lost');
+    await writeStorage(
+      other,
+      {
+        [STORAGE_KEYS.profiles]: [profile('Fresh')],
+        [STORAGE_KEYS.activeProfile]: 'Fresh',
+        [STORAGE_KEYS.globalEnabled]: false,
+      },
+      true
+    );
+
+    await expect(popup.locator('.profile-row')).toHaveCount(1);
+    await expect(popup.locator('#active-profile-name')).toHaveText('Fresh');
+    // Longer than the save delay: the old profiles are not written back
+    await popup.waitForTimeout(800);
+    expect((await readProfiles(popup)).map((p) => p.name)).toEqual(['Fresh']);
+    expect((await readStorage(popup))[STORAGE_KEYS.globalEnabled]).toBe(false);
+    await expect(popup.locator('#global-enabled')).not.toBeChecked();
+  });
+
+  test('the popup own saves never undo the edit being typed', async ({
+    context,
+    extensionOrigin,
+  }) => {
+    const page = await openPopup(context, extensionOrigin);
+    await seedState(page, { profiles: [profile('Work', { headers: [header('', '')] })] });
+
+    const name = page.locator('.header-name');
+    await name.click();
+    // Typing slower than the save delay: each save happens while more is typed
+    await name.pressSequentially('X-Very-Long-Header-Name', { delay: 120 });
+    await expect(name).toHaveValue('X-Very-Long-Header-Name');
+    await expect
+      .poll(async () => (await readProfiles(page))[0].headers?.[0].name)
+      .toBe('X-Very-Long-Header-Name');
   });
 });

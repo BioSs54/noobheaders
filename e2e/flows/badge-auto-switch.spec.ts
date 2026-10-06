@@ -221,3 +221,26 @@ test('the "applies to this tab" marker follows the headers being typed', async (
   await popup.locator('.header-name').fill('');
   await expect(marker).toBeHidden();
 });
+
+test('the marker is refreshed when leaving the field, before the save delay', async ({
+  context,
+  extensionOrigin,
+  testServerUrl,
+}) => {
+  const popup = await openPopup(context, extensionOrigin);
+  await seedState(popup, {
+    profiles: [profile('Work', { headers: [header('', '')] })],
+    globalEnabled: true,
+  });
+  const tab = await context.newPage();
+  await tab.goto(`${testServerUrl}/page`);
+  await tab.bringToFront();
+
+  const marker = profileRow(popup, 'Work').locator('.profile-applies');
+  await expect(marker).toBeHidden();
+  // Freeze the page timers: the debounced save never fires, only leaving the field saves
+  await popup.clock.install();
+  await popup.locator('.header-name').fill('X-Typed');
+  await popup.locator('.header-name').press('Tab');
+  await expect(marker).toBeVisible();
+});

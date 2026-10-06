@@ -39,9 +39,9 @@ describe('Storage Change Listener Fix', () => {
     const listenerBody = listenerMatch[0];
 
     // Should check the flag at the beginning
+    // Own writes are ignored; external profile changes still go through (E2E covered)
     assert.ok(
-      listenerBody.includes('if (isUpdatingStorage)') ||
-        listenerBody.includes('if(isUpdatingStorage)'),
+      /if\s*\(isUpdatingStorage\b/.test(listenerBody),
       'Should check isUpdatingStorage flag'
     );
 
