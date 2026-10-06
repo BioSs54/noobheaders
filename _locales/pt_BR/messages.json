@@ -412,7 +412,7 @@
     "message": "Atalho de teclado"
   },
   "shortcutDesc": {
-    "message": "Ativa ou desativa a modificação de cabeçalhos sem abrir o pop-up."
+    "message": "Ativa ou desativa a modificação de cabeçalhos sem abrir o pop-up. O ícone mostra brevemente ON ou OFF."
   },
   "shortcutChangeHint": {
     "message": "Você pode alterá-lo nas configurações de atalhos de extensões do navegador."
@@ -422,5 +422,11 @@
   },
   "refresh": {
     "message": "Atualizar"
+  },
+  "moveUp": {
+    "message": "Mover para cima"
+  },
+  "moveDown": {
+    "message": "Mover para baixo"
   }
 }

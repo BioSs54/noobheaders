@@ -412,7 +412,7 @@
     "message": "키보드 단축키"
   },
   "shortcutDesc": {
-    "message": "팝업을 열지 않고 헤더 수정을 켜거나 끕니다."
+    "message": "팝업을 열지 않고 헤더 수정을 켜거나 끕니다. 아이콘에 잠시 ON 또는 OFF가 표시됩니다."
   },
   "shortcutChangeHint": {
     "message": "브라우저의 확장 프로그램 단축키 설정에서 변경할 수 있습니다."
@@ -422,5 +422,11 @@
   },
   "refresh": {
     "message": "새로 고침"
+  },
+  "moveUp": {
+    "message": "위로 이동"
+  },
+  "moveDown": {
+    "message": "아래로 이동"
   }
 }

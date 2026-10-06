@@ -79,15 +79,17 @@ filter matches. Invalid filters are highlighted and never widen the scope.
 - **Select**: Click a profile to edit its headers and filters (in the Headers and Filters tabs)
 - **Rename, duplicate, export, delete**: Use the buttons of the selected profile (deleting requires at
   least 2 profiles)
-- **Reorder**: Drag a profile, or press `Alt + ↑/↓`. When several profiles set the same header, the
+- **Reorder**: Use the move up / down buttons of the selected profile, drag a profile, or press
+  `Alt + ↑/↓`. When several profiles set the same header, the
   selected profile wins, then the lowest one in the list
 - **Search**: A search field appears when you have more than 6 profiles
 - **Applies to this tab**: Profiles whose headers apply to the current tab are marked
 
 ### Keyboard Shortcut
 
-`Alt+Shift+H` switches the header modification on or off without opening the popup. The options page
-shows the current shortcut; change it in your browser's extension shortcut settings.
+`Alt+Shift+H` switches the header modification on or off without opening the popup; the icon briefly
+shows ON or OFF. The options page shows the current shortcut; change it in your browser's extension
+shortcut settings.
 
 ### Debugging
 

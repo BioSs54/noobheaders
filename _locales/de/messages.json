@@ -412,7 +412,7 @@
     "message": "Tastenkürzel"
   },
   "shortcutDesc": {
-    "message": "Schaltet die Header-Änderung ein oder aus, ohne das Popup zu öffnen."
+    "message": "Schaltet die Header-Änderung ein oder aus, ohne das Popup zu öffnen. Das Symbol zeigt kurz ON oder OFF."
   },
   "shortcutChangeHint": {
     "message": "Du kannst es in den Tastenkürzel-Einstellungen für Erweiterungen deines Browsers ändern."
@@ -422,5 +422,11 @@
   },
   "refresh": {
     "message": "Aktualisieren"
+  },
+  "moveUp": {
+    "message": "Nach oben"
+  },
+  "moveDown": {
+    "message": "Nach unten"
   }
 }

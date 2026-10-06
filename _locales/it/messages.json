@@ -412,7 +412,7 @@
     "message": "Scorciatoia da tastiera"
   },
   "shortcutDesc": {
-    "message": "Attiva o disattiva la modifica degli header senza aprire il popup."
+    "message": "Attiva o disattiva la modifica degli header senza aprire il popup. L'icona mostra brevemente ON o OFF."
   },
   "shortcutChangeHint": {
     "message": "Puoi modificarla nelle impostazioni delle scorciatoie delle estensioni del browser."
@@ -422,5 +422,11 @@
   },
   "refresh": {
     "message": "Aggiorna"
+  },
+  "moveUp": {
+    "message": "Sposta su"
+  },
+  "moveDown": {
+    "message": "Sposta giù"
   }
 }

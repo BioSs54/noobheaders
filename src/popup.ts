@@ -814,7 +814,7 @@ function renderProfiles(): void {
         hint.textContent = getMessage('profileDisabledHint');
         copy.appendChild(hint);
       }
-      row.appendChild(createSelectedProfileActions());
+      row.appendChild(createSelectedProfileActions(!searching));
     }
 
     // Pointer shortcut: the whole card selects the profile (the switch only turns it on/off).
@@ -863,7 +863,7 @@ function scrollRowIntoList(list: HTMLElement, row: HTMLElement | null): void {
 /**
  * Rename, duplicate and delete act on the selected profile: they are shown in its row
  */
-function createSelectedProfileActions(): HTMLDivElement {
+function createSelectedProfileActions(canReorder: boolean): HTMLDivElement {
   const actions = document.createElement('div');
   actions.className = 'profile-row-actions';
 
@@ -888,8 +888,35 @@ function createSelectedProfileActions(): HTMLDivElement {
   // The last profile cannot be deleted
   deleteBtn.disabled = profiles.length <= 1;
 
-  actions.append(renameBtn, duplicateBtn, exportBtn, deleteBtn);
+  // Move up / down: visible alternative to drag and drop and Alt + arrow keys. Off while the
+  // list is filtered by the search, like the other ways to reorder.
+  const index = profiles.findIndex((profile) => profile.id === activeProfileId);
+  const moveUpBtn = createIconButton('chevron-up', getMessage('moveUp'), '', () =>
+    moveSelectedProfile(-1)
+  );
+  moveUpBtn.id = 'move-up-profile-btn';
+  moveUpBtn.disabled = !canReorder || index <= 0;
+  const moveDownBtn = createIconButton('chevron-down', getMessage('moveDown'), '', () =>
+    moveSelectedProfile(1)
+  );
+  moveDownBtn.id = 'move-down-profile-btn';
+  moveDownBtn.disabled = !canReorder || index === -1 || index >= profiles.length - 1;
+
+  // Keyboard order: edit actions first, then moves (the grid places the moves on the left)
+  actions.append(renameBtn, duplicateBtn, exportBtn, deleteBtn, moveUpBtn, moveDownBtn);
   return actions;
+}
+
+async function moveSelectedProfile(step: -1 | 1): Promise<void> {
+  if (!activeProfileId) return;
+  const index = profiles.findIndex((profile) => profile.id === activeProfileId);
+  await moveProfile(activeProfileId, index + step);
+  // At the top or bottom the button is now disabled: keep the focus on the other one
+  const clicked = document.getElementById(
+    step < 0 ? 'move-up-profile-btn' : 'move-down-profile-btn'
+  );
+  const other = document.getElementById(step < 0 ? 'move-down-profile-btn' : 'move-up-profile-btn');
+  if (clicked instanceof HTMLButtonElement && clicked.disabled) other?.focus();
 }
 
 function isWebUrl(url: string | undefined): boolean {
@@ -1196,7 +1223,7 @@ function createRowToggle(checked: boolean, label: string, onChange: () => void) 
 }
 
 function createIconButton(
-  icon: 'copy' | 'download' | 'edit' | 'trash',
+  icon: 'chevron-down' | 'chevron-up' | 'copy' | 'download' | 'edit' | 'trash',
   label: string,
   className: string,
   onClick: () => void

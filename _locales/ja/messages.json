@@ -412,7 +412,7 @@
     "message": "キーボードショートカット"
   },
   "shortcutDesc": {
-    "message": "ポップアップを開かずにヘッダー変更のオン／オフを切り替えます。"
+    "message": "ポップアップを開かずにヘッダー変更のオン／オフを切り替えます。アイコンに一時的に ON または OFF が表示されます。"
   },
   "shortcutChangeHint": {
     "message": "ブラウザの拡張機能のショートカット設定で変更できます。"
@@ -422,5 +422,11 @@
   },
   "refresh": {
     "message": "更新"
+  },
+  "moveUp": {
+    "message": "上へ移動"
+  },
+  "moveDown": {
+    "message": "下へ移動"
   }
 }

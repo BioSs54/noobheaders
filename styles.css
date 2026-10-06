@@ -836,9 +836,43 @@ body {
 }
 
 .profile-row-actions {
-  display: flex;
+  display: grid;
   flex-shrink: 0;
+  grid-template-columns: repeat(3, 28px);
+  grid-template-areas:
+    "up rename duplicate"
+    "down export delete";
   gap: 2px;
+}
+
+/* Targets of 28px: above the 24px minimum of WCAG 2.5.8 */
+.profile-row-actions .icon-btn--row {
+  width: 28px;
+  height: 28px;
+}
+
+#rename-profile-btn {
+  grid-area: rename;
+}
+
+#duplicate-profile-btn {
+  grid-area: duplicate;
+}
+
+#export-profile-btn {
+  grid-area: export;
+}
+
+#delete-profile-btn {
+  grid-area: delete;
+}
+
+#move-up-profile-btn {
+  grid-area: up;
+}
+
+#move-down-profile-btn {
+  grid-area: down;
 }
 
 .profile-row-hint {

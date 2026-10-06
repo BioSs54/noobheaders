@@ -412,7 +412,7 @@
     "message": "键盘快捷键"
   },
   "shortcutDesc": {
-    "message": "无需打开弹出窗口即可开启或关闭请求头修改。"
+    "message": "无需打开弹出窗口即可开启或关闭请求头修改。图标会短暂显示 ON 或 OFF。"
   },
   "shortcutChangeHint": {
     "message": "可以在浏览器的扩展程序快捷键设置中更改。"
@@ -422,5 +422,11 @@
   },
   "refresh": {
     "message": "刷新"
+  },
+  "moveUp": {
+    "message": "上移"
+  },
+  "moveDown": {
+    "message": "下移"
   }
 }

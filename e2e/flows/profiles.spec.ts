@@ -226,6 +226,55 @@ test.describe('Profiles', () => {
     expect((await readProfiles(page)).every((p) => p.enabled)).toBe(true);
   });
 
+  test('the selected profile has move up and move down buttons', async ({
+    context,
+    extensionOrigin,
+  }) => {
+    const page = await openPopup(context, extensionOrigin);
+    await seedState(page, {
+      profiles: [profile('A'), profile('B'), profile('C')],
+      activeProfileId: 'B',
+    });
+    const names = async () => (await readProfiles(page)).map((p) => p.name);
+    const up = page.locator('#move-up-profile-btn');
+    const down = page.locator('#move-down-profile-btn');
+
+    // Only on the selected profile, labelled, and big enough to click (WCAG 2.5.8)
+    await expect(up).toHaveCount(1);
+    await expect(profileRow(page, 'B').locator('#move-up-profile-btn')).toBeVisible();
+    await expect(up).toHaveAttribute('aria-label', 'Move up');
+    await expect(down).toHaveAttribute('aria-label', 'Move down');
+    for (const button of [up, down]) {
+      const box = await button.boundingBox();
+      expect(box?.width).toBeGreaterThanOrEqual(24);
+      expect(box?.height).toBeGreaterThanOrEqual(24);
+    }
+    await expect(up).toBeEnabled();
+    await expect(down).toBeEnabled();
+
+    await up.click();
+    await expect.poll(names).toEqual(['B', 'A', 'C']);
+    // First now: "up" is disabled and the focus goes to "down"
+    await expect(up).toBeDisabled();
+    await expect(down).toBeFocused();
+
+    await page.keyboard.press('Enter');
+    await expect.poll(names).toEqual(['A', 'B', 'C']);
+    await expect(down).toBeFocused();
+    await down.click();
+    await expect.poll(names).toEqual(['A', 'C', 'B']);
+    await expect(down).toBeDisabled();
+    await expect(up).toBeFocused();
+
+    // The selection does not change
+    expect(await readActiveProfileId(page)).toBe('B');
+
+    // A single profile cannot move
+    await seedState(page, { profiles: [profile('Only')] });
+    await expect(up).toBeDisabled();
+    await expect(down).toBeDisabled();
+  });
+
   test('profiles are reordered with drag and drop', async ({ context, extensionOrigin }) => {
     const page = await openPopup(context, extensionOrigin);
     await seedState(page, { profiles: [profile('A'), profile('B'), profile('C')] });
@@ -272,6 +321,9 @@ test.describe('Profiles', () => {
     ]);
     // Reordering is off while the list is filtered
     await expect(profileRow(page, 'Beta')).not.toHaveAttribute('draggable', 'true');
+    await page.getByRole('button', { name: 'Zeta', exact: true }).click();
+    await expect(page.locator('#move-up-profile-btn')).toBeDisabled();
+    await expect(page.locator('#move-down-profile-btn')).toBeDisabled();
 
     // Case-insensitive
     await search.fill('API');

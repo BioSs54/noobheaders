@@ -418,7 +418,7 @@
     "message": "Keyboard shortcut"
   },
   "shortcutDesc": {
-    "message": "Switch the header modification on or off without opening the popup."
+    "message": "Switch the header modification on or off without opening the popup. The icon briefly shows ON or OFF."
   },
   "shortcutChangeHint": {
     "message": "You can change it in the extension shortcut settings of your browser."
@@ -428,5 +428,11 @@
   },
   "refresh": {
     "message": "Refresh"
+  },
+  "moveUp": {
+    "message": "Move up"
+  },
+  "moveDown": {
+    "message": "Move down"
   }
 }

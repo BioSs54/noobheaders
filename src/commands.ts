@@ -14,11 +14,18 @@ interface LocalStorageArea {
 /**
  * Run a command. Switching the header modification only writes the storage: the background
  * storage listener then applies the rules and refreshes the badge (and an open popup).
+ * `onToggle` runs with the new state before the write (to show it on the badge first).
  * Returns whether the command was handled.
  */
-export async function handleCommand(command: string, storage: LocalStorageArea): Promise<boolean> {
+export async function handleCommand(
+  command: string,
+  storage: LocalStorageArea,
+  onToggle?: (enabled: boolean) => void | Promise<void>
+): Promise<boolean> {
   if (command !== TOGGLE_COMMAND) return false;
   const data = await storage.get([STORAGE_KEYS.GLOBAL_ENABLED]);
-  await storage.set({ [STORAGE_KEYS.GLOBAL_ENABLED]: !data[STORAGE_KEYS.GLOBAL_ENABLED] });
+  const enabled = !data[STORAGE_KEYS.GLOBAL_ENABLED];
+  await onToggle?.(enabled);
+  await storage.set({ [STORAGE_KEYS.GLOBAL_ENABLED]: enabled });
   return true;
 }

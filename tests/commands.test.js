@@ -24,6 +24,16 @@ test('the toggle command switches the header modification on and off', async () 
   assert.strictEqual(storage.data.noobheaders_global_enabled, false);
 });
 
+test('the new state is reported before it is written', async () => {
+  const storage = fakeStorage({ noobheaders_global_enabled: true });
+  const seen = [];
+  await handleCommand(TOGGLE_COMMAND, storage, (enabled) => {
+    seen.push([enabled, storage.data.noobheaders_global_enabled]);
+  });
+  assert.deepStrictEqual(seen, [[false, true]], 'called with the new state, before the write');
+  assert.strictEqual(storage.data.noobheaders_global_enabled, false);
+});
+
 test('unknown commands are ignored', async () => {
   const storage = fakeStorage({ noobheaders_global_enabled: true });
   assert.strictEqual(await handleCommand('something-else', storage), false);

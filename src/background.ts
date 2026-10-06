@@ -4,6 +4,7 @@
  */
 
 import { selectProfileForUrl } from './auto-switch.js';
+import { flashBadge, isBadgeFlashing } from './badge-flash.js';
 import {
   detectBrowser,
   getActionApi,
@@ -192,7 +193,9 @@ async function getActiveTabUrl(tabId?: number): Promise<string | undefined> {
  */
 async function updateBadge(tabId?: number): Promise<void> {
   const generation = ++badgeGeneration;
-  const isStale = () => generation !== badgeGeneration;
+  // A newer update, or the "ON" / "OFF" flash of the shortcut, owns the badge
+  const isStale = () => generation !== badgeGeneration || isBadgeFlashing();
+  if (isStale()) return;
   try {
     const data = await browserAPI.storage.local.get([
       STORAGE_KEYS.PROFILES,
@@ -276,7 +279,9 @@ browserAPI.storage.onChanged.addListener(async (changes, namespace) => {
 
 // Keyboard shortcuts
 browserAPI.commands?.onCommand.addListener((command) => {
-  void handleCommand(command, browserAPI.storage.local);
+  void handleCommand(command, browserAPI.storage.local, (enabled) =>
+    flashBadge(getActionApi(), enabled, () => void updateBadge())
+  );
 });
 
 // Auto-switch the selected profile based on the active tab URL

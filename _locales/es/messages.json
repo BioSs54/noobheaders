@@ -411,7 +411,7 @@
     "message": "Atajo de teclado"
   },
   "shortcutDesc": {
-    "message": "Activa o desactiva la modificación de encabezados sin abrir la ventana emergente."
+    "message": "Activa o desactiva la modificación de encabezados sin abrir la ventana emergente. El icono muestra brevemente ON u OFF."
   },
   "shortcutChangeHint": {
     "message": "Puedes cambiarlo en los ajustes de atajos de extensiones de tu navegador."
@@ -421,5 +421,11 @@
   },
   "refresh": {
     "message": "Actualizar"
+  },
+  "moveUp": {
+    "message": "Subir"
+  },
+  "moveDown": {
+    "message": "Bajar"
   }
 }

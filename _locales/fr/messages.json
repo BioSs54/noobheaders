@@ -411,7 +411,7 @@
     "message": "Raccourci clavier"
   },
   "shortcutDesc": {
-    "message": "Active ou coupe la modification des en-têtes sans ouvrir la popup."
+    "message": "Active ou coupe la modification des en-têtes sans ouvrir la popup. L'icône affiche brièvement ON ou OFF."
   },
   "shortcutChangeHint": {
     "message": "Vous pouvez le modifier dans les réglages des raccourcis des extensions de votre navigateur."
@@ -421,5 +421,11 @@
   },
   "refresh": {
     "message": "Actualiser"
+  },
+  "moveUp": {
+    "message": "Monter"
+  },
+  "moveDown": {
+    "message": "Descendre"
   }
 }
