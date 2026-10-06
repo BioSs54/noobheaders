@@ -25,7 +25,12 @@ export async function handleCommand(
   if (command !== TOGGLE_COMMAND) return false;
   const data = await storage.get([STORAGE_KEYS.GLOBAL_ENABLED]);
   const enabled = !data[STORAGE_KEYS.GLOBAL_ENABLED];
-  await onToggle?.(enabled);
+  try {
+    await onToggle?.(enabled);
+  } catch (error) {
+    // The feedback is cosmetic: it must never prevent the switch itself
+    console.warn('[NoobHeaders] Shortcut feedback failed', error);
+  }
   await storage.set({ [STORAGE_KEYS.GLOBAL_ENABLED]: enabled });
   return true;
 }

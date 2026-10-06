@@ -36,13 +36,19 @@ export async function flashBadge(
   if (!api) return;
   const token = ++flashToken;
   flashUntil = now + BADGE_FLASH_MS;
-  await api.setBadgeText({ text: enabled ? 'ON' : 'OFF' });
-  await api.setBadgeBackgroundColor({
-    color: enabled ? BADGE_FLASH_COLORS.on : BADGE_FLASH_COLORS.off,
-  });
-  schedule(() => {
-    if (token !== flashToken) return;
-    flashUntil = 0;
-    restore();
-  }, BADGE_FLASH_MS);
+  try {
+    await api.setBadgeText({ text: enabled ? 'ON' : 'OFF' });
+    await api.setBadgeBackgroundColor({
+      color: enabled ? BADGE_FLASH_COLORS.on : BADGE_FLASH_COLORS.off,
+    });
+  } catch (error) {
+    console.warn('[NoobHeaders] Could not show the shortcut state on the badge', error);
+  } finally {
+    // Whatever happened, the regular badge comes back
+    schedule(() => {
+      if (token !== flashToken) return;
+      flashUntil = 0;
+      restore();
+    }, BADGE_FLASH_MS);
+  }
 }

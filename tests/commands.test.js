@@ -34,6 +34,15 @@ test('the new state is reported before it is written', async () => {
   assert.strictEqual(storage.data.noobheaders_global_enabled, false);
 });
 
+test('a failing feedback never prevents the switch', async () => {
+  const storage = fakeStorage({ noobheaders_global_enabled: false });
+  const handled = await handleCommand(TOGGLE_COMMAND, storage, () => {
+    throw new Error('badge unavailable');
+  });
+  assert.strictEqual(handled, true);
+  assert.strictEqual(storage.data.noobheaders_global_enabled, true);
+});
+
 test('unknown commands are ignored', async () => {
   const storage = fakeStorage({ noobheaders_global_enabled: true });
   assert.strictEqual(await handleCommand('something-else', storage), false);

@@ -72,3 +72,19 @@ test('nothing happens without a badge API', async () => {
   assert.strictEqual(pending.length, 0);
   assert.strictEqual(isBadgeFlashing(1000), false);
 });
+
+test('a failing badge API still restores the regular badge', async () => {
+  const { pending, schedule } = manualSchedule();
+  let restored = 0;
+  const failing = {
+    setBadgeText: async () => {
+      throw new Error('no badge here');
+    },
+    setBadgeBackgroundColor: async () => {},
+  };
+  await flashBadge(failing, true, () => restored++, schedule, 1000);
+  assert.strictEqual(pending.length, 1, 'the restore is still scheduled');
+  pending[0].callback();
+  assert.strictEqual(restored, 1);
+  assert.strictEqual(isBadgeFlashing(1001), false);
+});
