@@ -82,7 +82,7 @@ filter matches. Invalid filters are highlighted and never widen the scope.
 ### Import/Export
 
 - **Export**: Click "Export Profiles" to save all profiles as JSON
-- **Import**: Click "Import Profiles" to load profiles from a JSON file
+- **Import**: Click "Import Profiles" to load profiles from a JSON file, then choose to add them to your profiles (names and ids already in use are made unique) or to replace all your profiles
 
 ## 🛠️ Development
 

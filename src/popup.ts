@@ -1000,9 +1000,10 @@ function createHeaderElement(header: Header, index: number): HTMLDivElement {
   typeSelect.setAttribute('aria-label', getMessage('headerTypeLabel'));
   typeSelect.setAttribute('data-index', index.toString());
   typeSelect.setAttribute('data-field', 'type');
-  typeSelect.addEventListener('change', (e) =>
-    updateHeaderType(index, (e.target as HTMLSelectElement).value as 'request' | 'response')
-  );
+  typeSelect.addEventListener('change', (e) => {
+    void updateHeaderType(index, (e.target as HTMLSelectElement).value as 'request' | 'response');
+    updateRemovalNote();
+  });
 
   const requestOption = document.createElement('option');
   requestOption.value = 'request';
@@ -1022,6 +1023,20 @@ function createHeaderElement(header: Header, index: number): HTMLDivElement {
   errorSpan.id = `header-error-${index}`;
   errorSpan.hidden = true;
 
+  // An empty value removes the header: say so instead of relying on the placeholder
+  const removalNote = document.createElement('span');
+  removalNote.className = 'field-note';
+  removalNote.id = `header-note-${index}`;
+  const updateRemovalNote = () => {
+    const showNote = header.name.trim() !== '' && header.value === '';
+    removalNote.hidden = !showNote;
+    removalNote.textContent = showNote
+      ? getMessage(
+          header.type === 'response' ? 'headerRemovedFromResponses' : 'headerRemovedFromRequests'
+        )
+      : '';
+  };
+
   // Name input
   const nameInput = document.createElement('input');
   nameInput.type = 'text';
@@ -1038,6 +1053,7 @@ function createHeaderElement(header: Header, index: number): HTMLDivElement {
   nameInput.addEventListener('input', (e) => {
     updateHeaderName(index, (e.target as HTMLInputElement).value);
     setRowError(div, errorSpan, getHeaderError(header));
+    updateRemovalNote();
   });
   nameInput.addEventListener('blur', () => {
     void flushPendingSave();
@@ -1049,7 +1065,7 @@ function createHeaderElement(header: Header, index: number): HTMLDivElement {
   valueInput.className = 'header-value';
   valueInput.placeholder = getMessage('headerValue');
   valueInput.setAttribute('aria-label', getMessage('headerValue'));
-  valueInput.setAttribute('aria-describedby', errorSpan.id);
+  valueInput.setAttribute('aria-describedby', `${errorSpan.id} ${removalNote.id}`);
   valueInput.spellcheck = false;
   valueInput.autocomplete = 'off';
   valueInput.value = header.value || '';
@@ -1059,6 +1075,7 @@ function createHeaderElement(header: Header, index: number): HTMLDivElement {
   valueInput.addEventListener('input', (e) => {
     updateHeaderValue(index, (e.target as HTMLInputElement).value);
     setRowError(div, errorSpan, getHeaderError(header));
+    updateRemovalNote();
   });
   valueInput.addEventListener('blur', () => {
     void flushPendingSave();
@@ -1081,8 +1098,10 @@ function createHeaderElement(header: Header, index: number): HTMLDivElement {
   div.appendChild(duplicateBtn);
   div.appendChild(deleteBtn);
   div.appendChild(errorSpan);
+  div.appendChild(removalNote);
 
   setRowError(div, errorSpan, getHeaderError(header));
+  updateRemovalNote();
 
   return div;
 }

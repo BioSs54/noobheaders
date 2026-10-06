@@ -74,8 +74,16 @@
     "description": "Confirmation when deleting a profile"
   },
   "confirmImport": {
-    "message": "Import $1 profile(s)? This will replace existing profiles.",
+    "message": "Import $1 profile(s): add them to your profiles, or replace all your profiles?",
     "description": "Confirmation shown when importing profiles"
+  },
+  "importMerge": {
+    "message": "Add",
+    "description": "Import button: add the imported profiles to the existing ones"
+  },
+  "importReplace": {
+    "message": "Replace all",
+    "description": "Import button: replace every existing profile"
   },
   "confirmClearAll": {
     "message": "Clear all profiles and settings? This cannot be undone!",
@@ -115,7 +123,15 @@
     "message": "Header name"
   },
   "headerValue": {
-    "message": "Value (empty = remove header)"
+    "message": "Value"
+  },
+  "headerRemovedFromRequests": {
+    "message": "Empty value: this header is removed from requests.",
+    "description": "Shown when a request header has an empty value"
+  },
+  "headerRemovedFromResponses": {
+    "message": "Empty value: this header is removed from responses.",
+    "description": "Shown when a response header has an empty value"
   },
   "urlPattern": {
     "message": "URL Pattern"

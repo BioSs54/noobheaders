@@ -74,8 +74,14 @@
     "description": "Confirmation when deleting a profile"
   },
   "confirmImport": {
-    "message": "Importar $1 perfil(is)? Isso substituirá os perfis existentes.",
+    "message": "Importar $1 perfil(is): adicioná-los aos seus perfis ou substituir todos os perfis?",
     "description": "Confirmation shown when importing profiles"
+  },
+  "importMerge": {
+    "message": "Adicionar"
+  },
+  "importReplace": {
+    "message": "Substituir tudo"
   },
   "confirmClearAll": {
     "message": "Apagar todos os perfis e configurações? Esta ação não pode ser desfeita!",
@@ -115,7 +121,13 @@
     "message": "Nome do cabeçalho"
   },
   "headerValue": {
-    "message": "Valor (vazio = remover cabeçalho)"
+    "message": "Valor"
+  },
+  "headerRemovedFromRequests": {
+    "message": "Valor vazio: este cabeçalho é removido das requisições."
+  },
+  "headerRemovedFromResponses": {
+    "message": "Valor vazio: este cabeçalho é removido das respostas."
   },
   "urlPattern": {
     "message": "Padrão de URL"

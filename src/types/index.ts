@@ -93,6 +93,31 @@ export function normalizeProfiles(profiles: unknown): Profile[] {
   });
 }
 
+/**
+ * Add imported profiles after the existing ones. Ids and names already in use are made
+ * unique ("Work" becomes "Work (2)"), so that no existing profile is overwritten.
+ */
+export function mergeProfiles(existing: Profile[], imported: Profile[]): Profile[] {
+  const ids = new Set(existing.map((profile) => profile.id));
+  const names = new Set(existing.map((profile) => profile.name.trim().toLowerCase()));
+
+  const added = imported.map((profile) => {
+    const id = ids.has(profile.id) ? generateProfileId() : profile.id;
+    ids.add(id);
+
+    const baseName = profile.name.trim();
+    let name = baseName;
+    for (let counter = 2; names.has(name.toLowerCase()); counter += 1) {
+      name = `${baseName} (${counter})`;
+    }
+    names.add(name.toLowerCase());
+
+    return { ...profile, id, name };
+  });
+
+  return [...existing, ...added];
+}
+
 export function createDefaultProfile(id: string): Profile {
   return {
     id,

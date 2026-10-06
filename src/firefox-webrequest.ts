@@ -15,7 +15,7 @@ let activeProfiles: Profile[] = [];
  * @param globalEnabled - Whether global toggle is enabled
  */
 export function applyHeadersWebRequest(profiles: Profile[], globalEnabled: boolean): void {
-  const browserAPI = getBrowserApi() as typeof browser;
+  const browserAPI = getBrowserApi() as unknown as typeof browser;
 
   if (!browserAPI.webRequest?.onBeforeSendHeaders || !browserAPI.webRequest?.onHeadersReceived) {
     console.warn('[NoobHeaders] webRequest API is unavailable in this browser context');

@@ -4,7 +4,7 @@
 
 import { getBrowserApi } from './browser-compat.js';
 import { getMessage } from './i18n.js';
-import { normalizeProfiles, STORAGE_KEYS } from './types/index.js';
+import { mergeProfiles, normalizeProfiles, STORAGE_KEYS } from './types/index.js';
 import { createIcon } from './ui-icons.js';
 
 const browserAPI = getBrowserApi();
@@ -133,19 +133,52 @@ async function importProfiles(e: Event): Promise<void> {
       return;
     }
 
-    const confirmed = await showConfirm(
+    // Adding is the default choice: it never loses existing profiles
+    const choice = await showDialog(
       getMessage('importProfiles'),
-      getMessage('confirmImport', String(importedProfiles.length))
+      getMessage('confirmImport', String(importedProfiles.length)),
+      [
+        { id: 'confirm-cancel', label: getMessage('cancel'), className: 'btn-secondary' },
+        {
+          id: 'confirm-ok',
+          label: getMessage('importReplace'),
+          className: 'btn-danger',
+          value: 'replace',
+        },
+        {
+          id: 'import-merge',
+          label: getMessage('importMerge'),
+          className: 'btn-primary',
+          value: 'merge',
+          initialFocus: true,
+        },
+      ]
     );
 
-    if (!confirmed) return;
+    if (!choice) return;
 
     const normalizedProfiles = normalizeProfiles(importedProfiles);
 
-    await browserAPI.storage.local.set({
-      [STORAGE_KEYS.PROFILES]: normalizedProfiles,
-      [STORAGE_KEYS.ACTIVE_PROFILE]: normalizedProfiles[0].id,
-    });
+    if (choice === 'replace') {
+      await browserAPI.storage.local.set({
+        [STORAGE_KEYS.PROFILES]: normalizedProfiles,
+        [STORAGE_KEYS.ACTIVE_PROFILE]: normalizedProfiles[0].id,
+      });
+    } else {
+      const current = await browserAPI.storage.local.get([
+        STORAGE_KEYS.PROFILES,
+        STORAGE_KEYS.ACTIVE_PROFILE,
+      ]);
+      const existing = normalizeProfiles(current[STORAGE_KEYS.PROFILES]);
+      const merged = mergeProfiles(existing, normalizedProfiles);
+      // Keep the selected profile; select the first one when nothing valid was selected
+      const activeId = current[STORAGE_KEYS.ACTIVE_PROFILE];
+      const hasActive = merged.some((profile) => profile.id === activeId);
+      await browserAPI.storage.local.set({
+        [STORAGE_KEYS.PROFILES]: merged,
+        [STORAGE_KEYS.ACTIVE_PROFILE]: hasActive ? activeId : merged[0].id,
+      });
+    }
 
     showToast(getMessage('profilesImported'), 'success');
   } catch (error) {
@@ -188,10 +221,24 @@ function showToast(message: string, type: 'success' | 'error' | 'info' = 'info')
   }, 3000);
 }
 
+interface DialogAction<T extends string> {
+  id: string;
+  label: string;
+  className: string;
+  /** Value resolved when clicked; no value means "cancel" (resolves null) */
+  value?: T;
+  initialFocus?: boolean;
+}
+
 /**
- * Show confirm dialog (built with DOM APIs: messages are never parsed as HTML)
+ * Show a dialog with several actions (built with DOM APIs: messages are never parsed as HTML).
+ * Resolves the value of the clicked action, or null when cancelled (Escape, overlay, cancel).
  */
-function showConfirm(title: string, message: string): Promise<boolean> {
+function showDialog<T extends string>(
+  title: string,
+  message: string,
+  actionList: DialogAction<T>[]
+): Promise<T | null> {
   return new Promise((resolve) => {
     const previousFocus = document.activeElement as HTMLElement | null;
 
@@ -220,49 +267,48 @@ function showConfirm(title: string, message: string): Promise<boolean> {
     const actions = document.createElement('div');
     actions.className = 'modal-actions';
 
-    const cancelBtn = document.createElement('button');
-    cancelBtn.type = 'button';
-    cancelBtn.id = 'confirm-cancel';
-    cancelBtn.className = 'btn-secondary';
-    cancelBtn.textContent = getMessage('cancel');
-
-    const okBtn = document.createElement('button');
-    okBtn.type = 'button';
-    okBtn.id = 'confirm-ok';
-    okBtn.className = 'btn-primary';
-    okBtn.textContent = getMessage('ok');
-
-    actions.append(cancelBtn, okBtn);
-    content.append(titleEl, messageEl, actions);
-    modal.appendChild(content);
-    document.body.appendChild(modal);
-
-    const close = (confirmed: boolean) => {
+    const close = (value: T | null) => {
       document.removeEventListener('keydown', handleKeydown);
       modal.remove();
       previousFocus?.focus();
-      resolve(confirmed);
+      resolve(value);
     };
+
+    const buttons = actionList.map((action) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.id = action.id;
+      button.className = action.className;
+      button.textContent = action.label;
+      button.addEventListener('click', () => close(action.value ?? null));
+      actions.appendChild(button);
+      return button;
+    });
 
     const handleKeydown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
-        close(false);
+        close(null);
       } else if (e.key === 'Tab') {
         // Keep focus inside the dialog
         e.preventDefault();
-        (document.activeElement === okBtn ? cancelBtn : okBtn).focus();
+        const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
+        const step = e.shiftKey ? -1 : 1;
+        buttons[(index + step + buttons.length) % buttons.length].focus();
       }
     };
 
-    okBtn.addEventListener('click', () => close(true));
-    cancelBtn.addEventListener('click', () => close(false));
+    content.append(titleEl, messageEl, actions);
+    modal.appendChild(content);
+    document.body.appendChild(modal);
+
     modal.addEventListener('click', (e) => {
-      if (e.target === modal) close(false);
+      if (e.target === modal) close(null);
     });
     document.addEventListener('keydown', handleKeydown);
 
-    okBtn.focus();
+    const initial = actionList.findIndex((action) => action.initialFocus);
+    buttons[initial === -1 ? buttons.length - 1 : initial].focus();
   });
 }
 

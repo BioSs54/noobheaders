@@ -74,8 +74,14 @@
     "description": "Confirmation when deleting a profile"
   },
   "confirmImport": {
-    "message": "Importare $1 profilo/i? I profili esistenti verranno sostituiti.",
+    "message": "Importare $1 profilo/i: aggiungerli ai tuoi profili o sostituire tutti i profili?",
     "description": "Confirmation shown when importing profiles"
+  },
+  "importMerge": {
+    "message": "Aggiungi"
+  },
+  "importReplace": {
+    "message": "Sostituisci tutto"
   },
   "confirmClearAll": {
     "message": "Cancellare tutti i profili e le impostazioni? Operazione irreversibile!",
@@ -115,7 +121,13 @@
     "message": "Nome dell'header"
   },
   "headerValue": {
-    "message": "Valore (vuoto = rimuovi l'header)"
+    "message": "Valore"
+  },
+  "headerRemovedFromRequests": {
+    "message": "Valore vuoto: questo header viene rimosso dalle richieste."
+  },
+  "headerRemovedFromResponses": {
+    "message": "Valore vuoto: questo header viene rimosso dalle risposte."
   },
   "urlPattern": {
     "message": "Pattern URL"

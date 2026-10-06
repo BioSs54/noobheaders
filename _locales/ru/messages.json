@@ -74,8 +74,14 @@
     "description": "Confirmation when deleting a profile"
   },
   "confirmImport": {
-    "message": "Импортировать профили ($1)? Существующие профили будут заменены.",
+    "message": "Импорт профилей ($1): добавить их к вашим профилям или заменить все профили?",
     "description": "Confirmation shown when importing profiles"
+  },
+  "importMerge": {
+    "message": "Добавить"
+  },
+  "importReplace": {
+    "message": "Заменить все"
   },
   "confirmClearAll": {
     "message": "Удалить все профили и настройки? Это действие необратимо!",
@@ -115,7 +121,13 @@
     "message": "Имя заголовка"
   },
   "headerValue": {
-    "message": "Значение (пусто = удалить заголовок)"
+    "message": "Значение"
+  },
+  "headerRemovedFromRequests": {
+    "message": "Пустое значение: этот заголовок удаляется из запросов."
+  },
+  "headerRemovedFromResponses": {
+    "message": "Пустое значение: этот заголовок удаляется из ответов."
   },
   "urlPattern": {
     "message": "Шаблон URL"

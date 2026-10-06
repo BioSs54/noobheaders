@@ -74,8 +74,14 @@
     "description": "Confirmation when deleting a profile"
   },
   "confirmImport": {
-    "message": "프로필 $1개를 가져올까요? 기존 프로필은 대체됩니다.",
+    "message": "프로필 $1개를 가져옵니다. 기존 프로필에 추가할까요, 아니면 모두 대체할까요?",
     "description": "Confirmation shown when importing profiles"
+  },
+  "importMerge": {
+    "message": "추가"
+  },
+  "importReplace": {
+    "message": "모두 대체"
   },
   "confirmClearAll": {
     "message": "모든 프로필과 설정을 삭제할까요? 되돌릴 수 없습니다!",
@@ -115,7 +121,13 @@
     "message": "헤더 이름"
   },
   "headerValue": {
-    "message": "값 (비우면 헤더 제거)"
+    "message": "값"
+  },
+  "headerRemovedFromRequests": {
+    "message": "값이 비어 있어 이 헤더는 요청에서 제거됩니다."
+  },
+  "headerRemovedFromResponses": {
+    "message": "값이 비어 있어 이 헤더는 응답에서 제거됩니다."
   },
   "urlPattern": {
     "message": "URL 패턴"
