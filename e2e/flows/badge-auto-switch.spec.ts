@@ -194,7 +194,13 @@ test.describe('Popup: profiles applying to the active tab', () => {
         .include('#profiles-radio')
         .withTags(['wcag2a', 'wcag2aa'])
         .analyze();
-      expect(results.violations.map((v) => v.id)).toEqual([]);
+      expect(
+        results.violations.flatMap((v) =>
+          v.nodes.map(
+            (n) => `${colorScheme} ${v.id} ${n.target} ${JSON.stringify(n.any[0]?.data ?? {})}`
+          )
+        )
+      ).toEqual([]);
     }
   });
 });
