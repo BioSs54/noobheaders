@@ -34,7 +34,7 @@ export function looksLikeRegex(value: string): boolean {
     v.endsWith('$') ||
     v.includes('.+') ||
     v.includes('(?') ||
-    /(^|[^a-z0-9-])\.\*/i.test(v)
+    /(^|[^a-z0-9])\.\*/i.test(v)
   );
 }
 

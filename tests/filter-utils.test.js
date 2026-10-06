@@ -27,6 +27,7 @@ test('looksLikeRegex spots regular expressions, not valid wildcard patterns', as
     'https://example.com/.+',
     '(?i)example.com',
     '://.*example.com',
+    'https://example.com/items/sku-.*',
   ]) {
     assert.strictEqual(looksLikeRegex(value), true, value);
   }
@@ -37,6 +38,7 @@ test('looksLikeRegex spots regular expressions, not valid wildcard patterns', as
     '*.example.com',
     '*://example.com/*',
     'example.*',
+    'my-site.*',
     'https://api.example.com/v1/*',
     'localhost:3000',
     '*://*.example.com/api/*?x=*',
