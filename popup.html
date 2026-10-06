@@ -84,29 +84,10 @@
               <use href="icons/ui-sprite.svg#plus"></use>
             </svg>
           </button>
-          <button id="delete-profile-btn" class="icon-btn" data-i18n-title="deleteProfile" aria-label="Delete Profile" type="button">
-            <svg class="ui-icon ui-icon--md" focusable="false" aria-hidden="true">
-              <use href="icons/ui-sprite.svg#trash"></use>
-            </svg>
-          </button>
         </div>
       </div>
 
       <div class="profile-controls">
-        <div id="active-profile-display" class="profile-summary-card">
-          <div class="profile-summary-text">
-            <span class="profile-summary-label" data-i18n="profileActivePrefix">Active:</span>
-            <strong id="active-profile-name" class="profile-summary-name" aria-live="polite"></strong>
-            <span id="profile-disabled-hint" class="profile-summary-hint" data-i18n="profileDisabledHint" hidden>
-              This profile is off: its headers are not applied.</span>
-          </div>
-
-          <div class="button-group profile-summary-actions">
-            <button id="rename-profile-btn" class="btn-secondary" data-i18n="rename" type="button">Rename</button>
-            <button id="duplicate-profile-btn" class="btn-secondary" data-i18n="duplicate" type="button">Duplicate</button>
-          </div>
-        </div>
-
         <ul id="profiles-radio" class="profiles-radio" data-i18n-title="profiles"></ul>
         <p class="section-hint" data-i18n="profilesHint">Switch on the profiles to apply. Click a profile to edit it.</p>
       </div>
@@ -115,7 +96,7 @@
     <!-- Headers Section -->
     <section class="section">
       <div class="section-header">
-        <h2 data-i18n="headers">Headers</h2>
+        <h2><span data-i18n="headers">Headers</span> <span id="active-profile-name" class="section-context" aria-live="polite"></span></h2>
         <button id="add-header-btn" class="btn-primary" data-i18n="addHeader" type="button">+ Add Header</button>
       </div>
 
@@ -132,7 +113,7 @@
     <!-- Filters Section -->
     <section class="section">
       <div class="section-header">
-        <h2 data-i18n="filters">Filters</h2>
+        <h2><span data-i18n="filters">Filters</span> <span class="section-context" data-active-profile-name></span></h2>
         <button id="add-filter-btn" class="btn-primary" data-i18n="addFilter" type="button">+ Add Filter</button>
       </div>
 

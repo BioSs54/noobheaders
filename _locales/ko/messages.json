@@ -120,6 +120,9 @@
   "urlPattern": {
     "message": "URL 패턴"
   },
+  "urlPatternShort": {
+    "message": "URL"
+  },
   "domain": {
     "message": "도메인"
   },
@@ -212,9 +215,6 @@
   },
   "welcomeMadeWith": {
     "message": "제작"
-  },
-  "profileActivePrefix": {
-    "message": "선택됨:"
   },
   "aboutTitle": {
     "message": "정보"

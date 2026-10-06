@@ -87,7 +87,10 @@ test.describe('Profiles', () => {
 
     await answerPrompt(page, 'Production');
     await expect(page.locator('#active-profile-name')).toHaveText('Production');
+    await expect(page.locator('[data-active-profile-name]')).toHaveText('Production');
     await expect(profileRow(page, 'Production')).toBeVisible();
+    // The row is re-rendered: the focus comes back to its rename button
+    await expect(page.locator('#rename-profile-btn')).toBeFocused();
     expect((await readProfiles(page)).map((p) => p.name)).toEqual(['Production', 'Staging']);
   });
 
@@ -136,6 +139,27 @@ test.describe('Profiles', () => {
 
     await page.click('#duplicate-profile-btn');
     await expect(page.locator('#active-profile-name')).toHaveText('Work (copy)');
+  });
+
+  test('rename, duplicate and delete are shown on the selected profile only', async ({
+    context,
+    extensionOrigin,
+  }) => {
+    const page = await openPopup(context, extensionOrigin);
+    await seedState(page, {
+      profiles: [profile('Work'), profile('Staging', { enabled: false })],
+    });
+
+    const actions = page.locator('.profile-row-actions');
+    await expect(actions).toHaveCount(1);
+    await expect(profileRow(page, 'Work').locator('.profile-row-actions')).toBeVisible();
+    await expect(page.locator('#profile-disabled-hint')).toBeHidden();
+
+    await profileRow(page, 'Staging').locator('.profile-row-meta').click();
+    await expect(actions).toHaveCount(1);
+    await expect(profileRow(page, 'Staging').locator('.profile-row-actions')).toBeVisible();
+    // The "off" hint is shown in the selected row
+    await expect(profileRow(page, 'Staging').locator('#profile-disabled-hint')).toBeVisible();
   });
 
   test('delete a profile after confirmation', async ({ context, extensionOrigin }) => {

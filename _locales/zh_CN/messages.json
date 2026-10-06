@@ -120,6 +120,9 @@
   "urlPattern": {
     "message": "URL 模式"
   },
+  "urlPatternShort": {
+    "message": "URL"
+  },
   "domain": {
     "message": "域名"
   },
@@ -212,9 +215,6 @@
   },
   "welcomeMadeWith": {
     "message": "作者"
-  },
-  "profileActivePrefix": {
-    "message": "已选："
   },
   "aboutTitle": {
     "message": "关于"
