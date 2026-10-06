@@ -65,6 +65,17 @@ Clicking a profile name only selects it for editing.
 
 Filters allow you to apply headers only to specific requests:
 
+> [!IMPORTANT]
+> The wildcard is `*`, **not** `.*`: filters are not regular expressions. Coming from ModHeader, write
+> `*://example.com/api/*` instead of `.*://example\.com/api/.*`. The popup warns you when a filter
+> looks like a regular expression.
+>
+> | ModHeader (regular expression) | NoobHeaders |
+> | --- | --- |
+> | `.*://example\.com/.*` | `*://example.com/*` |
+> | `https://api\.example\.com/v1/.*` | `https://api.example.com/v1/*` |
+> | `.*\.example\.com.*` | `*.example.com` (domain) |
+
 - **Domain**: `example.com` matches the domain and all its subdomains
 - **URL Pattern**: `*` is a wildcard and the whole URL must match (e.g., `*://example.com/api/*`).
   Without a scheme any scheme matches, `*.example.com` also matches `example.com`, and a pattern without

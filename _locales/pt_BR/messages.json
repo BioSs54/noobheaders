@@ -244,7 +244,10 @@
     "message": "example.com ou *://*.example.com/*"
   },
   "filterHelpText": {
-    "message": "example.com corresponde ao domínio e aos seus subdomínios. Padrões de URL usam * como curinga: *://*.example.com/api/*, localhost:3000"
+    "message": "example.com corresponde ao domínio e aos seus subdomínios. Padrões de URL usam * como curinga (não .*, sem expressões regulares): *://*.example.com/api/*, localhost:3000"
+  },
+  "filterRegexHint": {
+    "message": "Isso parece uma expressão regular. Os filtros usam * como curinga, não .* (ex.: *://example.com/api/*)."
   },
   "invalidDomain": {
     "message": "Domínio ou URL inválido"

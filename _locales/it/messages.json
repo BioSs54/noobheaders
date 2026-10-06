@@ -244,7 +244,10 @@
     "message": "example.com o *://*.example.com/*"
   },
   "filterHelpText": {
-    "message": "example.com corrisponde al dominio e ai suoi sottodomini. I pattern URL usano * come jolly: *://*.example.com/api/*, localhost:3000"
+    "message": "example.com corrisponde al dominio e ai suoi sottodomini. I pattern URL usano * come jolly (non .*, niente espressioni regolari): *://*.example.com/api/*, localhost:3000"
+  },
+  "filterRegexHint": {
+    "message": "Sembra un'espressione regolare. I filtri usano * come jolly, non .* (es. *://example.com/api/*)."
   },
   "invalidDomain": {
     "message": "Dominio o URL non valido"

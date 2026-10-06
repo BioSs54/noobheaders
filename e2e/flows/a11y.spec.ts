@@ -21,7 +21,12 @@ for (const colorScheme of ['light', 'dark'] as const) {
               header('X-Removed', ''),
               header('X-Blank', '  '),
             ],
-            filters: [filter('example.com'), filter('not a domain')],
+            // The last one shows the "regular expression" hint
+            filters: [
+              filter('example.com'),
+              filter('not a domain'),
+              filter('https://a.example/.*'),
+            ],
           }),
           profile('Staging', { enabled: false }),
         ],

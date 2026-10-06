@@ -244,7 +244,10 @@
     "message": "example.com oder *://*.example.com/*"
   },
   "filterHelpText": {
-    "message": "example.com passt auf die Domain und ihre Subdomains. URL-Muster nutzen * als Platzhalter: *://*.example.com/api/*, localhost:3000"
+    "message": "example.com passt auf die Domain und ihre Subdomains. URL-Muster nutzen * als Platzhalter (nicht .*, keine regulären Ausdrücke): *://*.example.com/api/*, localhost:3000"
+  },
+  "filterRegexHint": {
+    "message": "Das sieht wie ein regulärer Ausdruck aus. Filter nutzen * als Platzhalter, nicht .* (z. B. *://example.com/api/*)."
   },
   "invalidDomain": {
     "message": "Ungültige Domain oder URL"
