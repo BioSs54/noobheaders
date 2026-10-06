@@ -162,6 +162,43 @@ test.describe('Profiles', () => {
     await expect(profileRow(page, 'Staging').locator('#profile-disabled-hint')).toBeVisible();
   });
 
+  test('the profile list scrolls to the selection, and only when it changes', async ({
+    context,
+    extensionOrigin,
+  }) => {
+    const page = await openPopup(context, extensionOrigin);
+    const names = Array.from({ length: 12 }, (_, i) => `Profile ${i}`);
+    await seedState(page, {
+      profiles: names.map((name) => profile(name, { enabled: false })),
+      activeProfileId: 'Profile 11',
+    });
+
+    const list = page.locator('#profiles-radio');
+    const isRowInList = (name: string) =>
+      list.evaluate((el, rowName) => {
+        const row = [...el.querySelectorAll<HTMLElement>('.profile-row')].find(
+          (r) => r.querySelector('.profile-name-btn')?.textContent === rowName
+        );
+        if (!row) return false;
+        const listBox = el.getBoundingClientRect();
+        const rowBox = row.getBoundingClientRect();
+        return rowBox.top >= listBox.top - 1 && rowBox.bottom <= listBox.bottom + 1;
+      }, name);
+
+    // The list overflows and the selected (last) profile is scrolled into view
+    await expect.poll(() => list.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true);
+    await expect.poll(() => isRowInList('Profile 11')).toBe(true);
+
+    // Switching another profile on re-renders the list without moving it
+    await list.evaluate((el) => {
+      el.scrollTop = 0;
+    });
+    await setProfileEnabled(page, 'Profile 0', true);
+    await expect.poll(async () => (await readProfiles(page))[0].enabled).toBe(true);
+    expect(await list.evaluate((el) => el.scrollTop)).toBe(0);
+    expect(await isRowInList('Profile 11')).toBe(false);
+  });
+
   test('delete a profile after confirmation', async ({ context, extensionOrigin }) => {
     const page = await openPopup(context, extensionOrigin);
     await seedState(page, {
