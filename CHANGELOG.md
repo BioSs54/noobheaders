@@ -1,3 +1,10 @@
+# [2.3.0](https://github.com/BioSs54/noobheaders/compare/v2.2.1...v2.3.0) (2026-10-06)
+
+
+### Features
+
+* **ui:** ✨ lighter profile, header and filter rows in the popup ([#18](https://github.com/BioSs54/noobheaders/issues/18)) ([d198598](https://github.com/BioSs54/noobheaders/commit/d19859808a5b825236d4cbe3a79d43fb1c0e1bc8))
+
 ## [2.2.1](https://github.com/BioSs54/noobheaders/compare/v2.2.0...v2.2.1) (2026-09-24)
 
 
