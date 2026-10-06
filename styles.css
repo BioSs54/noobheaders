@@ -1741,3 +1741,19 @@ body {
 .profile-row.drop-after {
   box-shadow: 0 3px 0 var(--primary-color);
 }
+
+/* Respect the "reduce motion" system setting */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: must win over every rule of the sheet */
+    animation-duration: 0.01ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: must win over every rule of the sheet */
+    animation-iteration-count: 1 !important;
+    /* biome-ignore lint/complexity/noImportantStyles: must win over every rule of the sheet */
+    transition-duration: 0.01ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: must win over every rule of the sheet */
+    scroll-behavior: auto !important;
+  }
+}

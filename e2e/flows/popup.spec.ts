@@ -82,6 +82,23 @@ test.describe('Popup: layout and global switch', () => {
     await expect.poll(async () => (await readProfiles(page))[0].enabled).toBe(true);
   });
 
+  test('animations are turned off when the system asks for reduced motion', async ({
+    context,
+    extensionOrigin,
+  }) => {
+    const page = await openPopup(context, extensionOrigin);
+    const rowTransition = () =>
+      page
+        .locator('.profile-row')
+        .first()
+        .evaluate((row) => Number.parseFloat(getComputedStyle(row).transitionDuration));
+
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    expect(await rowTransition()).toBeGreaterThan(0.1);
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    expect(await rowTransition()).toBeLessThan(0.001);
+  });
+
   test('easter egg unlocks noob mode after three clicks on the version', async ({
     context,
     extensionOrigin,

@@ -10,7 +10,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
   test.describe(`Accessibility (${colorScheme})`, () => {
     test('popup has no WCAG A/AA violation', async ({ context, extensionOrigin }) => {
       const popup = await openPopup(context, extensionOrigin);
-      await popup.emulateMedia({ colorScheme });
+      await popup.emulateMedia({ colorScheme, reducedMotion: 'reduce' });
       await seedState(popup, {
         profiles: [
           profile('Work', {
@@ -54,7 +54,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 
     test('welcome page has no WCAG A/AA violation', async ({ context, extensionOrigin }) => {
       const welcome = await context.newPage();
-      await welcome.emulateMedia({ colorScheme });
+      await welcome.emulateMedia({ colorScheme, reducedMotion: 'reduce' });
       await welcome.goto(`${extensionOrigin}/welcome.html`);
       const results = await new AxeBuilder({ page: welcome })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -68,7 +68,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 
     test('options page has no WCAG A/AA violation', async ({ context, extensionOrigin }) => {
       const options = await openOptions(context, extensionOrigin);
-      await options.emulateMedia({ colorScheme });
+      await options.emulateMedia({ colorScheme, reducedMotion: 'reduce' });
       const results = await new AxeBuilder({ page: options })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
         .analyze();

@@ -188,8 +188,9 @@ test.describe('Popup: profiles applying to the active tab', () => {
     await expect(marker('Everywhere')).toBeHidden();
 
     // The marker keeps the contrast requirements
+    // No transitions while the colors change: axe must not measure a half-way color
     for (const colorScheme of ['light', 'dark'] as const) {
-      await popup.emulateMedia({ colorScheme });
+      await popup.emulateMedia({ colorScheme, reducedMotion: 'reduce' });
       const results = await new AxeBuilder({ page: popup })
         .include('#profiles-radio')
         .withTags(['wcag2a', 'wcag2aa'])
