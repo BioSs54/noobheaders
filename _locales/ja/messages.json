@@ -74,8 +74,14 @@
     "description": "Confirmation when deleting a profile"
   },
   "confirmImport": {
-    "message": "$1 件のプロファイルをインポートしますか？既存のプロファイルは置き換えられます。",
+    "message": "$1 件のプロファイルをインポートします。既存のプロファイルに追加しますか、それともすべて置き換えますか？",
     "description": "Confirmation shown when importing profiles"
+  },
+  "importMerge": {
+    "message": "追加"
+  },
+  "importReplace": {
+    "message": "すべて置き換え"
   },
   "confirmClearAll": {
     "message": "すべてのプロファイルと設定を削除しますか？元に戻せません！",
@@ -115,7 +121,13 @@
     "message": "ヘッダー名"
   },
   "headerValue": {
-    "message": "値（空 = ヘッダーを削除）"
+    "message": "値"
+  },
+  "headerRemovedFromRequests": {
+    "message": "値が空のため、このヘッダーはリクエストから削除されます。"
+  },
+  "headerRemovedFromResponses": {
+    "message": "値が空のため、このヘッダーはレスポンスから削除されます。"
   },
   "urlPattern": {
     "message": "URL パターン"

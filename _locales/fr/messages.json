@@ -15,10 +15,10 @@
     "description": "Libellé pour le bouton global qui active la modification des en-têtes"
   },
   "addProfile": {
-    "message": "Ajouter un Profil"
+    "message": "Ajouter un profil"
   },
   "deleteProfile": {
-    "message": "Supprimer le Profil"
+    "message": "Supprimer le profil"
   },
   "rename": {
     "message": "Renommer"
@@ -30,19 +30,19 @@
     "message": "En-têtes"
   },
   "addHeader": {
-    "message": "+ Ajouter un En-tête"
+    "message": "+ Ajouter un en-tête"
   },
   "filters": {
     "message": "Filtres"
   },
   "addFilter": {
-    "message": "+ Ajouter un Filtre"
+    "message": "+ Ajouter un filtre"
   },
   "noHeadersConfigured": {
     "message": "Aucun en-tête configuré"
   },
   "clickAddHeaderHint": {
-    "message": "Cliquez sur \"Ajouter un En-tête\" pour commencer"
+    "message": "Cliquez sur « Ajouter un en-tête » pour commencer"
   },
   "noFiltersConfigured": {
     "message": "Aucun filtre configuré"
@@ -73,8 +73,14 @@
     "description": "Confirmation lors de la suppression d'un profil"
   },
   "confirmImport": {
-    "message": "Importer $1 profil(s) ? Ceci remplacera les profils existants.",
+    "message": "Importer $1 profil(s) : les ajouter à vos profils, ou remplacer tous vos profils ?",
     "description": "Confirmation affichée lors de l'importation de profils"
+  },
+  "importMerge": {
+    "message": "Ajouter"
+  },
+  "importReplace": {
+    "message": "Tout remplacer"
   },
   "confirmClearAll": {
     "message": "Effacer tous les profils et paramètres ? Ceci est irréversible !",
@@ -99,10 +105,10 @@
     "message": "Débogage"
   },
   "showDebugInfo": {
-    "message": "Afficher les Infos de Débogage"
+    "message": "Afficher les infos de débogage"
   },
   "clearAllData": {
-    "message": "Effacer Toutes les Données"
+    "message": "Effacer toutes les données"
   },
   "request": {
     "message": "Requête"
@@ -114,7 +120,13 @@
     "message": "Nom de l'en-tête"
   },
   "headerValue": {
-    "message": "Valeur (vide = supprimer l'en-tête)"
+    "message": "Valeur"
+  },
+  "headerRemovedFromRequests": {
+    "message": "Valeur vide : cet en-tête est supprimé des requêtes."
+  },
+  "headerRemovedFromResponses": {
+    "message": "Valeur vide : cet en-tête est supprimé des réponses."
   },
   "urlPattern": {
     "message": "Schéma d'URL"
@@ -153,7 +165,7 @@
     "message": "Modificateur d'en-têtes HTTP simple, local et respectueux de la vie privée"
   },
   "welcomeFeatureSimpleTitle": {
-    "message": "Simple et Clair"
+    "message": "Simple et clair"
   },
   "welcomeFeatureSimpleDesc": {
     "message": "Interface intuitive conçue pour les développeurs et les débutants. Sans encombrement, juste des en-têtes."
@@ -165,13 +177,13 @@
     "message": "Pas de pubs, pas de tracking, pas d'analytiques. Vos données restent sur votre appareil."
   },
   "welcomeFeatureProfilesTitle": {
-    "message": "Profils Puissants"
+    "message": "Profils puissants"
   },
   "welcomeFeatureProfilesDesc": {
     "message": "Créez plusieurs profils pour différents scénarios. Changez instantanément."
   },
   "welcomeFeatureFiltersTitle": {
-    "message": "Filtres Intelligents"
+    "message": "Filtres intelligents"
   },
   "welcomeFeatureFiltersDesc": {
     "message": "Appliquez des en-têtes à des domaines ou motifs d'URL spécifiques."
@@ -189,13 +201,13 @@
     "message": "Développé ouvertement. Contribuez sur GitHub ou auditez le code."
   },
   "welcomeReadyTitle": {
-    "message": "Prêt à Commencer ?"
+    "message": "Prêt à commencer ?"
   },
   "welcomeReadyDesc": {
     "message": "Cliquez sur l'icône de l'extension dans votre barre d'outils pour créer votre premier profil !"
   },
   "welcomeQuickTipsTitle": {
-    "message": "Astuces Rapides"
+    "message": "Astuces rapides"
   },
   "welcomeTip1": {
     "message": "Cliquez sur l'icône de l'extension pour ouvrir le popup"
@@ -252,7 +264,7 @@
     "message": "Importer les profils"
   },
   "welcomeReportIssue": {
-    "message": "Signaler un Problème"
+    "message": "Signaler un problème"
   },
   "cancel": {
     "message": "Annuler"

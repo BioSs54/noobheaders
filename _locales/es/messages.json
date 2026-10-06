@@ -15,10 +15,10 @@
     "description": "Etiqueta para el interruptor global que habilita la modificación de encabezados"
   },
   "addProfile": {
-    "message": "Añadir Perfil"
+    "message": "Añadir perfil"
   },
   "deleteProfile": {
-    "message": "Eliminar Perfil"
+    "message": "Eliminar perfil"
   },
   "rename": {
     "message": "Renombrar"
@@ -30,19 +30,19 @@
     "message": "Encabezados"
   },
   "addHeader": {
-    "message": "+ Añadir Encabezado"
+    "message": "+ Añadir encabezado"
   },
   "filters": {
     "message": "Filtros"
   },
   "addFilter": {
-    "message": "+ Añadir Filtro"
+    "message": "+ Añadir filtro"
   },
   "noHeadersConfigured": {
     "message": "No hay encabezados configurados"
   },
   "clickAddHeaderHint": {
-    "message": "Haz clic en \"Añadir Encabezado\" para comenzar"
+    "message": "Haz clic en «Añadir encabezado» para comenzar"
   },
   "noFiltersConfigured": {
     "message": "No hay filtros configurados"
@@ -54,7 +54,7 @@
     "message": "Importar/Exportar"
   },
   "importExportDesc": {
-    "message": "Haga una copia de seguridad de sus perfiles o importe perfiles desde un archivo JSON"
+    "message": "Haz una copia de seguridad de tus perfiles o importa perfiles desde un archivo JSON"
   },
   "enterProfileName": {
     "message": "Ingrese el nombre del perfil:",
@@ -73,8 +73,14 @@
     "description": "Confirmación al eliminar un perfil"
   },
   "confirmImport": {
-    "message": "¿Importar $1 perfil(es)? Esto reemplazará los perfiles existentes.",
+    "message": "Importar $1 perfil(es): ¿añadirlos a tus perfiles o reemplazar todos tus perfiles?",
     "description": "Confirmación mostrada al importar perfiles"
+  },
+  "importMerge": {
+    "message": "Añadir"
+  },
+  "importReplace": {
+    "message": "Reemplazar todo"
   },
   "confirmClearAll": {
     "message": "¿Borrar todos los perfiles y ajustes? ¡Esto no se puede deshacer!",
@@ -99,10 +105,10 @@
     "message": "Depuración"
   },
   "showDebugInfo": {
-    "message": "Mostrar Información de Depuración"
+    "message": "Mostrar información de depuración"
   },
   "clearAllData": {
-    "message": "Borrar Todos los Datos"
+    "message": "Borrar todos los datos"
   },
   "request": {
     "message": "Solicitud"
@@ -114,7 +120,13 @@
     "message": "Nombre del encabezado"
   },
   "headerValue": {
-    "message": "Valor (vacío = eliminar encabezado)"
+    "message": "Valor"
+  },
+  "headerRemovedFromRequests": {
+    "message": "Valor vacío: este encabezado se elimina de las solicitudes."
+  },
+  "headerRemovedFromResponses": {
+    "message": "Valor vacío: este encabezado se elimina de las respuestas."
   },
   "urlPattern": {
     "message": "Patrón de URL"
@@ -153,25 +165,25 @@
     "message": "Modificador de encabezados HTTP limpio y respetuoso con la privacidad"
   },
   "welcomeFeatureSimpleTitle": {
-    "message": "Simple y Limpio"
+    "message": "Simple y limpio"
   },
   "welcomeFeatureSimpleDesc": {
     "message": "Interfaz intuitiva diseñada tanto para desarrolladores como para principiantes. Sin desorden, solo encabezados."
   },
   "welcomeFeaturePrivacyTitle": {
-    "message": "Privacidad Primero"
+    "message": "Privacidad primero"
   },
   "welcomeFeaturePrivacyDesc": {
     "message": "Sin anuncios, sin rastreo, sin analíticas. Tus datos permanecen en tu dispositivo."
   },
   "welcomeFeatureProfilesTitle": {
-    "message": "Perfiles Potentes"
+    "message": "Perfiles potentes"
   },
   "welcomeFeatureProfilesDesc": {
     "message": "Crea múltiples perfiles para diferentes escenarios. Cambia instantáneamente."
   },
   "welcomeFeatureFiltersTitle": {
-    "message": "Filtros Inteligentes"
+    "message": "Filtros inteligentes"
   },
   "welcomeFeatureFiltersDesc": {
     "message": "Aplica encabezados a dominios o patrones de URL específicos."
@@ -183,19 +195,19 @@
     "message": "Comparte configuraciones con tu equipo o haz copias de seguridad de tus perfiles."
   },
   "welcomeFeatureOpenSourceTitle": {
-    "message": "Código Abierto"
+    "message": "Código abierto"
   },
   "welcomeFeatureOpenSourceDesc": {
     "message": "Desarrollado abiertamente. Contribuye en GitHub o audita el código."
   },
   "welcomeReadyTitle": {
-    "message": "¿Listo para Comenzar?"
+    "message": "¿Listo para comenzar?"
   },
   "welcomeReadyDesc": {
     "message": "¡Haz clic en el icono de la extensión en tu barra de herramientas para crear tu primer perfil!"
   },
   "welcomeQuickTipsTitle": {
-    "message": "Consejos Rápidos"
+    "message": "Consejos rápidos"
   },
   "welcomeTip1": {
     "message": "Haz clic en el icono de la extensión para abrir el popup"
@@ -252,7 +264,7 @@
     "message": "Importar perfiles"
   },
   "welcomeReportIssue": {
-    "message": "Reportar Problema"
+    "message": "Reportar un problema"
   },
   "cancel": {
     "message": "Cancelar"

@@ -74,8 +74,14 @@
     "description": "Confirmation when deleting a profile"
   },
   "confirmImport": {
-    "message": "导入 $1 个配置？现有配置将被替换。",
+    "message": "导入 $1 个配置：添加到现有配置，还是替换全部配置？",
     "description": "Confirmation shown when importing profiles"
+  },
+  "importMerge": {
+    "message": "添加"
+  },
+  "importReplace": {
+    "message": "全部替换"
   },
   "confirmClearAll": {
     "message": "清除所有配置和设置？此操作无法撤销！",
@@ -115,7 +121,13 @@
     "message": "名称"
   },
   "headerValue": {
-    "message": "值（留空 = 删除该头）"
+    "message": "值"
+  },
+  "headerRemovedFromRequests": {
+    "message": "值为空：此头部将从请求中移除。"
+  },
+  "headerRemovedFromResponses": {
+    "message": "值为空：此头部将从响应中移除。"
   },
   "urlPattern": {
     "message": "URL 模式"

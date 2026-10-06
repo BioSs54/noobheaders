@@ -29,6 +29,29 @@ test.describe('Headers editor', () => {
       .toEqual([{ enabled: true, type: 'response', name: 'X-Api-Key', value: 'secret' }]);
   });
 
+  test('an empty value says that the header is removed', async ({ context, extensionOrigin }) => {
+    const page = await openPopup(context, extensionOrigin);
+    await seedState(page, {
+      profiles: [profile('Work', { headers: [header('X-Remove-Me', '')] })],
+    });
+
+    const row = page.locator('.header-item');
+    const note = row.locator('.field-note');
+    await expect(note).toHaveText('Empty value: this header is removed from requests.');
+
+    await row.locator('.header-type').selectOption('response');
+    await expect(note).toHaveText('Empty value: this header is removed from responses.');
+
+    await row.locator('.header-value').fill('kept');
+    await expect(note).toBeHidden();
+    await row.locator('.header-value').fill('');
+    await expect(note).toBeVisible();
+
+    // No note while the header has no name yet
+    await row.locator('.header-name').fill('');
+    await expect(note).toBeHidden();
+  });
+
   test('typing keeps the focus and caret while the popup saves', async ({
     context,
     extensionOrigin,

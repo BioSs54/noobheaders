@@ -94,6 +94,8 @@ test.describe('Options page', () => {
     ]);
     await options.locator('#import-profiles-input').setInputFiles(file);
     await expect(options.locator('#confirm-message')).toContainText('2');
+    // Adding (non-destructive) is the default choice
+    await expect(options.locator('#import-merge')).toBeFocused();
     await options.click('#confirm-ok');
     await expect(options.locator('.toast.success')).toBeVisible();
 
@@ -105,6 +107,40 @@ test.describe('Options page', () => {
 
     await expect(popup.locator('.profile-row')).toHaveCount(2);
     await expect(popup.locator('#active-profile-name')).toHaveText('Imported A');
+  });
+
+  test('import can add the profiles to the existing ones', async ({ context, extensionOrigin }) => {
+    const popup = await openPopup(context, extensionOrigin);
+    await seedState(popup, {
+      profiles: [profile('Work'), profile('Staging')],
+      activeProfileId: 'Staging',
+    });
+    const options = await openOptions(context, extensionOrigin);
+
+    const file = await writeJson('profiles.json', [
+      // Same id and name as an existing profile: both are made unique
+      { id: 'Work', name: 'work', headers: [header('X-New', '1')], filters: [] },
+      { name: 'Local', headers: [], filters: [] },
+    ]);
+    await options.locator('#import-profiles-input').setInputFiles(file);
+    await options.click('#import-merge');
+    await expect(options.locator('.toast.success')).toBeVisible();
+
+    const storage = await readStorage(options);
+    const profiles = storage[STORAGE_KEYS.profiles];
+    expect(profiles.map((p: { name: string }) => p.name)).toEqual([
+      'Work',
+      'Staging',
+      'work (2)',
+      'Local',
+    ]);
+    expect(new Set(profiles.map((p: { id: string }) => p.id)).size).toBe(4);
+    expect(profiles[0].headers).toEqual([]);
+    // The selection is kept
+    expect(storage[STORAGE_KEYS.activeProfile]).toBe('Staging');
+
+    await expect(popup.locator('.profile-row')).toHaveCount(4);
+    await expect(popup.locator('#active-profile-name')).toHaveText('Staging');
   });
 
   test('cancelling the import keeps the current profiles', async ({ context, extensionOrigin }) => {

@@ -161,6 +161,24 @@ test('normalizeProfiles keeps user edits of the demo profile and deduplicates id
   assert.notStrictEqual(profiles[1].id, 'a', 'Duplicate ids must be regenerated');
 });
 
+test('mergeProfiles appends imported profiles with unique ids and names', async () => {
+  const { mergeProfiles } = await import('../dist/types.js');
+  const profile = (id, name) => ({ id, name, enabled: false, headers: [], filters: [] });
+  const merged = mergeProfiles(
+    [profile('a', 'Work'), profile('b', 'Work (2)')],
+    [profile('a', 'work'), profile('c', 'Staging'), profile('d', 'Staging')]
+  );
+
+  assert.deepStrictEqual(
+    merged.map((p) => p.name),
+    ['Work', 'Work (2)', 'work (3)', 'Staging', 'Staging (2)']
+  );
+  assert.strictEqual(new Set(merged.map((p) => p.id)).size, 5, 'Ids must stay unique');
+  assert.strictEqual(merged[0].id, 'a', 'Existing profiles keep their id');
+  assert.notStrictEqual(merged[2].id, 'a', 'A clashing imported id is regenerated');
+  assert.strictEqual(merged[3].id, 'c', 'Other imported ids are kept');
+});
+
 test('browser detection prefers declarativeNetRequest over browser namespace', async () => {
   const fs = await import('node:fs/promises');
   const path = await import('node:path');
