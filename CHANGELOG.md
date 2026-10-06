@@ -1,3 +1,10 @@
+# [2.4.0](https://github.com/BioSs54/noobheaders/compare/v2.3.0...v2.4.0) (2026-10-06)
+
+
+### Features
+
+* ✨ import can add profiles, visible switches, clearer header removal, type check in CI ([#19](https://github.com/BioSs54/noobheaders/issues/19)) ([ab3c8c2](https://github.com/BioSs54/noobheaders/commit/ab3c8c2f3a5a5fb12e2c6a3a8c20dd01bb5234f1))
+
 # [2.3.0](https://github.com/BioSs54/noobheaders/compare/v2.2.1...v2.3.0) (2026-10-06)
 
 
