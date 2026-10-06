@@ -45,6 +45,34 @@ test.describe('Filters editor', () => {
     }
   });
 
+  test('regular expressions get a hint that * is the wildcard (issue #11)', async ({
+    context,
+    extensionOrigin,
+  }) => {
+    const page = await openPopup(context, extensionOrigin);
+    await seedState(page, {
+      profiles: [profile('Work', { filters: [filter('.*://example\\.com/.*')] })],
+    });
+    await openEditorTab(page, 'filters');
+
+    const row = page.locator('.filter-item');
+    const note = row.locator('.field-note');
+    await expect(note).toBeVisible();
+    await expect(note).toHaveText(
+      'This looks like a regular expression. Filters use * as the wildcard, not .* (e.g. *://example.com/api/*).'
+    );
+    await expect(row.locator('.filter-value')).toHaveAttribute('aria-describedby', /filter-note-0/);
+
+    // Writing the NoobHeaders pattern removes the hint
+    await row.locator('.filter-value').fill('*://example.com/*');
+    await expect(note).toBeHidden();
+    await row.locator('.filter-value').fill('https://example.com/api/.*');
+    await expect(note).toBeVisible();
+    // "example.*" is a valid wildcard pattern (any extension): no hint
+    await row.locator('.filter-value').fill('example.*');
+    await expect(note).toBeHidden();
+  });
+
   test('invalid filters are reported and can still be switched off', async ({
     context,
     extensionOrigin,

@@ -244,7 +244,10 @@
     "message": "example.com 또는 *://*.example.com/*"
   },
   "filterHelpText": {
-    "message": "example.com은 해당 도메인과 하위 도메인에 일치합니다. URL 패턴에서는 *가 와일드카드입니다: *://*.example.com/api/*, localhost:3000"
+    "message": "example.com은 해당 도메인과 하위 도메인에 일치합니다. URL 패턴에서는 *가 와일드카드입니다(.* 및 정규 표현식 불가): *://*.example.com/api/*, localhost:3000"
+  },
+  "filterRegexHint": {
+    "message": "정규 표현식처럼 보입니다. 필터의 와일드카드는 .*가 아니라 *입니다 (예: *://example.com/api/*)."
   },
   "invalidDomain": {
     "message": "도메인 또는 URL이 올바르지 않습니다"

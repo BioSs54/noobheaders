@@ -20,4 +20,22 @@ export function detectFilterType(value: string): FilterType {
   return 'domain';
 }
 
-export default { detectFilterType };
+/**
+ * Whether a filter value looks like a regular expression (as in ModHeader), while
+ * NoobHeaders patterns use "*" as wildcard: ".*" after "/" only matches a literal dot.
+ * "example.*" stays allowed: there, "*" after a dot is a valid wildcard (any extension).
+ */
+export function looksLikeRegex(value: string): boolean {
+  if (!value || typeof value !== 'string') return false;
+  const v = value.trim();
+  return (
+    v.includes('\\') ||
+    v.startsWith('^') ||
+    v.endsWith('$') ||
+    v.includes('.+') ||
+    v.includes('(?') ||
+    /(^|[^a-z0-9-])\.\*/i.test(v)
+  );
+}
+
+export default { detectFilterType, looksLikeRegex };

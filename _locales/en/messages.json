@@ -249,7 +249,10 @@
     "message": "example.com or *://*.example.com/*"
   },
   "filterHelpText": {
-    "message": "example.com matches the domain and its subdomains. URL patterns use * as a wildcard: *://*.example.com/api/*, localhost:3000"
+    "message": "example.com matches the domain and its subdomains. URL patterns use * as a wildcard (not .*, no regular expressions): *://*.example.com/api/*, localhost:3000"
+  },
+  "filterRegexHint": {
+    "message": "This looks like a regular expression. Filters use * as the wildcard, not .* (e.g. *://example.com/api/*)."
   },
   "invalidDomain": {
     "message": "Invalid domain or URL"

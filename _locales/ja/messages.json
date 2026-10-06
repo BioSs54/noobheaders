@@ -244,7 +244,10 @@
     "message": "example.com または *://*.example.com/*"
   },
   "filterHelpText": {
-    "message": "example.com はそのドメインとサブドメインに一致します。URL パターンでは * がワイルドカードです：*://*.example.com/api/*、localhost:3000"
+    "message": "example.com はそのドメインとサブドメインに一致します。URL パターンでは * がワイルドカードです（.* や正規表現は使えません）：*://*.example.com/api/*、localhost:3000"
+  },
+  "filterRegexHint": {
+    "message": "正規表現のようです。フィルターのワイルドカードは .* ではなく * です（例：*://example.com/api/*）。"
   },
   "invalidDomain": {
     "message": "ドメインまたは URL が正しくありません"

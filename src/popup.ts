@@ -3,7 +3,7 @@
  */
 
 import { getBrowserApi } from './browser-compat.js';
-import { detectFilterType } from './filter-utils.js';
+import { detectFilterType, looksLikeRegex } from './filter-utils.js';
 import { HEADER_SUGGESTION_LIST_IDS, installHeaderSuggestions } from './header-suggestions.js';
 import { headerAppliesToUrl } from './header-utils.js';
 import { getMessage } from './i18n.js';
@@ -1439,6 +1439,15 @@ function createFilterElement(filter: Filter, index: number): HTMLDivElement {
   errorSpan.id = `filter-error-${index}`;
   errorSpan.hidden = true;
 
+  // Users coming from ModHeader write regular expressions (".*"): say that "*" is the wildcard
+  const regexNote = document.createElement('span');
+  regexNote.className = 'field-note';
+  regexNote.id = `filter-note-${index}`;
+  regexNote.textContent = getMessage('filterRegexHint');
+  const updateRegexNote = (value: string) => {
+    regexNote.hidden = !looksLikeRegex(value);
+  };
+
   // Type badge: detected automatically from the value
   const typeBadge = document.createElement('span');
   typeBadge.className = 'filter-type-badge';
@@ -1457,7 +1466,7 @@ function createFilterElement(filter: Filter, index: number): HTMLDivElement {
   valueInput.className = 'filter-value';
   valueInput.placeholder = getMessage('filterValuePlaceholder');
   valueInput.setAttribute('aria-label', getMessage('filters'));
-  valueInput.setAttribute('aria-describedby', errorSpan.id);
+  valueInput.setAttribute('aria-describedby', `${errorSpan.id} ${regexNote.id}`);
   valueInput.spellcheck = false;
   valueInput.autocomplete = 'off';
   valueInput.value = filter.value || '';
@@ -1474,6 +1483,7 @@ function createFilterElement(filter: Filter, index: number): HTMLDivElement {
     const current = getActiveProfile()?.filters[index];
     if (current) setRowError(div, errorSpan, getFilterError(current));
     renderTypeBadge();
+    updateRegexNote(v);
   });
   valueInput.addEventListener('blur', () => {
     void flushPendingSave();
@@ -1495,9 +1505,11 @@ function createFilterElement(filter: Filter, index: number): HTMLDivElement {
   div.appendChild(duplicateBtn);
   div.appendChild(deleteBtn);
   div.appendChild(errorSpan);
+  div.appendChild(regexNote);
 
   renderTypeBadge();
   setRowError(div, errorSpan, getFilterError(filter));
+  updateRegexNote(filter.value || '');
 
   return div;
 }

@@ -244,7 +244,10 @@
     "message": "example.com 或 *://*.example.com/*"
   },
   "filterHelpText": {
-    "message": "example.com 匹配该域名及其子域名。URL 模式使用 * 作为通配符：*://*.example.com/api/*、localhost:3000"
+    "message": "example.com 匹配该域名及其子域名。URL 模式使用 * 作为通配符（不是 .*，不支持正则表达式）：*://*.example.com/api/*、localhost:3000"
+  },
+  "filterRegexHint": {
+    "message": "这看起来像正则表达式。过滤器使用 * 作为通配符，而不是 .*（例如 *://example.com/api/*）。"
   },
   "invalidDomain": {
     "message": "无效的域名或 URL"

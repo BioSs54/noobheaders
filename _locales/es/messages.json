@@ -243,7 +243,10 @@
     "message": "example.com o *://*.example.com/*"
   },
   "filterHelpText": {
-    "message": "example.com coincide con el dominio y sus subdominios. Los patrones de URL usan * como comodín: *://*.example.com/api/*, localhost:3000"
+    "message": "example.com coincide con el dominio y sus subdominios. Los patrones de URL usan * como comodín (no .*, sin expresiones regulares): *://*.example.com/api/*, localhost:3000"
+  },
+  "filterRegexHint": {
+    "message": "Parece una expresión regular. Los filtros usan * como comodín, no .* (p. ej. *://example.com/api/*)."
   },
   "invalidDomain": {
     "message": "Dominio o URL inválido"

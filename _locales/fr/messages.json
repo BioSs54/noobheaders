@@ -243,7 +243,10 @@
     "message": "example.com ou *://*.example.com/*"
   },
   "filterHelpText": {
-    "message": "example.com cible le domaine et ses sous-domaines. Les motifs d'URL utilisent * comme joker : *://*.example.com/api/*, localhost:3000"
+    "message": "example.com cible le domaine et ses sous-domaines. Les motifs d'URL utilisent * comme joker (pas .*, ni expressions régulières) : *://*.example.com/api/*, localhost:3000"
+  },
+  "filterRegexHint": {
+    "message": "Ceci ressemble à une expression régulière. Les filtres utilisent * comme joker, pas .* (ex. : *://example.com/api/*)."
   },
   "invalidDomain": {
     "message": "Domaine ou URL invalide"
