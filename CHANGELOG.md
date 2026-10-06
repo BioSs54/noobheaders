@@ -1,3 +1,10 @@
+## [2.5.1](https://github.com/BioSs54/noobheaders/compare/v2.5.0...v2.5.1) (2026-10-06)
+
+
+### Bug Fixes
+
+* **filters:** 🐛 warn when a filter looks like a regular expression ([#21](https://github.com/BioSs54/noobheaders/issues/21)) ([31fd8b0](https://github.com/BioSs54/noobheaders/commit/31fd8b0d85e3e26da56fee1f8cb4e579fae4e2f5)), closes [#11](https://github.com/BioSs54/noobheaders/issues/11)
+
 # [2.5.0](https://github.com/BioSs54/noobheaders/compare/v2.4.0...v2.5.0) (2026-10-06)
 
 
