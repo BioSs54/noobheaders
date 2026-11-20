@@ -63,7 +63,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^17.6.1",
     "rimraf": "^6.1.4",
-    "semantic-release": "^25.0.9",
+    "semantic-release": "^26.0.1",
     "sharp": "^0.35.5",
     "typescript": "^5.9.3",
     "web-ext": "^10.8.0"
